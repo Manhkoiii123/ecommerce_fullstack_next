@@ -50,3 +50,12 @@ export const upsertCategory = async (category: Category) => {
     throw error;
   }
 };
+
+export const getAllCategories = async () => {
+  const categories = await db.category.findMany({
+    orderBy: {
+      updatedAt: "desc",
+    },
+  });
+  return categories;
+};

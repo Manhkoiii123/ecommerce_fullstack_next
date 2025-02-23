@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Trash } from "lucide-react";
 import { cn } from "@/lib/utils";
 interface ImageUploadProps {
-  cloudinary_key: string;
+  cloudinary_key?: string;
   disabled?: boolean;
   onChange: (value: string) => void;
   onRemove: (value: string) => void;
@@ -71,7 +71,7 @@ const ImageUpload: FC<ImageUploadProps> = ({
             className="w-52 h-52 rounded-full object-cover absolute top-0 left-0 bottom-0 right-0"
           />
         )}
-        <CldUploadWidget onSuccess={onUpload} uploadPreset={cloudinary_key}>
+        <CldUploadWidget onSuccess={onUpload} uploadPreset={"hg6ynq9x"}>
           {({ open }) => {
             const onClick = () => {
               open();
@@ -121,7 +121,7 @@ const ImageUpload: FC<ImageUploadProps> = ({
             className="w-full h-full rounded-lg object-cover"
           />
         )}
-        <CldUploadWidget onSuccess={onUpload} uploadPreset={cloudinary_key}>
+        <CldUploadWidget onSuccess={onUpload} uploadPreset={"hg6ynq9x"}>
           {({ open }) => {
             const onClick = () => {
               open();
@@ -183,7 +183,7 @@ const ImageUpload: FC<ImageUploadProps> = ({
               </div>
             ))}
         </div>
-        <CldUploadWidget onSuccess={onUpload} uploadPreset={cloudinary_key}>
+        <CldUploadWidget onSuccess={onUpload} uploadPreset={"hg6ynq9x"}>
           {({ open }) => {
             const onClick = () => {
               open();

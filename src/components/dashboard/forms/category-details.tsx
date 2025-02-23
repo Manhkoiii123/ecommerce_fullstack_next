@@ -32,7 +32,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 interface CategoryDetailsProps {
   data?: Category;
-  cloudinary_key: string;
+  cloudinary_key?: string;
 }
 const CategoryDetails = ({ data, cloudinary_key }: CategoryDetailsProps) => {
   const router = useRouter();

@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/sonner";
+import ModalProvider from "@/providers/modal-provider";
 const interFont = Inter({ subsets: ["latin"] });
 const barlowFont = Barlow({
   subsets: ["latin"],
@@ -32,7 +33,7 @@ export default function RootLayout({
             enableSystem={true}
             disableTransitionOnChange={true}
           >
-            {children}
+            <ModalProvider>{children}</ModalProvider>
             <Toaster />
           </ThemeProvider>
         </body>
