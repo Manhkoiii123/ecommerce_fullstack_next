@@ -26,11 +26,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { CategoryFormSchema } from "@/lib/schemas";
 import { useEffect } from "react";
 import ImageUpload from "@/components/dashboard/shared/image-upload";
+import { upsertCategory } from "@/queries/category";
+import { v4 } from "uuid";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 interface CategoryDetailsProps {
   data?: Category;
   cloudinary_key: string;
 }
 const CategoryDetails = ({ data, cloudinary_key }: CategoryDetailsProps) => {
+  const router = useRouter();
   const form = useForm<z.infer<typeof CategoryFormSchema>>({
     mode: "onChange",
     resolver: zodResolver(CategoryFormSchema),
@@ -52,7 +57,33 @@ const CategoryDetails = ({ data, cloudinary_key }: CategoryDetailsProps) => {
       });
     }
   }, [data, form]);
-  const handleSubmit = async (values: z.infer<typeof CategoryFormSchema>) => {};
+  const handleSubmit = async (values: z.infer<typeof CategoryFormSchema>) => {
+    try {
+      const response = await upsertCategory({
+        id: data?.id ? data.id : v4(),
+        name: values.name,
+        image: values.image[0].url,
+        url: values.url,
+        featured: values.featured,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      toast(
+        data?.id
+          ? "Category has been updated."
+          : `Congratulations! '${response?.name}' is now created.`
+      );
+      if (data?.id) {
+        router.refresh();
+      } else {
+        router.push("/dashboard/admin/categories");
+      }
+    } catch (error: any) {
+      toast.error("Oops!", {
+        description: error.toString(),
+      });
+    }
+  };
   return (
     <AlertDialog>
       <Card className="w-full">

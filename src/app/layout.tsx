@@ -3,6 +3,7 @@ import { Inter, Barlow } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Toaster } from "@/components/ui/sonner";
 const interFont = Inter({ subsets: ["latin"] });
 const barlowFont = Barlow({
   subsets: ["latin"],
@@ -32,6 +33,7 @@ export default function RootLayout({
             disableTransitionOnChange={true}
           >
             {children}
+            <Toaster />
           </ThemeProvider>
         </body>
       </html>
