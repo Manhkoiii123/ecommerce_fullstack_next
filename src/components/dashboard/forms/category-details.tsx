@@ -25,10 +25,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CategoryFormSchema } from "@/lib/schemas";
 import { useEffect } from "react";
+import ImageUpload from "@/components/dashboard/shared/image-upload";
 interface CategoryDetailsProps {
   data?: Category;
+  cloudinary_key: string;
 }
-const CategoryDetails = ({ data }: CategoryDetailsProps) => {
+const CategoryDetails = ({ data, cloudinary_key }: CategoryDetailsProps) => {
   const form = useForm<z.infer<typeof CategoryFormSchema>>({
     mode: "onChange",
     resolver: zodResolver(CategoryFormSchema),
@@ -74,7 +76,8 @@ const CategoryDetails = ({ data }: CategoryDetailsProps) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      {/* <ImageUpload
+                      <ImageUpload
+                        cloudinary_key={cloudinary_key}
                         type="profile"
                         value={field.value.map((image) => image.url)}
                         disabled={isLoading}
@@ -86,7 +89,7 @@ const CategoryDetails = ({ data }: CategoryDetailsProps) => {
                             ),
                           ])
                         }
-                      /> */}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
