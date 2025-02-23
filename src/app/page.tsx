@@ -1,9 +1,9 @@
-import { Button } from "@/components/ui/button";
+import ThemeToggle from "@/components/shared/theme-toggle";
 
 export default function Home() {
   return (
-    <Button className="font-barlow" variant={"outline"}>
-      Hello
-    </Button>
+    <>
+      <ThemeToggle />
+    </>
   );
 }
