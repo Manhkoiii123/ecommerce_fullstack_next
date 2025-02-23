@@ -77,6 +77,7 @@ const CategoryDetails = ({ data, cloudinary_key }: CategoryDetailsProps) => {
         router.refresh();
       } else {
         router.push("/dashboard/admin/categories");
+        router.refresh();
       }
     } catch (error: any) {
       toast.error("Oops!", {

@@ -59,3 +59,31 @@ export const getAllCategories = async () => {
   });
   return categories;
 };
+
+export const getCategory = async (categoryId: string) => {
+  if (!categoryId) throw new Error("Please provide category ID.");
+  const category = await db.category.findUnique({
+    where: {
+      id: categoryId,
+    },
+  });
+  return category;
+};
+
+export const deleteCategory = async (categoryId: string) => {
+  const user = await currentUser();
+  if (!user) throw new Error("Unauthenticated.");
+  if (user.privateMetadata.role !== "ADMIN")
+    throw new Error(
+      "Unauthorized Access: Admin Privileges Required for Entry."
+    );
+
+  if (!categoryId) throw new Error("Please provide category ID.");
+
+  const response = await db.category.delete({
+    where: {
+      id: categoryId,
+    },
+  });
+  return response;
+};
