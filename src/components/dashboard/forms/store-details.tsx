@@ -31,6 +31,7 @@ import ImageUpload from "../shared/image-upload";
 import { v4 } from "uuid";
 import { toast } from "sonner";
 import { StoreFormSchema } from "@/lib/schemas";
+import { upsertStore } from "@/queries/store";
 
 interface StoreDetailsProps {
   data?: Store;
@@ -75,29 +76,29 @@ const StoreDetails: FC<StoreDetailsProps> = ({ data }) => {
 
   const handleSubmit = async (values: z.infer<typeof StoreFormSchema>) => {
     try {
-      //   const response = await upsertStore({
-      //     id: data?.id ? data.id : v4(),
-      //     name: values.name,
-      //     description: values.description,
-      //     email: values.email,
-      //     phone: values.phone,
-      //     logo: values.logo[0].url,
-      //     cover: values.cover[0].url,
-      //     url: values.url,
-      //     featured: values.featured,
-      //     createdAt: new Date(),
-      //     updatedAt: new Date(),
-      //   });
-      //   toast(
-      //     data?.id
-      //       ? "Store has been updated."
-      //       : `Congratulations! Store is now created.`
-      //   );
-      //   if (data?.id) {
-      //     router.refresh();
-      //   } else {
-      //     router.push(`/dashboard/seller/stores/`);
-      //   }
+      const response = await upsertStore({
+        id: data?.id ? data.id : v4(),
+        name: values.name,
+        description: values.description,
+        email: values.email,
+        phone: values.phone,
+        logo: values.logo[0].url,
+        cover: values.cover[0].url,
+        url: values.url,
+        featured: values.featured,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      toast(
+        data?.id
+          ? "Store has been updated."
+          : `Congratulations! Store is now created.`
+      );
+      if (data?.id) {
+        router.refresh();
+      } else {
+        router.push(`/dashboard/seller/stores/${response?.url}`);
+      }
     } catch (error: any) {
       toast.error("Oops!", {
         description: error.toString(),
