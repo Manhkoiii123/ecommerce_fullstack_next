@@ -14,7 +14,7 @@ export default async function AdminDashboardLayout({
   if (!user || user.privateMetadata.role !== "ADMIN") redirect("/");
   return (
     <div className="w-full h-full">
-      <Sidebar />
+      <Sidebar isAdmin />
       <div className="ml-[340px]">
         <Header />
         <div className="w-full mt-[75px] p-4">{children}</div>
