@@ -71,7 +71,7 @@ export default function DataTable<TData, TValue>({
           />
         </div>
         <div className="flex gap-x-2">
-          {modalChildren && (
+          {/* {modalChildren && (
             <Button
               className="flex- gap-2"
               onClick={() => {
@@ -88,7 +88,7 @@ export default function DataTable<TData, TValue>({
             >
               {actionButtonText}
             </Button>
-          )}
+          )} */}
           {newTabLink && (
             <Link href={newTabLink}>
               <Button variant="outline">
