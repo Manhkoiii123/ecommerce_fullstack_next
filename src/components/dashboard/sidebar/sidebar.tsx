@@ -23,8 +23,8 @@ const Sidebar: FC<SidebarProps> = async ({ isAdmin, stores }) => {
         <Logo width="50%" height="120px" />
       </div>
       <span className="mt-3" />
-      {!isAdmin && stores && <StoreSwitcher stores={stores} />}
       {user && <UserInfo user={user} />}
+      {!isAdmin && stores && <StoreSwitcher stores={stores} />}
       {isAdmin ? (
         <SidebarNavAdmin menuLinks={adminDashboardSidebarOptions} />
       ) : (
