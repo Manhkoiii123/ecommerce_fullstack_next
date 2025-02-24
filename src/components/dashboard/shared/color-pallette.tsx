@@ -24,7 +24,6 @@ const ColorPalette: FC<ColorPaletteProps> = ({
     const newColors = currentColorsData.filter((c) => c.color !== "");
     setColors([...newColors, { color: color }]);
   };
-
   const Color = ({ color }: { color: string }) => {
     return (
       <div
@@ -39,9 +38,10 @@ const ColorPalette: FC<ColorPaletteProps> = ({
       </div>
     );
   };
+
   return (
     <div className="pt-10 w-[320px] h-[160px] rounded-b-md overflow-hidden">
-      <div className="w-[320px] h-[180px] rounded-md perspective-1000">
+      <div className="w-[320px] h-[180px] rounded-md perspective-1000 relative">
         <div className="relative w-full flex items-center justify-center bg-white h-16 rounded-t-md">
           <div
             className="absolute w-16 h-16 grid place-items-center shadow-lg rounded-full -top-10"

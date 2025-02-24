@@ -34,6 +34,7 @@ import { ProductFormSchema } from "@/lib/schemas";
 import { upsertStore } from "@/queries/store";
 import { ProductWithVariantType } from "@/lib/types";
 import ImagesPreviewGrid from "@/components/dashboard/shared/images-preview-grid";
+import ClickToAddInputs from "@/components/dashboard/forms/click-to-add";
 
 interface StoreDetailsProps {
   data?: ProductWithVariantType;
@@ -72,6 +73,7 @@ const ProductDetails: FC<StoreDetailsProps> = ({
   });
 
   const isLoading = form.formState.isSubmitting;
+  const errors = form.formState.errors;
 
   useEffect(() => {
     if (data) {
@@ -143,52 +145,68 @@ const ProductDetails: FC<StoreDetailsProps> = ({
               className="space-y-4"
             >
               <div className="flex flex-col gap-6 xl:flex-row">
-                <FormField
-                  control={form.control}
-                  name="images"
-                  render={({ field }) => (
-                    <FormItem className="w-full xl:border-r">
-                      <FormControl>
-                        <>
-                          <ImagesPreviewGrid
-                            images={form.getValues().images}
-                            onRemove={(url) => {
-                              const updatedImages = images.filter(
-                                (img) => img.url !== url
-                              );
-                              setImages(updatedImages);
-                              field.onChange(updatedImages);
-                            }}
-                            colors={colors}
-                            setColors={setColors}
-                          />
-                          <FormMessage className="!mt-4" />
-                          <ImageUpload
-                            type="standard"
-                            dontShowPreview
-                            value={field.value.map((image) => image.url)}
-                            disabled={isLoading}
-                            onChange={(url) =>
-                              setImages((prev) => {
-                                const update = [...prev, { url }];
-                                field.onChange(update);
-                                return update;
-                              })
-                            }
-                            onRemove={(url) =>
-                              field.onChange([
-                                ...field.value.filter(
-                                  (current) => current.url !== url
-                                ),
-                              ])
-                            }
-                          />
-                        </>
-                      </FormControl>
-                    </FormItem>
+                <div className="flex-[2]">
+                  <FormField
+                    control={form.control}
+                    name="images"
+                    render={({ field }) => (
+                      <FormItem className="w-full xl:border-r">
+                        <FormControl>
+                          <>
+                            <ImagesPreviewGrid
+                              images={form.getValues().images}
+                              onRemove={(url) => {
+                                const updatedImages = images.filter(
+                                  (img) => img.url !== url
+                                );
+                                setImages(updatedImages);
+                                field.onChange(updatedImages);
+                              }}
+                              colors={colors}
+                              setColors={setColors}
+                            />
+                            <FormMessage className="!mt-4" />
+                            <ImageUpload
+                              type="standard"
+                              dontShowPreview
+                              value={field.value.map((image) => image.url)}
+                              disabled={isLoading}
+                              onChange={(url) =>
+                                setImages((prev) => {
+                                  const update = [...prev, { url }];
+                                  field.onChange(update);
+                                  return update;
+                                })
+                              }
+                              onRemove={(url) =>
+                                field.onChange([
+                                  ...field.value.filter(
+                                    (current) => current.url !== url
+                                  ),
+                                ])
+                              }
+                            />
+                          </>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="w-full flex-1 flex flex-col gap-y-3 xl:pl-5">
+                  <ClickToAddInputs
+                    details={data?.colors || colors}
+                    setDetails={setColors}
+                    initialDetail={{ color: "" }}
+                    header="Colors"
+                    colorPicker
+                  />
+                  {errors.colors && (
+                    <span className="text-sm font-medium text-destructive">
+                      {errors.colors.message}
+                    </span>
                   )}
-                />
-                <div className="w-full flex flex-col gap-y-3 xl:pl-5"></div>
+                </div>
               </div>
               <FormField
                 disabled={isLoading}
