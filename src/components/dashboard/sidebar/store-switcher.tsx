@@ -32,14 +32,12 @@ const StoreSwitcher: FC<StoreSwitcherProps> = ({ stores, className }) => {
   const params = useParams();
   const router = useRouter();
 
-  // Format stores data
   const formattedItems = stores.map((store) => ({
     label: store.name,
     value: store.url,
   }));
   const [open, setOpen] = useState(false);
 
-  // Get the active store
   const activeStore = formattedItems.find(
     (store) => store.value === params.storeUrl
   );

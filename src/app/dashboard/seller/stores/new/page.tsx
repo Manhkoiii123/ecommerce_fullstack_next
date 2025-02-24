@@ -1,7 +1,9 @@
-import React from 'react';
+import StoreDetails from "@/components/dashboard/forms/store-details";
 
-const NewStorePage = () => {
-    return <div>NewStorePage</div>;
-};
-
-export default NewStorePage;
+export default function SellerNewStorePage() {
+  return (
+    <div className="p-2">
+      <StoreDetails />
+    </div>
+  );
+}
