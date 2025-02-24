@@ -65,3 +65,23 @@ export const upsertSubCategory = async (subCategory: SubCategory) => {
     throw error;
   }
 };
+
+export const deleteSubCategory = async (subCategoryId: string) => {
+  const user = await currentUser();
+
+  if (!user) throw new Error("Unauthenticated.");
+
+  if (user.privateMetadata.role !== "ADMIN")
+    throw new Error(
+      "Unauthorized Access: Admin Privileges Required for Entry."
+    );
+
+  if (!subCategoryId) throw new Error("Please provide category ID.");
+
+  const response = await db.subCategory.delete({
+    where: {
+      id: subCategoryId,
+    },
+  });
+  return response;
+};

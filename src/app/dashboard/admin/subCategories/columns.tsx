@@ -44,20 +44,21 @@ import CustomModal from "@/components/shared/custom-modal";
 import { SubCategoryWithCategoryType } from "@/lib/types";
 import { getAllCategories } from "@/queries/category";
 import SubCategoryDetails from "@/components/dashboard/forms/subCategory-details";
+import { deleteSubCategory } from "@/queries/subCategories";
 
-export const columns: ColumnDef<any>[] = [
+export const columns: ColumnDef<SubCategoryWithCategoryType>[] = [
   {
     accessorKey: "image",
     header: "",
     cell: ({ row }) => {
       return (
-        <div className="relative h-44 min-w-64 rounded-xl overflow-hidden">
+        <div className="relative h-22 min-w-22 rounded-xl overflow-hidden">
           <Image
             src={row.original.image}
             alt=""
             width={1000}
             height={1000}
-            className="w-40 h-40 rounded-full object-cover shadow-2xl"
+            className="w-20 h-20 rounded-full object-cover shadow-2xl"
           />
         </div>
       );
@@ -191,7 +192,7 @@ const CellActions: React.FC<CellActionsProps> = ({ rowData }) => {
             className="bg-destructive hover:bg-destructive mb-2 text-white"
             onClick={async () => {
               setLoading(true);
-              //   await deleteSubCategory(rowData.id);
+              await deleteSubCategory(rowData.id);
               toast("Deleted subCategory", {
                 description: "The subCategory has been deleted.",
               });
