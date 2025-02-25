@@ -152,12 +152,10 @@ export const ProductFormSchema = z.object({
         "Product variant name may only contain letters, numbers, spaces, hyphens, and underscores, without consecutive special characters.",
     }),
 
-  variantDescription: z
-    .string({
-      required_error: "Product variant description is mandatory.",
-      invalid_type_error: "Product variant description must be a valid string.",
-    })
-    .optional(),
+  variantDescription: z.string({
+    required_error: "Product variant description is mandatory.",
+    invalid_type_error: "Product variant description must be a valid string.",
+  }),
   images: z
     .object({ url: z.string() })
     .array()
