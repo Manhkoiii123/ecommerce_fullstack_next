@@ -108,68 +108,81 @@ const ClickToAddInputs = <T extends Detail>({
       </button>
     );
   };
+
+  /**
+   * const tmp = [
+  {color:1}
+]
+   * => map qua => detail sẽ là {color:1} => object.keys => ["color"]
+   */
   return (
     <div className="flex flex-col gap-y-4">
       {header && <div>{header}</div>}
       {details.length === 0 && <PlusButton onClick={handleAddDetail} />}
-      {details.map((detail, index) => (
-        <div key={index} className="flex items-center gap-x-4">
-          {Object.keys(detail).map((property, propIndex) => (
-            <div
-              key={propIndex}
-              className={cn("flex items-center gap-x-4", containerClassName)}
-            >
-              {property === "color" && colorPicker && (
-                <div className="flex gap-x-4">
-                  <button
-                    type="button"
-                    className="cursor-pointer"
-                    onClick={() =>
-                      setColorPickerIndex(
-                        colorPickerIndex === index ? null : index
-                      )
+      {details.map((detail, index) => {
+        return (
+          <div key={index} className="flex items-center gap-x-4">
+            {Object.keys(detail).map((property, propIndex) => (
+              <div
+                key={propIndex}
+                className={cn("flex items-center gap-x-4", containerClassName)}
+              >
+                {property === "color" && colorPicker && (
+                  <div className="flex gap-x-4">
+                    <button
+                      type="button"
+                      className="cursor-pointer"
+                      onClick={() =>
+                        setColorPickerIndex(
+                          colorPickerIndex === index ? null : index
+                        )
+                      }
+                    >
+                      <PaintBucket />
+                    </button>
+                    <span
+                      className="w-8 h-8 rounded-full"
+                      style={{ backgroundColor: detail[property] as string }}
+                    />
+                  </div>
+                )}
+
+                {colorPickerIndex === index && property === "color" && (
+                  <SketchPicker
+                    color={detail[property] as string}
+                    onChange={(e) =>
+                      handleDetailsChange(index, property, e.hex)
                     }
-                  >
-                    <PaintBucket />
-                  </button>
-                  <span
-                    className="w-8 h-8 rounded-full"
-                    style={{ backgroundColor: detail[property] as string }}
                   />
-                </div>
-              )}
+                )}
 
-              {colorPickerIndex === index && property === "color" && (
-                <SketchPicker
-                  color={detail[property] as string}
-                  onChange={(e) => handleDetailsChange(index, property, e.hex)}
+                <Input
+                  className={cn("w-28 placeholder:capitalize", inputClassName)}
+                  type={
+                    typeof detail[property] === "number" ? "number" : "text"
+                  }
+                  name={property}
+                  placeholder={property}
+                  value={detail[property] as string}
+                  min={typeof detail[property] === "number" ? 0 : undefined}
+                  step="0.01"
+                  onChange={(e) =>
+                    handleDetailsChange(
+                      index,
+                      property,
+                      e.target.type === "number"
+                        ? parseFloat(e.target.value)
+                        : e.target.value
+                    )
+                  }
                 />
-              )}
-
-              <Input
-                className={cn("w-28 placeholder:capitalize", inputClassName)}
-                type={typeof detail[property] === "number" ? "number" : "text"}
-                name={property}
-                placeholder={property}
-                value={detail[property] as string}
-                min={typeof detail[property] === "number" ? 0 : undefined}
-                step="0.01"
-                onChange={(e) =>
-                  handleDetailsChange(
-                    index,
-                    property,
-                    e.target.type === "number"
-                      ? parseFloat(e.target.value)
-                      : e.target.value
-                  )
-                }
-              />
-            </div>
-          ))}
-          <MinusButton onClick={() => handleRemove(index)} />
-          <PlusButton onClick={handleAddDetail} />
-        </div>
-      ))}
+              </div>
+            ))}
+            <MinusButton onClick={() => handleRemove(index)} />
+            <PlusButton onClick={handleAddDetail} />
+          </div>
+        );
+      })}
     </div>
   );
 };

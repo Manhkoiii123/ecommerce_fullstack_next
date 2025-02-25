@@ -52,6 +52,9 @@ const ProductDetails: FC<StoreDetailsProps> = ({
   const [colors, setColors] = useState<{ color: string }[]>(
     data?.colors || [{ color: "" }]
   );
+  const [sizes, setSizes] = useState<
+    { size: string; price: number; quantity: number; discount: number }[]
+  >(data?.sizes || [{ size: "", price: 1, quantity: 0.01, discount: 0 }]);
   const form = useForm<z.infer<typeof ProductFormSchema>>({
     mode: "onChange",
     resolver: zodResolver(ProductFormSchema),
@@ -126,6 +129,11 @@ const ProductDetails: FC<StoreDetailsProps> = ({
     //   });
     // }
   };
+
+  useEffect(() => {
+    form.setValue("colors", colors);
+    form.setValue("sizes", sizes);
+  }, [colors, sizes]);
 
   return (
     <AlertDialog>
@@ -237,6 +245,20 @@ const ProductDetails: FC<StoreDetailsProps> = ({
                 )}
               />
 
+              {/* size */}
+              <div className="w-full flex flex-col gap-y-3 xl:pl-5">
+                <ClickToAddInputs
+                  details={data?.sizes || sizes}
+                  setDetails={setSizes}
+                  initialDetail={{
+                    size: "",
+                    price: 1,
+                    quantity: 0.01,
+                    discount: 0,
+                  }}
+                  header="Sizes, Quantities, Prices, Discounts"
+                />
+              </div>
               <Button type="submit" disabled={isLoading}>
                 {isLoading
                   ? "loading..."
