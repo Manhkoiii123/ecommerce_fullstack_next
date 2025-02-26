@@ -49,7 +49,7 @@ interface Keyword {
   text: string;
 }
 interface StoreDetailsProps {
-  data?: ProductWithVariantType;
+  data?: Partial<ProductWithVariantType>;
   categories: Category[];
   storeUrl: string;
 }

@@ -117,3 +117,32 @@ export const upsertProduct = async (
     throw error;
   }
 };
+
+export const getProductMainInfo = async (productId: string) => {
+  const product = await db.product.findUnique({
+    where: {
+      id: productId,
+    },
+  });
+  if (!product) return null;
+
+  return {
+    productId: product.id,
+    name: product.name,
+    description: product.description,
+    brand: product.brand,
+    categoryId: product.categoryId,
+    subCategoryId: product.subCategoryId,
+    // offerTagId: product.offerTagId || undefined,
+    storeId: product.storeId,
+    // shippingFeeMethod: product.shippingFeeMethod,
+    // questions: product.questions.map((q) => ({
+    //   question: q.question,
+    //   answer: q.answer,
+    // })),
+    // product_specs: product.specs.map((spec) => ({
+    //   name: spec.name,
+    //   value: spec.value,
+    // })),
+  };
+};
