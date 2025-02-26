@@ -122,6 +122,7 @@ model Product {
 model ProductVariant {
   id                 String                @id @default(uuid())
   variantName        String
+  variantImage        String?
   variantDescription String?               @db.LongText
   slug               String                @unique
   isSale             Boolean               @default(false)

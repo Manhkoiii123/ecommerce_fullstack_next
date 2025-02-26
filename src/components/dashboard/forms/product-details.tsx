@@ -159,6 +159,7 @@ const ProductDetails: FC<StoreDetailsProps> = ({
         router.refresh();
       } else {
         router.push(`/dashboard/seller/stores/${storeUrl}/products`);
+        router.refresh();
       }
     } catch (error: any) {
       toast.error("Oops!", {
