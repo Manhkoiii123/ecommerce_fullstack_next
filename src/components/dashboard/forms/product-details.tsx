@@ -43,6 +43,7 @@ import {
 import { getAllCategoriesForCategory } from "@/queries/subCategories";
 import { toast } from "sonner";
 import { upsertProduct } from "@/queries/product";
+import { v4 } from "uuid";
 interface Keyword {
   id: string;
   text: string;
@@ -127,29 +128,38 @@ const ProductDetails: FC<StoreDetailsProps> = ({
 
   const handleSubmit = async (values: z.infer<typeof ProductFormSchema>) => {
     try {
-      // const response = await upsertProduct({
-      //   id: data?.id ? data.id : v4(),
-      //   name: values.name,
-      //   description: values.description,
-      //   email: values.email,
-      //   phone: values.phone,
-      //   logo: values.logo[0].url,
-      //   cover: values.cover[0].url,
-      //   url: values.url,
-      //   featured: values.featured,
-      //   createdAt: new Date(),
-      //   updatedAt: new Date(),
-      // });
-      // toast(
-      //   data?.id
-      //     ? "Store has been updated."
-      //     : `Congratulations! Store is now created.`
-      // );
-      // if (data?.id) {
-      //   router.refresh();
-      // } else {
-      //   router.push(`/dashboard/seller/stores/${response?.url}`);
-      // }
+      const response = await upsertProduct(
+        {
+          productId: data?.productId ? data.productId : v4(),
+          variantId: data?.variantId ? data.variantId : v4(),
+          name: values.name,
+          description: values.description,
+          variantName: values.variantName,
+          variantDescription: values.variantDescription || "",
+          images: values.images,
+          categoryId: values.categoryId,
+          subCategoryId: values.subCategoryId,
+          isSale: values.isSale,
+          brand: values.brand,
+          sku: values.sku,
+          colors: values.colors,
+          sizes: values.sizes,
+          keywords: values.keywords,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        storeUrl
+      );
+      toast(
+        data?.productId && data?.variantId
+          ? "Product has been updated."
+          : `Congratulations! product is now created.`
+      );
+      if (data?.productId && data?.variantId) {
+        router.refresh();
+      } else {
+        router.push(`/dashboard/seller/stores/${storeUrl}/products`);
+      }
     } catch (error: any) {
       toast.error("Oops!", {
         description: error.toString(),
