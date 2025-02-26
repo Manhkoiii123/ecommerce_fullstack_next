@@ -62,7 +62,9 @@ const ImagesPreviewGrid: FC<ImagesPreviewGridProps> = ({
     return (
       <div className="max-w-4xl">
         <div
-          className={`grid h-[800px]  overflow-hidden bg-white rounded-md ${GridClassName}`}
+          className={`grid h-[800px]  overflow-hidden bg-white rounded-md ${
+            GridClassName || "grid-cols-2"
+          }`}
         >
           {images.map((img, i) => (
             <div
