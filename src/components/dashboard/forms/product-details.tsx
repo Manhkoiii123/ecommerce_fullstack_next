@@ -77,6 +77,14 @@ const ProductDetails: FC<StoreDetailsProps> = ({
   const [sizes, setSizes] = useState<
     { size: string; price: number; quantity: number; discount: number }[]
   >(data?.sizes || [{ size: "", price: 1, quantity: 0.01, discount: 0 }]);
+
+  const [productSpecs, setProductSpecs] = useState<
+    { name: string; value: string }[]
+  >(data?.product_specs || [{ name: "", value: "" }]);
+
+  const [variantSpecs, setVariantSpecs] = useState<
+    { name: string; value: string }[]
+  >(data?.variant_specs || [{ name: "", value: "" }]);
   const [keywords, setKeywords] = useState<string[]>([]);
   const handleAddition = (keyword: Keyword) => {
     if (keywords.length === 10) return;
@@ -116,6 +124,8 @@ const ProductDetails: FC<StoreDetailsProps> = ({
       isSale: data?.isSale || false,
       saleEndDate:
         data?.saleEndDate || format(new Date(), "yyyy-MM-dd'T'HH:mm:ss"),
+      product_specs: data?.product_specs,
+      variant_specs: data?.variant_specs,
     },
   });
   useEffect(() => {
@@ -131,20 +141,8 @@ const ProductDetails: FC<StoreDetailsProps> = ({
   useEffect(() => {
     if (data) {
       form.reset({
-        name: data?.name,
-        description: data?.description,
-        variantName: data?.variantName,
-        variantDescription: data?.variantDescription,
-        images: data?.images || [],
-        variantImage: data?.variantImage ? [{ url: data.variantImage }] : [],
-        subCategoryId: data?.subCategoryId,
-        categoryId: data?.categoryId,
-        brand: data?.brand,
-        sku: data?.sku,
-        colors: data?.colors,
-        sizes: data?.sizes,
-        keywords: data?.keywords || [],
-        isSale: data?.isSale || false,
+        ...data,
+        variantImage: data.variantImage ? [{ url: data.variantImage }] : [],
       });
     }
   }, [data, form]);
@@ -181,6 +179,8 @@ const ProductDetails: FC<StoreDetailsProps> = ({
           keywords: values.keywords,
           createdAt: new Date(),
           updatedAt: new Date(),
+          product_specs: values.product_specs,
+          variant_specs: values.variant_specs,
         },
         storeUrl
       );
@@ -206,7 +206,9 @@ const ProductDetails: FC<StoreDetailsProps> = ({
     form.setValue("colors", colors);
     form.setValue("sizes", sizes);
     form.setValue("keywords", keywords);
-  }, [colors, sizes, keywords]);
+    form.setValue("product_specs", productSpecs);
+    form.setValue("variant_specs", variantSpecs);
+  }, [colors, sizes, keywords, form, productSpecs, variantSpecs]);
 
   return (
     <AlertDialog>
@@ -380,36 +382,6 @@ const ProductDetails: FC<StoreDetailsProps> = ({
                 </TabsContent>
               </Tabs>
 
-              {/* <div className="flex flex-col lg:flex-row gap-4 hidden">
-                <FormField
-                  disabled={isLoading}
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>Product description</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Description" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  disabled={isLoading}
-                  control={form.control}
-                  name="variantDescription"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>Variant description</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Description" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div> */}
               {/* category - sub category */}
               <div className="flex flex-col lg:flex-row gap-4">
                 <FormField
@@ -602,6 +574,65 @@ const ProductDetails: FC<StoreDetailsProps> = ({
                     {errors.sizes.message}
                   </span>
                 )}
+              </div>
+              {/* product and variant specs */}
+              <div className="w-full flex flex-col gap-y-3 xl:pl-5">
+                <Tabs
+                  // defaultValue={
+                  //   isNewVariantPage ? "variantSpecs" : "productSpecs"
+                  // }
+                  defaultValue={"productSpecs"}
+                  className="w-full"
+                >
+                  {/* {!isNewVariantPage && ( */}
+                  <TabsList className="w-full grid grid-cols-2">
+                    <TabsTrigger value="productSpecs">
+                      Product Specifications
+                    </TabsTrigger>
+                    <TabsTrigger value="variantSpecs">
+                      Variant Specifications
+                    </TabsTrigger>
+                  </TabsList>
+                  {/* )} */}
+                  <TabsContent value="productSpecs">
+                    <div className="w-full flex flex-col gap-y-3">
+                      <ClickToAddInputs
+                        details={productSpecs}
+                        setDetails={setProductSpecs}
+                        initialDetail={{
+                          name: "",
+                          value: "",
+                        }}
+                        containerClassName="flex-1"
+                        inputClassName="w-full"
+                      />
+                      {errors.product_specs && (
+                        <span className="text-sm font-medium text-destructive">
+                          {errors.product_specs.message}
+                        </span>
+                      )}
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="variantSpecs">
+                    <div className="w-full flex flex-col gap-y-3">
+                      <ClickToAddInputs
+                        details={variantSpecs}
+                        setDetails={setVariantSpecs}
+                        initialDetail={{
+                          name: "",
+                          value: "",
+                        }}
+                        containerClassName="flex-1"
+                        inputClassName="w-full"
+                      />
+                      {errors.variant_specs && (
+                        <span className="text-sm font-medium text-destructive">
+                          {errors.variant_specs.message}
+                        </span>
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
               {/* is sale */}
               <div className="flex border rounded-md">

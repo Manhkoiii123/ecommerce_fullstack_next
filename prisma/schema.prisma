@@ -102,6 +102,7 @@ model Product {
   rating      Float? @default(0)
 
   variants ProductVariant[] @relation("ProductToProductVariant")
+  specs     Spec[]           @relation("ProductSpec")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -136,6 +137,7 @@ model ProductVariant {
   sizes              Size[]                @relation("ProductVariantSizes")
   images             ProductVariantImage[] @relation("ProductVariantToVariantImage")
   colors             Color[]               @relation("ProductVariantColors")
+   specs    Spec[]                @relation("ProductVariantSpec")
 
   @@index([productId])
 }
@@ -181,4 +183,23 @@ model Color {
   updatedAt DateTime @default(now()) @updatedAt
 
   @@index([productVariantId])
+}
+
+
+model Spec {
+  id    String @id @default(uuid())
+  name  String
+  value String
+
+  productId String?
+  product   Product? @relation("ProductSpec", fields: [productId], references: [id], onDelete: Cascade)
+
+  variantId String?
+  variant   ProductVariant? @relation("ProductVariantSpec", fields: [variantId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([productId])
+  @@index([variantId])
 }
