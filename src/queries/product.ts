@@ -53,6 +53,18 @@ export const upsertProduct = async (
       subCategory: { connect: { id: product.subCategoryId } },
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
+      questions: {
+        create: product.questions.map((q) => ({
+          question: q.question,
+          answer: q.answer,
+        })),
+      },
+      specs: {
+        create: product.product_specs.map((spec) => ({
+          name: spec.name,
+          value: spec.value,
+        })),
+      },
     };
     const commonVariantData = {
       variantName: product.variantName,
@@ -61,6 +73,7 @@ export const upsertProduct = async (
       isSale: product.isSale,
       sku: product.sku,
       keywords: product.keywords.join(","),
+      saleEndDate: product.saleEndDate,
       images: {
         create: product.images.map((image) => ({
           url: image.url,
@@ -79,6 +92,12 @@ export const upsertProduct = async (
           quantity: s.quantity,
           price: s.price,
           discount: s.discount,
+        })),
+      },
+      specs: {
+        create: product.variant_specs.map((spec) => ({
+          name: spec.name,
+          value: spec.value,
         })),
       },
       createdAt: product.createdAt,

@@ -81,6 +81,9 @@ const ProductDetails: FC<StoreDetailsProps> = ({
   const [productSpecs, setProductSpecs] = useState<
     { name: string; value: string }[]
   >(data?.product_specs || [{ name: "", value: "" }]);
+  const [questions, setQuestions] = useState<
+    { question: string; answer: string }[]
+  >(data?.questions || [{ question: "", answer: "" }]);
 
   const [variantSpecs, setVariantSpecs] = useState<
     { name: string; value: string }[]
@@ -126,6 +129,7 @@ const ProductDetails: FC<StoreDetailsProps> = ({
         data?.saleEndDate || format(new Date(), "yyyy-MM-dd'T'HH:mm:ss"),
       product_specs: data?.product_specs,
       variant_specs: data?.variant_specs,
+      questions: data?.questions,
     },
   });
   useEffect(() => {
@@ -181,6 +185,7 @@ const ProductDetails: FC<StoreDetailsProps> = ({
           updatedAt: new Date(),
           product_specs: values.product_specs,
           variant_specs: values.variant_specs,
+          questions: values.questions,
         },
         storeUrl
       );
@@ -208,7 +213,8 @@ const ProductDetails: FC<StoreDetailsProps> = ({
     form.setValue("keywords", keywords);
     form.setValue("product_specs", productSpecs);
     form.setValue("variant_specs", variantSpecs);
-  }, [colors, sizes, keywords, form, productSpecs, variantSpecs]);
+    form.setValue("questions", questions);
+  }, [colors, sizes, keywords, form, productSpecs, variantSpecs, questions]);
 
   return (
     <AlertDialog>
@@ -633,6 +639,26 @@ const ProductDetails: FC<StoreDetailsProps> = ({
                     </div>
                   </TabsContent>
                 </Tabs>
+              </div>
+
+              {/*  question */}
+              <div className="w-full flex flex-col gap-y-3">
+                <ClickToAddInputs
+                  details={questions}
+                  setDetails={setQuestions}
+                  initialDetail={{
+                    question: "",
+                    answer: "",
+                  }}
+                  containerClassName="flex-1"
+                  inputClassName="w-full"
+                  header="Questions"
+                />
+                {errors.questions && (
+                  <span className="text-sm font-medium text-destructive">
+                    {errors.questions.message}
+                  </span>
+                )}
               </div>
               {/* is sale */}
               <div className="flex border rounded-md">

@@ -103,6 +103,7 @@ model Product {
 
   variants ProductVariant[] @relation("ProductToProductVariant")
   specs     Spec[]           @relation("ProductSpec")
+  questions Question[]       @relation("ProductQuestion")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -202,4 +203,18 @@ model Spec {
 
   @@index([productId])
   @@index([variantId])
+}
+model Question {
+  id String @id @default(uuid())
+
+  question String
+  answer   String
+
+  productId String
+  product   Product @relation("ProductQuestion", fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([productId])
 }

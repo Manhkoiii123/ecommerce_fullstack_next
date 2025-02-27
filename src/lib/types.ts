@@ -38,6 +38,7 @@ export type ProductWithVariantType = {
   updatedAt: Date;
   product_specs: { id?: string; name: string; value: string }[];
   variant_specs: { id?: string; name: string; value: string }[];
+  questions: { id?: string; question: string; answer: string }[];
 };
 
 export type StoreProductType = Prisma.PromiseReturnType<
