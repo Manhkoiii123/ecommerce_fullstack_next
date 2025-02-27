@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Category, Store, SubCategory } from "@prisma/client";
 import * as z from "zod";
@@ -50,6 +50,9 @@ import DateTimePicker from "react-datetime-picker";
 import "react-datetime-picker/dist/DateTimePicker.css";
 import "react-calendar/dist/Calendar.css";
 import "react-clock/dist/Clock.css";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import JoditEditor from "jodit-react";
+import { useTheme } from "next-themes";
 interface Keyword {
   id: string;
   text: string;
@@ -82,6 +85,16 @@ const ProductDetails: FC<StoreDetailsProps> = ({
   const handleDeleteKeyword = (i: number) => {
     setKeywords(keywords.filter((_, index) => index !== i));
   };
+  const productDescEditor = useRef(null);
+  const variantDescEditor = useRef(null);
+  const { theme } = useTheme();
+
+  const config = useMemo(
+    () => ({
+      theme: theme === "dark" ? "dark" : "default",
+    }),
+    [theme]
+  );
 
   const form = useForm<z.infer<typeof ProductFormSchema>>({
     mode: "onChange",
@@ -307,7 +320,67 @@ const ProductDetails: FC<StoreDetailsProps> = ({
                 />
               </div>
 
-              <div className="flex flex-col lg:flex-row gap-4">
+              {/* desc prodcut and variant */}
+              <Tabs
+                // defaultValue={isNewVariantPage ? "variant" : "product"}
+                defaultValue={"product"}
+                className="w-full"
+              >
+                {/* {!isNewVariantPage && ( */}
+                <TabsList className="w-full grid grid-cols-2">
+                  <TabsTrigger value="product">Product description</TabsTrigger>
+                  <TabsTrigger value="variant">Variant description</TabsTrigger>
+                </TabsList>
+                {/* )} */}
+                <TabsContent value="product">
+                  <FormField
+                    disabled={isLoading}
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormLabel>Product description</FormLabel>
+                        <FormControl>
+                          <JoditEditor
+                            ref={productDescEditor}
+                            config={config}
+                            value={form.getValues().description}
+                            onChange={(content) => {
+                              form.setValue("description", content);
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TabsContent>
+                <TabsContent value="variant">
+                  <FormField
+                    disabled={isLoading}
+                    control={form.control}
+                    name="variantDescription"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormLabel>Variant description</FormLabel>
+                        <FormControl>
+                          <JoditEditor
+                            ref={variantDescEditor}
+                            config={config}
+                            value={form.getValues().variantDescription || ""}
+                            onChange={(content) => {
+                              form.setValue("variantDescription", content);
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TabsContent>
+              </Tabs>
+
+              {/* <div className="flex flex-col lg:flex-row gap-4 hidden">
                 <FormField
                   disabled={isLoading}
                   control={form.control}
@@ -336,7 +409,7 @@ const ProductDetails: FC<StoreDetailsProps> = ({
                     </FormItem>
                   )}
                 />
-              </div>
+              </div> */}
               {/* category - sub category */}
               <div className="flex flex-col lg:flex-row gap-4">
                 <FormField
