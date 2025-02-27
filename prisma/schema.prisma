@@ -50,7 +50,7 @@ model SubCategory {
   url        String    @unique
   featured   Boolean   @default(false)
   categoryId String
-  category   Category  @relation("CategoryToSubCategory", fields: [categoryId], references: [id],onDelete: Cascade)
+  category   Category  @relation("CategoryToSubCategory", fields: [categoryId], references: [id], onDelete: Cascade)
   products   Product[] @relation("SubCategoryToProduct")
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
@@ -86,7 +86,7 @@ model Store {
   updatedAt              DateTime    @default(now()) @updatedAt
 
   userId String
-  user   User   @relation("UserStores", fields: [userId], references: [id],onDelete: Cascade)
+  user   User   @relation("UserStores", fields: [userId], references: [id], onDelete: Cascade)
 
   products Product[] @relation("StoreToProducts")
 
@@ -106,13 +106,13 @@ model Product {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
   storeId   String
-  store     Store    @relation("StoreToProducts", fields: [storeId], references: [id],onDelete: Cascade)
+  store     Store    @relation("StoreToProducts", fields: [storeId], references: [id], onDelete: Cascade)
 
   categoryId String
-  category   Category @relation("CategoryToProduct", fields: [categoryId], references: [id],onDelete: Cascade)
+  category   Category @relation("CategoryToProduct", fields: [categoryId], references: [id], onDelete: Cascade)
 
   subCategoryId String
-  subCategory   SubCategory @relation("SubCategoryToProduct", fields: [subCategoryId], references: [id],onDelete: Cascade)
+  subCategory   SubCategory @relation("SubCategoryToProduct", fields: [subCategoryId], references: [id], onDelete: Cascade)
 
   @@index([storeId])
   @@index([categoryId])
@@ -122,14 +122,15 @@ model Product {
 model ProductVariant {
   id                 String                @id @default(uuid())
   variantName        String
-  variantImage        String?
+  variantImage       String?
   variantDescription String?               @db.LongText
   slug               String                @unique
   isSale             Boolean               @default(false)
+  saleEndDate        String?
   sku                String
   keywords           String
   productId          String
-  product            Product               @relation("ProductToProductVariant", fields: [productId], references: [id],onDelete: Cascade)
+  product            Product               @relation("ProductToProductVariant", fields: [productId], references: [id], onDelete: Cascade)
   createdAt          DateTime              @default(now())
   updatedAt          DateTime              @default(now()) @updatedAt
   sizes              Size[]                @relation("ProductVariantSizes")
@@ -147,7 +148,7 @@ model Size {
   discount Float  @default(0)
 
   productVariantId String
-  productVariant   ProductVariant @relation("ProductVariantSizes", fields: [productVariantId], references: [id],onDelete: Cascade)
+  productVariant   ProductVariant @relation("ProductVariantSizes", fields: [productVariantId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -161,7 +162,7 @@ model ProductVariantImage {
   alt String @default("")
 
   productVariantId String
-  productVariant   ProductVariant @relation("ProductVariantToVariantImage", fields: [productVariantId], references: [id],onDelete: Cascade)
+  productVariant   ProductVariant @relation("ProductVariantToVariantImage", fields: [productVariantId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -174,7 +175,7 @@ model Color {
   name String
 
   productVariantId String
-  productVariant   ProductVariant @relation("ProductVariantColors", fields: [productVariantId], references: [id],onDelete: Cascade)
+  productVariant   ProductVariant @relation("ProductVariantColors", fields: [productVariantId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt

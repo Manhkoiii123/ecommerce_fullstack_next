@@ -44,6 +44,12 @@ import { getAllCategoriesForCategory } from "@/queries/subCategories";
 import { toast } from "sonner";
 import { upsertProduct } from "@/queries/product";
 import { v4 } from "uuid";
+import { format } from "date-fns";
+import { ArrowRight, Dot } from "lucide-react";
+import DateTimePicker from "react-datetime-picker";
+import "react-datetime-picker/dist/DateTimePicker.css";
+import "react-calendar/dist/Calendar.css";
+import "react-clock/dist/Clock.css";
 interface Keyword {
   id: string;
   text: string;
@@ -95,6 +101,8 @@ const ProductDetails: FC<StoreDetailsProps> = ({
       sizes: data?.sizes,
       keywords: data?.keywords,
       isSale: data?.isSale || false,
+      saleEndDate:
+        data?.saleEndDate || format(new Date(), "yyyy-MM-dd'T'HH:mm:ss"),
     },
   });
   useEffect(() => {
@@ -127,7 +135,17 @@ const ProductDetails: FC<StoreDetailsProps> = ({
       });
     }
   }, [data, form]);
-
+  const saleEndDate = form.getValues().saleEndDate || new Date().toISOString();
+  const formattedDate = new Date(saleEndDate).toLocaleString("en-Us", {
+    weekday: "short", // Abbreviated day name (e.g., "Mon")
+    month: "long", // Abbreviated month name (e.g., "Nov")
+    day: "2-digit", // Two-digit day (e.g., "25")
+    year: "numeric", // Full year (e.g., "2024")
+    hour: "2-digit", // Two-digit hour (e.g., "02")
+    minute: "2-digit", // Two-digit minute (e.g., "30")
+    second: "2-digit", // Two-digit second (optional)
+    hour12: false, // 12-hour format (change to false for 24-hour format)
+  });
   const handleSubmit = async (values: z.infer<typeof ProductFormSchema>) => {
     try {
       const response = await upsertProduct(
@@ -513,27 +531,74 @@ const ProductDetails: FC<StoreDetailsProps> = ({
                 )}
               </div>
               {/* is sale */}
-              <FormField
-                control={form.control}
-                name="isSale"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        // @ts-ignore
-                        onCheckedChange={field.onChange}
+              <div className="flex border rounded-md">
+                <FormField
+                  control={form.control}
+                  name="isSale"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          // @ts-ignore
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>On Sale</FormLabel>
+                        <FormDescription>
+                          Is this product on sale?
+                        </FormDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                {form.getValues().isSale && (
+                  <div className="mt-5 w-full">
+                    <p className="text-sm text-main-secondary dark:text-gray-400 pb-3 flex">
+                      <Dot className="-me-1" />
+                      When sale does end ?
+                    </p>
+                    <div className="flex items-center gap-x-5">
+                      <FormField
+                        control={form.control}
+                        name="saleEndDate"
+                        render={({ field }) => (
+                          <FormItem className="ml-4">
+                            <FormControl>
+                              <DateTimePicker
+                                className="inline-flex items-center gap-2 p-2 border rounded-md shadow-sm"
+                                calendarIcon={
+                                  <span className="text-gray-500 hover:text-gray-600">
+                                    📅
+                                  </span>
+                                }
+                                clearIcon={
+                                  <span className="text-gray-500 hover:text-gray-600">
+                                    ✖️
+                                  </span>
+                                }
+                                onChange={(date) => {
+                                  field.onChange(
+                                    date
+                                      ? format(date, "yyyy-MM-dd'T'HH:mm:ss")
+                                      : ""
+                                  );
+                                }}
+                                value={
+                                  field.value ? new Date(field.value) : null
+                                }
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
                       />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>On Sale</FormLabel>
-                      <FormDescription>
-                        Is this product on sale?
-                      </FormDescription>
+                      <ArrowRight className="w-4 text-[#1087ff]" />
+                      <span>{formattedDate}</span>
                     </div>
-                  </FormItem>
+                  </div>
                 )}
-              />
+              </div>
 
               <Button type="submit" disabled={isLoading}>
                 {isLoading
