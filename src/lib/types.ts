@@ -18,6 +18,7 @@ export type ProductWithVariantType = {
   description: string;
   variantName: string;
   variantDescription: string;
+  variantImage: string;
   images: { url: string }[];
   categoryId: string;
   subCategoryId: string;
