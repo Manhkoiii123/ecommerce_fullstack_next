@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { StoreDefaultShippingType } from "@/lib/types";
 import { currentUser } from "@clerk/nextjs/server";
 import { Store } from "@prisma/client";
 
@@ -56,6 +57,79 @@ export const upsertStore = async (store: Partial<Store>) => {
     });
 
     return storeDetails;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getStoreDefaultShippingDetails = async (storeUrl: string) => {
+  try {
+    if (!storeUrl) throw new Error("Store URL is required.");
+
+    const store = await db.store.findUnique({
+      where: {
+        url: storeUrl,
+      },
+      select: {
+        defaultShippingService: true,
+        defaultShippingFeePerItem: true,
+        defaultShippingFeeForAdditionalItem: true,
+        defaultShippingFeePerKg: true,
+        defaultShippingFeeFixed: true,
+        defaultDeliveryTimeMin: true,
+        defaultDeliveryTimeMax: true,
+        returnPolicy: true,
+      },
+    });
+
+    if (!store) throw new Error("Store not found.");
+
+    return store;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const updateStoreDefaultShippingDetails = async (
+  storeUrl: string,
+  details: StoreDefaultShippingType
+) => {
+  try {
+    const user = await currentUser();
+
+    if (!user) throw new Error("Unauthenticated.");
+
+    if (user.privateMetadata.role !== "SELLER")
+      throw new Error(
+        "Unauthorized Access: Seller Privileges Required for Entry."
+      );
+
+    if (!storeUrl) throw new Error("Store URL is required.");
+
+    if (!details) {
+      throw new Error("No shipping details provided to update.");
+    }
+    const check_ownership = await db.store.findUnique({
+      where: {
+        url: storeUrl,
+        userId: user.id,
+      },
+    });
+
+    if (!check_ownership)
+      throw new Error(
+        "Make sure you have the permissions to update this store"
+      );
+
+    const updatedStore = await db.store.update({
+      where: {
+        url: storeUrl,
+        userId: user.id,
+      },
+      data: details,
+    });
+
+    return updatedStore;
   } catch (error) {
     throw error;
   }

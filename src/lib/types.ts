@@ -1,4 +1,5 @@
 import { getAllStoreProducts } from "@/queries/product";
+import { getStoreDefaultShippingDetails } from "@/queries/store";
 import { getAllSubCategories } from "@/queries/subCategories";
 import { Prisma } from "@prisma/client";
 
@@ -44,3 +45,7 @@ export type ProductWithVariantType = {
 export type StoreProductType = Prisma.PromiseReturnType<
   typeof getAllStoreProducts
 >[0];
+
+export type StoreDefaultShippingType = Prisma.PromiseReturnType<
+  typeof getStoreDefaultShippingDetails
+>;
