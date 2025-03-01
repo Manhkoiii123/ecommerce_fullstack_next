@@ -18,7 +18,7 @@ const ProductCard = ({ product }: { product: ProductType }) => {
     <div>
       <div
         className={cn(
-          "group w-[190px] min-[480px]:w-[225px] relative transition-all duration-75 bg-white ease-in-out p-4 rounded-t-3xl border border-transparent hover:shadow-xl hover:border-border",
+          "group w-[190px]  min-[480px]:w-[225px] relative transition-all duration-75 bg-white ease-in-out p-4 rounded-t-3xl border border-transparent hover:shadow-xl hover:border-border",
           {
             "": true,
           }
@@ -52,7 +52,7 @@ const ProductCard = ({ product }: { product: ProductType }) => {
             {/* <ProductPrice sizes={sizes} isCard handleChange={() => {}} /> */}
           </Link>
         </div>
-        <div className="hidden group-hover:block absolute -left-[1px] bg-white border border-t-0  w-[calc(100%+2px)] px-4 pb-4 rounded-b-3xl shadow-xl z-30 space-y-2">
+        <div className="hidden  group-hover:block absolute -left-[1px] bg-white border border-t-0  w-[calc(100%+2px)] px-4 pb-4 rounded-b-3xl shadow-xl z-30 space-y-2">
           <VariantSwitcher
             images={variantImages}
             variants={variants}

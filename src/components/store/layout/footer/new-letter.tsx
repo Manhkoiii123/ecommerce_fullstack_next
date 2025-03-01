@@ -2,7 +2,7 @@ import { SendIcon } from "@/components/store/icons";
 
 export default function Newsletter() {
   return (
-    <div className="bg-gradient-to-r from-slate-500 to-slate-800 p-5">
+    <div className="bg-gradient-to-r from-slate-500 to-slate-800 p-5 ">
       <div className="max-w-[1430px] mx-auto">
         <div className="flex flex-col gap-y-4 xl:flex-row items-center text-white">
           <div className="flex items-center xl:w-[58%]">
