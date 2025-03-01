@@ -1,3 +1,4 @@
+import ProductCard from "@/components/store/cards/product/product-card";
 import { ProductType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { ChevronRight } from "lucide-react";
@@ -42,9 +43,7 @@ const ProductList: FC<ProductListProps> = ({
           })}
         >
           {products.map((product) => (
-            <h1 key={product.id} className="block">
-              {product.name}
-            </h1>
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
       ) : (

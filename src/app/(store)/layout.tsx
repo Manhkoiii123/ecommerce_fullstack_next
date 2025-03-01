@@ -12,9 +12,9 @@ export default function StoreLayout({ children }: { children: ReactNode }) {
       <Header />
       <CategoriesHeader />
       <div>{children}</div>
-      <div className="fixed bottom-0 w-full">
+      {/* <div className="fixed bottom-0 w-full">
         <Footer />
-      </div>
+      </div> */}
       {/* <Toaster position="top-center" /> */}
     </div>
   );
