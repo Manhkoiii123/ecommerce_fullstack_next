@@ -236,3 +236,10 @@ model OfferTag {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 }
+model Country {
+  id   String @id @default(uuid())
+  name String @unique
+  code String @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
