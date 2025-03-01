@@ -4,8 +4,22 @@ import UserMenu from "@/components/store/layout/header/user-menu/user-menu";
 import Cart from "@/components/store/layout/header/cart";
 import DownloadApp from "@/components/store/layout/header/download-app";
 import Search from "@/components/store/layout/header/search/search";
+import { Country } from "@/lib/types";
+import CountryLanguageCurrencySelector from "@/components/store/layout/header/country-lang-curr-selector";
 
 export default function Header() {
+  const cookieStore = cookies();
+  const userCountryCookie = cookieStore.get("userCountry");
+  let userCountry: Country = {
+    name: "United States",
+    city: "",
+    code: "US",
+    region: "",
+  };
+
+  if (userCountryCookie) {
+    userCountry = JSON.parse(userCountryCookie.value) as Country;
+  }
   return (
     <div className="bg-gradient-to-r from-slate-500 to-slate-800">
       <div className="h-full w-full lg:flex text-white px-4 lg:px-12">
@@ -25,6 +39,7 @@ export default function Header() {
           <div className="lg:flex">
             <DownloadApp />
           </div>
+          <CountryLanguageCurrencySelector userCountry={userCountry} />
           <UserMenu />
           <Cart />
         </div>

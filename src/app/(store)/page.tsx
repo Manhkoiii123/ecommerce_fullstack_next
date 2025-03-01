@@ -1,3 +1,9 @@
+import ThemeToggle from "@/components/shared/theme-toggle";
+
 export default async function Home() {
-  return <div className="p-5"></div>;
+  return (
+    <div className="p-5">
+      <ThemeToggle />
+    </div>
+  );
 }

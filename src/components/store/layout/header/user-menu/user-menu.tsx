@@ -49,6 +49,7 @@ export default async function UserMenu() {
         )}
       >
         <div className="relative left-[-40px] mt-10 right-auto bottom-auto pt-2.5 text-[#222] p-0 text-sm z-40">
+          <div className="w-0 h-0 absolute left-[200px] top-1 right-24 !border-l-[10px] !border-l-transparent !border-r-[10px] !border-r-transparent !border-b-[10px] border-b-white"></div>
           <div className="rounded-3xl bg-white text-sm text-[#222] shadow-lg">
             <div className="w-[305px]">
               <div className="pt-5 px-6 pb-0">
