@@ -97,3 +97,33 @@ export const getAllCategoriesForCategory = async (categoryId: string) => {
   });
   return subCategories;
 };
+
+export const getSubcategories = async (
+  limit: number | null,
+  random: boolean = false
+): Promise<SubCategory[]> => {
+  enum SortOrder {
+    asc = "asc",
+    desc = "desc",
+  }
+  try {
+    const queryOptions = {
+      take: limit || undefined,
+      orderBy: random ? { createdAt: SortOrder.desc } : undefined,
+    };
+
+    if (random) {
+      const subcategories = await db.$queryRaw<SubCategory[]>`
+    SELECT * FROM SubCategory
+    ORDER BY RAND()
+    LIMIT ${limit || 10} 
+    `;
+      return subcategories;
+    } else {
+      const subcategories = await db.subCategory.findMany(queryOptions);
+      return subcategories;
+    }
+  } catch (error) {
+    throw error;
+  }
+};

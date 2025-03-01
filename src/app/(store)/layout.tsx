@@ -1,4 +1,5 @@
 import CategoriesHeader from "@/components/store/layout/categories-header/categories-header";
+import Footer from "@/components/store/layout/footer/footer";
 import Header from "@/components/store/layout/header/header";
 import { ThemeProvider } from "next-themes";
 import { ReactNode } from "react";
@@ -11,6 +12,9 @@ export default function StoreLayout({ children }: { children: ReactNode }) {
       <Header />
       <CategoriesHeader />
       <div>{children}</div>
+      <div className="fixed bottom-0 w-full">
+        <Footer />
+      </div>
       {/* <Toaster position="top-center" /> */}
     </div>
   );
