@@ -1,7 +1,11 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { ProductWithVariantType } from "@/lib/types";
+import {
+  ProductWithVariantType,
+  VariantImageType,
+  VariantSimplified,
+} from "@/lib/types";
 import { generateUniqueSlug } from "@/lib/utils";
 import { currentUser } from "@clerk/nextjs/server";
 import slugify from "slugify";
@@ -210,4 +214,93 @@ export const deleteProduct = async (productId: string) => {
 
   const response = await db.product.delete({ where: { id: productId } });
   return response;
+};
+export const getProducts = async (
+  filters: any = {},
+  sortBy: string = "",
+  page: number = 1,
+  pageSize: number = 10
+) => {
+  const currentPage = page;
+  const limit = pageSize;
+  const skip = (currentPage - 1) * limit;
+  const wherClause: any = {
+    AND: [],
+  };
+  if (filters.category) {
+    const category = await db.category.findUnique({
+      where: {
+        url: filters.category,
+      },
+      select: { id: true },
+    });
+    if (category) {
+      wherClause.AND.push({ categoryId: category.id });
+    }
+  }
+
+  if (filters.subCategory) {
+    const subCategory = await db.subCategory.findUnique({
+      where: {
+        url: filters.subCategory,
+      },
+      select: { id: true },
+    });
+    if (subCategory) {
+      wherClause.AND.push({ subCategoryId: subCategory.id });
+    }
+  }
+  const products = await db.product.findMany({
+    where: wherClause,
+    take: limit,
+    skip: skip,
+    include: {
+      variants: {
+        include: {
+          sizes: true,
+          images: true,
+          colors: true,
+        },
+      },
+    },
+  });
+
+  const productsWithFilteredVariants = products.map((product) => {
+    const filteredVariants = product.variants;
+
+    const variants: VariantSimplified[] = filteredVariants.map((variant) => ({
+      variantId: variant.id,
+      variantSlug: variant.slug,
+      variantName: variant.variantName,
+      images: variant.images,
+      sizes: variant.sizes,
+    }));
+
+    const variantImages: VariantImageType[] = filteredVariants.map(
+      (variant) => ({
+        url: `/product/${product.slug}/${variant.slug}`,
+        image: variant.variantImage
+          ? variant.variantImage
+          : variant.images[0].url,
+      })
+    );
+    return {
+      id: product.id,
+      slug: product.slug,
+      name: product.name,
+      rating: product.rating,
+      sales: product.sales,
+      variants,
+      variantImages,
+    };
+  });
+  const totalCount = products.length;
+  const totalPages = Math.ceil(totalCount / pageSize);
+  return {
+    products: productsWithFilteredVariants,
+    totalPages,
+    currentPage,
+    pageSize,
+    totalCount,
+  };
 };

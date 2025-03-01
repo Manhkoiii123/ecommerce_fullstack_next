@@ -103,7 +103,10 @@ model Product {
   description String @db.LongText
   slug        String @unique
   brand       String
-  rating      Float? @default(0)
+  rating      Float @default(0)
+  sales      Int @default(0)
+
+
 
   variants  ProductVariant[] @relation("ProductToProductVariant")
   specs     Spec[]           @relation("ProductSpec")
@@ -139,6 +142,7 @@ model ProductVariant {
   saleEndDate        String?
   sku                String
   keywords           String
+  sales      Int @default(0)
   productId          String
   product            Product               @relation("ProductToProductVariant", fields: [productId], references: [id], onDelete: Cascade)
   createdAt          DateTime              @default(now())
