@@ -3,6 +3,8 @@ import { twMerge } from "tailwind-merge";
 import ColorThief from "colorthief";
 import { PrismaClient } from "@prisma/client";
 import { db } from "@/lib/db";
+import { Country } from "@/lib/types";
+import countries from "@/data/countries.json";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -73,3 +75,49 @@ export const generateUniqueSlug = async (
   }
   return slug;
 };
+
+const DEFAULT_COUNTRY: Country = {
+  name: "United States",
+  code: "US",
+  city: "",
+  region: "",
+};
+
+interface IPInfoResponse {
+  country: string;
+  city: string;
+  region: string;
+}
+export async function getUserCountry(): Promise<Country> {
+  let userCountry: Country = DEFAULT_COUNTRY;
+
+  // const geo = (req as any).geo;
+  // if (geo) {
+  //   userCountry = {
+  //     name: geo.country || DEFAULT_COUNTRY.name,
+  //     code: geo.country || DEFAULT_COUNTRY.code,
+  //     city: geo.city || DEFAULT_COUNTRY.city,
+  //     region: geo.region || DEFAULT_COUNTRY.region,
+  //   };
+  // } else {
+  try {
+    const response = await fetch(
+      `https://ipinfo.io/?token=${process.env.IPINFO_TOKEN}`
+    );
+    if (response.ok) {
+      const data = (await response.json()) as IPInfoResponse;
+      userCountry = {
+        name:
+          countries.find((c) => c.code === data.country)?.name ||
+          data.country ||
+          DEFAULT_COUNTRY.name,
+        code: data.country || DEFAULT_COUNTRY.code,
+        city: data.city || DEFAULT_COUNTRY.city,
+        region: data.region || DEFAULT_COUNTRY.region,
+      };
+    }
+  } catch (error) {}
+  // }
+
+  return userCountry;
+}
