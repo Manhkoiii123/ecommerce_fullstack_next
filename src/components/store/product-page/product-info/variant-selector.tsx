@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import Link from "next/link";
 import React from "react";
 interface Variant {
   url: string;
@@ -11,12 +12,13 @@ interface Props {
   slug: string;
 }
 const ProductVariantSelector = ({ slug, variants }: Props) => {
-  const handleSelectVariant = (variant: Variant) => {};
+  //   const handleSelectVariant = (variant: Variant) => {};
   return (
     <div className="flex items-center flex-wrap gap-2">
       {variants.map((variant, i) => (
-        <div
-          onClick={() => handleSelectVariant(variant)}
+        <Link
+          href={variant.url}
+          //   onClick={() => handleSelectVariant(variant)}
           key={i}
           onMouseEnter={() => {
             //  setVariantImages(variant.images);
@@ -43,7 +45,7 @@ const ProductVariantSelector = ({ slug, variants }: Props) => {
               className="w-12 h-12 rounded-full object-cover object-center"
             />
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   );

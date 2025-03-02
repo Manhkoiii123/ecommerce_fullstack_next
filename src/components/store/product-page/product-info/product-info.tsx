@@ -1,7 +1,10 @@
+import ProductAssurancePolicy from "@/components/store/product-page/product-info/assurance-policy";
 import ProductPrice from "@/components/store/product-page/product-info/product-price";
+import SizeSelector from "@/components/store/product-page/product-info/size-selector";
 import ProductVariantSelector from "@/components/store/product-page/product-info/variant-selector";
 import ColorWheel from "@/components/store/shared/color-wheel";
 import Countdown from "@/components/store/shared/countdown";
+import { Separator } from "@/components/ui/separator";
 import { ProductPageDataType } from "@/lib/types";
 import { CopyIcon } from "lucide-react";
 import Image from "next/image";
@@ -111,6 +114,14 @@ const ProductInfo = ({ productData, quantity, sizeId }: ProductInfoProps) => {
             />
           )}
         </div>
+        <div className="space-y-2 pb-2 mt-4">
+          <div>
+            <h1 className="text-main-primary font-bold">Size </h1>
+          </div>
+          <SizeSelector sizes={sizes} sizeId={sizeId} />
+        </div>
+        <Separator className="mt-2" />
+        <ProductAssurancePolicy />
       </div>
     </div>
   );
