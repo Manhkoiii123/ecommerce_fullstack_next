@@ -45,33 +45,6 @@ const ProductList: FC<ProductListProps> = ({
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
         </div>
       ) : (
         "No Products."

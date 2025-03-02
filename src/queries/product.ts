@@ -318,7 +318,7 @@ export const retrieveProductDetails = async (
   productSlug: string,
   variantSlug: string
 ) => {
-  return await db.product.findUnique({
+  const product = await db.product.findUnique({
     where: {
       slug: productSlug,
     },
@@ -342,6 +342,25 @@ export const retrieveProductDetails = async (
       },
     },
   });
+  if (!product) return null;
+  const variantImages = await db.productVariant.findMany({
+    where: {
+      productId: product.id,
+    },
+    select: {
+      variantImage: true,
+      slug: true,
+    },
+  });
+
+  return {
+    ...product,
+    variantImages: variantImages.map((i) => ({
+      url: `/product/${product.slug}/${i.slug}`,
+      img: i.variantImage,
+      slug: i.slug,
+    })),
+  };
 };
 
 const formatProductResponse = (product: ProductPageType) => {
@@ -392,6 +411,6 @@ const formatProductResponse = (product: ProductPageType) => {
       reviewsWithImagesCount: 6,
     },
     shippingDetails: {},
-    variantImages: [],
+    variantImages: product.variantImages,
   };
 };

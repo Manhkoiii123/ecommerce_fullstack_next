@@ -162,6 +162,7 @@ const ProductDetails: FC<StoreDetailsProps> = ({
     hour12: false, // 12-hour format (change to false for 24-hour format)
   });
   const handleSubmit = async (values: z.infer<typeof ProductFormSchema>) => {
+    console.log("🚀 ~ handleSubmit ~ values:", values);
     try {
       const response = await upsertProduct(
         {

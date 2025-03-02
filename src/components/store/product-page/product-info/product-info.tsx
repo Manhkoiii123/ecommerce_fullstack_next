@@ -1,4 +1,5 @@
 import ProductPrice from "@/components/store/product-page/product-info/product-price";
+import ProductVariantSelector from "@/components/store/product-page/product-info/variant-selector";
 import ColorWheel from "@/components/store/shared/color-wheel";
 import Countdown from "@/components/store/shared/countdown";
 import { ProductPageDataType } from "@/lib/types";
@@ -101,6 +102,14 @@ const ProductInfo = ({ productData, quantity, sizeId }: ProductInfoProps) => {
             {colors.length > 1 ? "Colors" : "Color"}
             <ColorWheel colors={colors} size={25} />
           </span>
+        </div>
+        <div className="mt-4">
+          {variantImages.length > 0 && (
+            <ProductVariantSelector
+              variants={variantImages}
+              slug={productData.variantSlug}
+            />
+          )}
         </div>
       </div>
     </div>
