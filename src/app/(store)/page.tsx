@@ -1,3 +1,4 @@
+import Footer from "@/components/store/layout/footer/footer";
 import ProductList from "@/components/store/shared/product-list";
 import { getProducts } from "@/queries/product";
 

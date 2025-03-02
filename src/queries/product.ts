@@ -385,11 +385,13 @@ const formatProductResponse = (product: ProductPageType) => {
     questions,
     rating: product.rating,
     relatedProducts: [],
-    reviews: 22,
+    reviews: [],
+    numReviews: 123,
     reviewsStatistics: {
       ratingStatistics: [],
       reviewsWithImagesCount: 6,
     },
     shippingDetails: {},
+    variantImages: [],
   };
 };

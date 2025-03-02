@@ -186,6 +186,7 @@ const ProductDetails: FC<StoreDetailsProps> = ({
           product_specs: values.product_specs,
           variant_specs: values.variant_specs,
           questions: values.questions,
+          saleEndDate: values.saleEndDate,
         },
         storeUrl
       );

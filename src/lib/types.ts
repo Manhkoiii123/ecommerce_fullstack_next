@@ -1,5 +1,6 @@
 import {
   getAllStoreProducts,
+  getProductPageData,
   getProducts,
   retrieveProductDetails,
 } from "@/queries/product";
@@ -10,6 +11,7 @@ import {
   ProductVariantImage,
   ShippingRate,
   Size,
+  Spec,
 } from "@prisma/client";
 import countries from "@/data/countries.json";
 export interface DashboardSidebarMenuInterface {
@@ -91,3 +93,24 @@ export type VariantImageType = {
 export type ProductPageType = Prisma.PromiseReturnType<
   typeof retrieveProductDetails
 >;
+export type ProductPageDataType = Prisma.PromiseReturnType<
+  typeof getProductPageData
+>;
+export type ProductVariantDataType = {
+  id: string;
+  variantName: string;
+  slug: string;
+  sku: string;
+  variantImage: string;
+  weight: number;
+  isSale: boolean;
+  saleEndDate: string | null;
+  variantDescription: string | null;
+  images: {
+    url: string;
+  }[];
+  sizes: Size[];
+  specs: Spec[];
+  colors: { name: string }[];
+  keywords: string;
+};
