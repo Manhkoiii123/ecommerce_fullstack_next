@@ -10,6 +10,9 @@ import {
 import { generateUniqueSlug } from "@/lib/utils";
 import { currentUser } from "@clerk/nextjs/server";
 import slugify from "slugify";
+import { getCookie } from "cookies-next";
+import { cookies } from "next/headers";
+import { Store } from "@prisma/client";
 export const upsertProduct = async (
   product: ProductWithVariantType,
   storeUrl: string
@@ -310,8 +313,17 @@ export const getProductPageData = async (
   productSlug: string,
   variantSlug: string
 ) => {
-  const product = await retrieveProductDetails(productSlug, variantSlug);
+  const [product, userCountry] = await Promise.all([
+    retrieveProductDetails(productSlug, variantSlug),
+    getUserCountry(),
+  ]);
   if (!product) throw new Error("Product not found.");
+  //calc and retrieve the shipping detail
+  const productShippingDetails = await getShippingDetails(
+    product?.shippingFeeMethod,
+    userCountry,
+    product?.store
+  );
   return formatProductResponse(product);
 };
 export const retrieveProductDetails = async (
@@ -413,4 +425,107 @@ const formatProductResponse = (product: ProductPageType) => {
     shippingDetails: {},
     variantImages: product.variantImages,
   };
+};
+
+const getUserCountry = async () => {
+  const userCountryCookie = (await getCookie("userCountry", { cookies })) || "";
+  const defaultCountry = { name: "United States", code: "US" };
+
+  try {
+    const parsedCountry = JSON.parse(userCountryCookie as string);
+    if (
+      parsedCountry &&
+      typeof parsedCountry === "object" &&
+      "name" in parsedCountry &&
+      "code" in parsedCountry
+    ) {
+      return parsedCountry;
+    }
+    return defaultCountry;
+  } catch (error) {}
+};
+
+export const getShippingDetails = async (
+  shippingFeeMethod: string,
+  userCountry: { name: string; code: string; city: string },
+  store: Store
+) => {
+  // mặc định khởi tạo
+  let shippingDetails = {
+    shippingFeeMethod,
+    shippingService: store.defaultShippingService,
+    shippingFee: 0,
+    extraShippingFee: 0,
+    deliveryTimeMin: 0,
+    deliveryTimeMax: 0,
+    returnPolicy: "",
+    countryCode: userCountry.code,
+    countryName: userCountry.name,
+    city: userCountry.city,
+    isFreeShipping: false,
+  };
+  // tìm cái thông tin country của người dùng đang ở
+  const country = await db.country.findUnique({
+    where: {
+      name: userCountry.name,
+      code: userCountry.code,
+    },
+  });
+  if (country) {
+    // tìm cái shipping ở thành phố đó
+    const shippingRate = await db.shippingRate.findFirst({
+      where: {
+        countryId: country.id,
+        storeId: store.id,
+      },
+    });
+    // lấy ra cái shipping rate gán vào cái để trả ra
+    const returnPolicy = shippingRate?.returnPolicy || store.returnPolicy;
+    const shippingService =
+      shippingRate?.shippingService || store.defaultShippingService;
+    const shippingFeePerItem =
+      shippingRate?.shippingFeePerItem || store.defaultShippingFeePerItem;
+    const shippingFeeForAdditionalItem =
+      shippingRate?.shippingFeeForAdditionalItem ||
+      store.defaultShippingFeeForAdditionalItem;
+    const shippingFeePerKg =
+      shippingRate?.shippingFeePerKg || store.defaultShippingFeePerKg;
+    const shippingFeeFixed =
+      shippingRate?.shippingFeeFixed || store.defaultShippingFeeFixed;
+    const deliveryTimeMin =
+      shippingRate?.deliveryTimeMin || store.defaultDeliveryTimeMin;
+    const deliveryTimeMax =
+      shippingRate?.deliveryTimeMax || store.defaultDeliveryTimeMax;
+
+    let shippingDetails = {
+      shippingFeeMethod,
+      shippingService: shippingService,
+      shippingFee: 0,
+      extraShippingFee: 0,
+      deliveryTimeMin,
+      deliveryTimeMax,
+      returnPolicy,
+      countryCode: userCountry.code,
+      countryName: userCountry.name,
+    };
+    switch (shippingFeeMethod) {
+      case "ITEM":
+        shippingDetails.shippingFee = shippingFeePerItem;
+        shippingDetails.extraShippingFee = shippingFeeForAdditionalItem;
+        break;
+
+      case "WEIGHT":
+        shippingDetails.shippingFee = shippingFeePerKg;
+        break;
+
+      case "FIXED":
+        shippingDetails.shippingFee = shippingFeeFixed;
+        break;
+
+      default:
+        break;
+    }
+    return shippingDetails;
+  }
+  return false;
 };
