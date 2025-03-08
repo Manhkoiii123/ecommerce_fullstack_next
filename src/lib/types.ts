@@ -2,6 +2,7 @@ import {
   getAllStoreProducts,
   getProductPageData,
   getProducts,
+  getShippingDetails,
   retrieveProductDetails,
 } from "@/queries/product";
 import { getStoreDefaultShippingDetails } from "@/queries/store";
@@ -114,3 +115,6 @@ export type ProductVariantDataType = {
   colors: { name: string }[];
   keywords: string;
 };
+export type ProductShippingDetailsType = Prisma.PromiseReturnType<
+  typeof getShippingDetails
+>;

@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import {
   ProductPageType,
+  ProductShippingDetailsType,
   ProductWithVariantType,
   VariantImageType,
   VariantSimplified,
@@ -324,7 +325,7 @@ export const getProductPageData = async (
     userCountry,
     product?.store
   );
-  return formatProductResponse(product);
+  return formatProductResponse(product, productShippingDetails);
 };
 export const retrieveProductDetails = async (
   productSlug: string,
@@ -375,7 +376,10 @@ export const retrieveProductDetails = async (
   };
 };
 
-const formatProductResponse = (product: ProductPageType) => {
+const formatProductResponse = (
+  product: ProductPageType,
+  productShippingDetails: ProductShippingDetailsType
+) => {
   if (!product) return;
   const variant = product.variants[0];
   const { store, category, subCategory, offerTag, questions } = product;
@@ -422,7 +426,7 @@ const formatProductResponse = (product: ProductPageType) => {
       ratingStatistics: [],
       reviewsWithImagesCount: 6,
     },
-    shippingDetails: {},
+    shippingDetails: productShippingDetails,
     variantImages: product.variantImages,
   };
 };
@@ -507,6 +511,7 @@ export const getShippingDetails = async (
       returnPolicy,
       countryCode: userCountry.code,
       countryName: userCountry.name,
+      city: userCountry.city,
     };
     switch (shippingFeeMethod) {
       case "ITEM":
