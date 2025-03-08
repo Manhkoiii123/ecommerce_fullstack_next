@@ -81,6 +81,7 @@ export const upsertProduct = async (
       slug: variantSlug,
       isSale: product.isSale,
       sku: product.sku,
+      weight: product.weight,
       keywords: product.keywords.join(","),
       saleEndDate: product.saleEndDate,
       images: {
@@ -402,6 +403,7 @@ const formatProductResponse = (
     saleEndDate: variant.saleEndDate,
     brand: product.brand,
     sku: variant.sku,
+    weight: variant.weight,
     variantImage: variant.variantImage,
     store: {
       id: store.id,

@@ -47,7 +47,7 @@ const ProductPageContainer = ({
                       <ShippingDetails
                         quantity={1}
                         shippingDetails={shippingDetails}
-                        weight={1}
+                        weight={productData?.weight || 0}
                       />
                     </div>
                   </>

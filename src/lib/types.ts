@@ -49,6 +49,7 @@ export type ProductWithVariantType = {
   keywords: string[];
   createdAt: Date;
   updatedAt: Date;
+  weight: number;
   product_specs: { id?: string; name: string; value: string }[];
   variant_specs: { id?: string; name: string; value: string }[];
   questions: { id?: string; question: string; answer: string }[];

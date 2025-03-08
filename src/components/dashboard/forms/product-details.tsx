@@ -53,6 +53,7 @@ import "react-clock/dist/Clock.css";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import JoditEditor from "jodit-react";
 import { useTheme } from "next-themes";
+import { NumberInput } from "@tremor/react";
 interface Keyword {
   id: string;
   text: string;
@@ -130,6 +131,7 @@ const ProductDetails: FC<StoreDetailsProps> = ({
       product_specs: data?.product_specs,
       variant_specs: data?.variant_specs,
       questions: data?.questions,
+      weight: data?.weight,
     },
   });
   useEffect(() => {
@@ -162,7 +164,6 @@ const ProductDetails: FC<StoreDetailsProps> = ({
     hour12: false, // 12-hour format (change to false for 24-hour format)
   });
   const handleSubmit = async (values: z.infer<typeof ProductFormSchema>) => {
-    console.log("🚀 ~ handleSubmit ~ values:", values);
     try {
       const response = await upsertProduct(
         {
@@ -188,6 +189,7 @@ const ProductDetails: FC<StoreDetailsProps> = ({
           variant_specs: values.variant_specs,
           questions: values.questions,
           saleEndDate: values.saleEndDate,
+          weight: values.weight,
         },
         storeUrl
       );
@@ -486,6 +488,27 @@ const ProductDetails: FC<StoreDetailsProps> = ({
                       <FormLabel>Product sku</FormLabel>
                       <FormControl>
                         <Input placeholder="Product sku" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  disabled={isLoading}
+                  control={form.control}
+                  name="weight"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Product weight</FormLabel>
+                      <FormControl>
+                        <NumberInput
+                          defaultValue={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Product weight"
+                          min={0.01}
+                          step={0.01}
+                          className="!shadow-none rounded-md !text-sm"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
