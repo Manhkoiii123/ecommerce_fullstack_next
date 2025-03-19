@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 "use client";
 
+import ProductShippingFee from "@/components/store/product-page/shipping/shipping-fee";
 import { ProductShippingDetailsType } from "@/lib/types";
 import { ChevronRight, Truck } from "lucide-react";
 import { FC, useEffect, useState } from "react";
@@ -85,28 +86,7 @@ const ShippingDetails: FC<Props> = ({
           </div>
           <ChevronRight className="w-3" />
         </div>
-        <span className="flex items-center text-sm ml-5">
-          Service:&nbsp;
-          <strong className="text-sm">
-            {loading ? (
-              <></>
-            ) : (
-              // <BarLoader width={100} color="#e5e5e5" className="rounded-full" />
-              shippingService
-            )}
-          </strong>
-        </span>
-        {/* <span className="flex items-center text-sm ml-5">
-          Delivery:&nbsp;
-          <strong className="text-sm">
-            {loading ? (
-              <></>
-              // <BarLoader width={180} color="#e5e5e5" className="rounded-full" />
-            ) : (
-              `${minDate.slice(4)} - ${maxDate.slice(4)}`
-            )}
-          </strong>
-        </span> */}
+        <ProductShippingFee fee={shippingFee} extraFee={extraShippingFee} method={shippingFeeMethod} quantity={quantity} weight={weight} />
       </div>
     </div>
   );
