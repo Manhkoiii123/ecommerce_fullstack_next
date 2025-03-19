@@ -3,7 +3,8 @@
 
 import ProductShippingFee from "@/components/store/product-page/shipping/shipping-fee";
 import { ProductShippingDetailsType } from "@/lib/types";
-import { ChevronRight, Truck } from "lucide-react";
+import { getShippingDatesRange } from "@/lib/utils";
+import { ChevronDown, ChevronRight, ChevronUp, Truck } from "lucide-react";
 import { FC, useEffect, useState } from "react";
 
 interface Props {
@@ -21,7 +22,7 @@ const ShippingDetails: FC<Props> = ({
   loading,
 }) => {
   if (typeof shippingDetails === "boolean") return null;
-
+  const [toggle, setToggle] = useState<boolean>(true);
   const [shippingTotal, setShippingTotal] = useState<number>(0);
   const {
     countryName,
@@ -33,6 +34,9 @@ const ShippingDetails: FC<Props> = ({
     shippingFeeMethod,
     shippingService,
   } = shippingDetails;
+  const { minDate, maxDate } = shippingDetails
+    ? getShippingDatesRange(deliveryTimeMin, deliveryTimeMax)
+    : { minDate: "Loading...", maxDate: "Loading..." };
   useEffect(() => {
     if (!shippingDetails) return;
 
@@ -54,7 +58,7 @@ const ShippingDetails: FC<Props> = ({
         setShippingTotal(0);
         break;
     }
-  }, [quantity, shippingDetails]);
+  }, [quantity, shippingDetails, countryName]);
 
   return (
     <div>
@@ -86,7 +90,40 @@ const ShippingDetails: FC<Props> = ({
           </div>
           <ChevronRight className="w-3" />
         </div>
-        <ProductShippingFee fee={shippingFee} extraFee={extraShippingFee} method={shippingFeeMethod} quantity={quantity} weight={weight} />
+        <span className="flex items-center text-sm ml-5">
+          Service:&nbsp;
+          <strong className="text-sm">{shippingService}</strong>
+        </span>
+        <span className="flex items-center text-sm ml-5">
+          Delivery:&nbsp;
+          <strong className="text-sm">
+            {`${minDate.slice(4)} - ${maxDate.slice(4)}`}
+          </strong>
+        </span>
+        {!shippingDetails.isFreeShipping && (
+          <ProductShippingFee
+            fee={shippingFee}
+            extraFee={extraShippingFee}
+            method={shippingFeeMethod}
+            quantity={quantity}
+            weight={weight}
+          />
+        )}
+        <div
+          onClick={() => setToggle((prev) => !prev)}
+          className="max-w-[calc(100%-2rem)] ml-4 flex items-center bg-gray-100 hover:bg-gray-200 h-5 cursor-pointer"
+        >
+          <div className="w-full flex items-center justify-between gap-x-1 px-2">
+            <span className="text-xs">
+              {toggle ? "Hide" : "Shipping Fee Breakdown"}
+            </span>
+            {toggle ? (
+              <ChevronUp className="w-4" />
+            ) : (
+              <ChevronDown className="w-4" />
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

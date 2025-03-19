@@ -1,6 +1,7 @@
 "use client";
 import ProductInfo from "@/components/store/product-page/product-info/product-info";
 import ProductSwiper from "@/components/store/product-page/product-swiper";
+import ReturnPrivacySecurityCard from "@/components/store/product-page/returns-security-privacy-card";
 import ShipTo from "@/components/store/product-page/shipping/ship-to";
 import ShippingDetails from "@/components/store/product-page/shipping/shipping-details";
 import { ProductPageDataType, ProductVariantDataType } from "@/lib/types";
@@ -33,16 +34,15 @@ const ProductPageContainer = ({
         </div>
         <div className="w-full mt-4 md:mt-0 flex flex-col gap-4 md:flex-row">
           <ProductInfo productData={productData} sizeId={sizeId} />
-          <div className="w-full lg:w-[390px]">
+          <div className="w-full h-auto lg:w-[390px]">
             <div className="z-20">
-              <div className="bg-white border rounded-md overflow-hidden overflow-y-auto p-4 pb-0">
+              <div className="bg-white border rounded-md overflow-hidden  p-4 pb-0">
                 {typeof shippingDetails !== "boolean" && (
                   <>
                     <ShipTo
                       countryCode={shippingDetails.countryCode}
                       countryName={shippingDetails.countryName}
                       city={shippingDetails.city}
-                      
                     />
                     <div className="mt-3 space-y-3">
                       <ShippingDetails
@@ -51,6 +51,10 @@ const ProductPageContainer = ({
                         weight={productData?.weight || 0}
                       />
                     </div>
+                    <ReturnPrivacySecurityCard
+                      returnPolicy={shippingDetails?.returnPolicy}
+                      loading={false}
+                    />
                   </>
                 )}
               </div>
