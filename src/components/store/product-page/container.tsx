@@ -42,6 +42,7 @@ const ProductPageContainer = ({
                       countryCode={shippingDetails.countryCode}
                       countryName={shippingDetails.countryName}
                       city={shippingDetails.city}
+                      
                     />
                     <div className="mt-3 space-y-3">
                       <ShippingDetails

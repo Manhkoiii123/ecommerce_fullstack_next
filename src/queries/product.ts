@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db";
 import {
+  FreeShippingWithCountriesType,
   ProductPageType,
   ProductShippingDetailsType,
   ProductWithVariantType,
@@ -13,7 +14,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import slugify from "slugify";
 import { getCookie } from "cookies-next";
 import { cookies } from "next/headers";
-import { Store } from "@prisma/client";
+import { FreeShipping, Store } from "@prisma/client";
 export const upsertProduct = async (
   product: ProductWithVariantType,
   storeUrl: string
@@ -324,7 +325,8 @@ export const getProductPageData = async (
   const productShippingDetails = await getShippingDetails(
     product?.shippingFeeMethod,
     userCountry,
-    product?.store
+    product?.store,
+    product.freeShipping
   );
   return formatProductResponse(product, productShippingDetails);
 };
@@ -343,6 +345,11 @@ export const retrieveProductDetails = async (
       store: true,
       specs: true,
       questions: true,
+      freeShipping: {
+        include: {
+          eligibaleCountries: true,
+        },
+      },
       variants: {
         where: {
           slug: variantSlug,
@@ -454,7 +461,8 @@ const getUserCountry = async () => {
 export const getShippingDetails = async (
   shippingFeeMethod: string,
   userCountry: { name: string; code: string; city: string },
-  store: Store
+  store: Store,
+  freeShipping: FreeShippingWithCountriesType | null
 ) => {
   // mặc định khởi tạo
   let shippingDetails = {
@@ -503,7 +511,17 @@ export const getShippingDetails = async (
     const deliveryTimeMax =
       shippingRate?.deliveryTimeMax || store.defaultDeliveryTimeMax;
 
-    let shippingDetails = {
+    // check free shipping
+    if (freeShipping) {
+      const free_shipping_countries = freeShipping.eligibaleCountries;
+      const check_free_shipping = free_shipping_countries.find(
+        (c) => c.countryId === country.id
+      );
+      if (check_free_shipping) {
+        shippingDetails.isFreeShipping = true;
+      }
+    }
+    shippingDetails = {
       shippingFeeMethod,
       shippingService: shippingService,
       shippingFee: 0,
@@ -514,19 +532,23 @@ export const getShippingDetails = async (
       countryCode: userCountry.code,
       countryName: userCountry.name,
       city: userCountry.city,
+      isFreeShipping: shippingDetails.isFreeShipping,
     };
+    const { isFreeShipping } = shippingDetails;
     switch (shippingFeeMethod) {
       case "ITEM":
-        shippingDetails.shippingFee = shippingFeePerItem;
-        shippingDetails.extraShippingFee = shippingFeeForAdditionalItem;
+        shippingDetails.shippingFee = isFreeShipping ? 0 : shippingFeePerItem;
+        shippingDetails.extraShippingFee = isFreeShipping
+          ? 0
+          : shippingFeeForAdditionalItem;
         break;
 
       case "WEIGHT":
-        shippingDetails.shippingFee = shippingFeePerKg;
+        shippingDetails.shippingFee = isFreeShipping ? 0 : shippingFeePerKg;
         break;
 
       case "FIXED":
-        shippingDetails.shippingFee = shippingFeeFixed;
+        shippingDetails.shippingFee = isFreeShipping ? 0 : shippingFeeFixed;
         break;
 
       default:

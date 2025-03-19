@@ -8,6 +8,8 @@ import {
 import { getStoreDefaultShippingDetails } from "@/queries/store";
 import { getAllSubCategories } from "@/queries/subCategories";
 import {
+  FreeShipping,
+  FreeShippingCountry,
   Prisma,
   ProductVariantImage,
   ShippingRate,
@@ -119,3 +121,7 @@ export type ProductVariantDataType = {
 export type ProductShippingDetailsType = Prisma.PromiseReturnType<
   typeof getShippingDetails
 >;
+
+export type FreeShippingWithCountriesType = FreeShipping & {
+  eligibaleCountries: FreeShippingCountry[];
+};

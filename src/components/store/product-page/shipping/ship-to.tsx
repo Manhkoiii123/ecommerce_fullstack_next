@@ -16,8 +16,7 @@ const ShipTo: FC<Props> = ({ countryName, countryCode, city }) => {
       <div className="flex items-center overflow-hidden">
         <MapPin className="w-4 mb-1 stroke-main-primary" />
         <span className="text-main-secondary text-sm cursor-pointer max-w-[200px] overflow-hidden pl-0.5 text-ellipsis whitespace-nowrap">
-          {countryName},{city && `${city},`}
-          {countryCode}
+          {city && `${city}`},{countryName}
         </span>
       </div>
     </div>

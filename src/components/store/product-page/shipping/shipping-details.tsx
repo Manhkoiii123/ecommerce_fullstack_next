@@ -61,29 +61,27 @@ const ShippingDetails: FC<Props> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-x-1">
             <Truck className="w-4" />
-            {/* {isFreeShipping ? (
+            {shippingDetails.isFreeShipping ? (
               <span className="text-sm font-bold flex items-center">
                 <span>
                   Free Shipping to&nbsp;
-                  <span>
-                    {loading ? <BarLoader width={100} /> : countryName}
-                  </span>
+                  <span>{countryName}</span>
                 </span>
               </span>
-            ) : ( */}
-            <span className="text-sm font-bold flex items-center">
-              <span>Shipping to {countryName}</span>
-              <span className="flex items-center">
-                &nbsp;for $&nbsp;
-                {loading ? (
-                  <></>
-                ) : (
-                  // <MoonLoader size={12} color="#e5e5e5" />
-                  shippingTotal
-                )}
+            ) : (
+              <span className="text-sm font-bold flex items-center">
+                <span>Shipping to {countryName}</span>
+                <span className="flex items-center">
+                  &nbsp;for $&nbsp;
+                  {loading ? (
+                    <></>
+                  ) : (
+                    // <MoonLoader size={12} color="#e5e5e5" />
+                    shippingTotal
+                  )}
+                </span>
               </span>
-            </span>
-            {/* )} */}
+            )}
           </div>
           <ChevronRight className="w-3" />
         </div>
