@@ -13,6 +13,7 @@ const config: Config = {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+        home: "url(/public/assets/images/home-wallpaper.webp)",
       },
       fontFamily: {
         barlow: "var(--font-barlow)",
@@ -109,6 +110,13 @@ const config: Config = {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+      },
+
+      transitionTimingFunction: {
+        "bezier-1": "cubic-bezier(.645,.045,.355,1)",
+      },
+      maxWidth: {
+        container: "1200px",
       },
     },
   },

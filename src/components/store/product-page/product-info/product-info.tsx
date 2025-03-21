@@ -5,7 +5,7 @@ import ProductVariantSelector from "@/components/store/product-page/product-info
 import ColorWheel from "@/components/store/shared/color-wheel";
 import Countdown from "@/components/store/shared/countdown";
 import { Separator } from "@/components/ui/separator";
-import { ProductPageDataType } from "@/lib/types";
+import { CartProductType, ProductPageDataType } from "@/lib/types";
 import { CopyIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -15,8 +15,14 @@ interface ProductInfoProps {
   productData: ProductPageDataType;
   quantity?: number;
   sizeId: string | undefined;
+  handleChange: (property: keyof CartProductType, value: any) => void;
 }
-const ProductInfo = ({ productData, quantity, sizeId }: ProductInfoProps) => {
+const ProductInfo = ({
+  productData,
+  quantity,
+  sizeId,
+  handleChange,
+}: ProductInfoProps) => {
   if (!productData) return null;
   const {
     productId,
@@ -92,7 +98,11 @@ const ProductInfo = ({ productData, quantity, sizeId }: ProductInfoProps) => {
         </div>
       </div>
       <div className="my-2 relative flex flex-col sm:flex-row justify-between">
-        <ProductPrice sizes={sizes} sizeId={sizeId} />
+        <ProductPrice
+          sizes={sizes}
+          sizeId={sizeId}
+          handleChange={handleChange}
+        />
         {isSale && saleEndDate && (
           <div className="mt-4 pb-2">
             <Countdown targetDate={saleEndDate} />
@@ -118,7 +128,11 @@ const ProductInfo = ({ productData, quantity, sizeId }: ProductInfoProps) => {
           <div>
             <h1 className="text-main-primary font-bold">Size </h1>
           </div>
-          <SizeSelector sizes={sizes} sizeId={sizeId} />
+          <SizeSelector
+            sizes={sizes}
+            sizeId={sizeId}
+            handleChange={handleChange}
+          />
         </div>
         <Separator className="mt-2" />
         <ProductAssurancePolicy />

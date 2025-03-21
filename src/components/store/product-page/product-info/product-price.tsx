@@ -1,6 +1,8 @@
+/* eslint-disable react-hooks/rules-of-hooks */
+import { CartProductType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { usePathname, useRouter } from "next/navigation";
-import React from "react";
+import React, { useEffect } from "react";
 
 interface SimplifiedSize {
   id: string;
@@ -13,8 +15,9 @@ interface Props {
   sizeId?: string | undefined;
   sizes: SimplifiedSize[];
   isCard?: boolean;
+  handleChange: (property: keyof CartProductType, value: any) => void;
 }
-const ProductPrice = ({ sizes, isCard, sizeId }: Props) => {
+const ProductPrice = ({ sizes, isCard, sizeId, handleChange }: Props) => {
   const pathname = usePathname();
   const { replace, push } = useRouter();
   if (!sizes || sizes.length === 0) {
@@ -61,7 +64,12 @@ const ProductPrice = ({ sizes, isCard, sizeId }: Props) => {
   if (!selectedSize) return <></>;
   const discountedPrice =
     selectedSize.price * (1 - selectedSize.discount / 100);
-
+  useEffect(() => {
+    // khi thay đổi size thì đổi giá theo cái size đấy => update cái data để addtocart
+    handleChange("price", discountedPrice);
+    // thay đổi cả cái stock trong cái data thêm vào
+    handleChange("stock", selectedSize.quantity);
+  }, [sizeId]);
   return (
     <div>
       <div className="text-orange-primary inline-block font-bold leading-none mr-2.5">
