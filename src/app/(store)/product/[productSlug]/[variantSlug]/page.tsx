@@ -1,6 +1,8 @@
 import ProductPageContainer from "@/components/store/product-page/container";
+import ProductDescription from "@/components/store/product-page/product-description";
+import RelatedProducts from "@/components/store/product-page/related-product";
 import { Separator } from "@/components/ui/separator";
-import { getProductPageData } from "@/queries/product";
+import { getProductPageData, getProducts } from "@/queries/product";
 import { notFound, redirect } from "next/navigation";
 import React from "react";
 interface ProductVariantPageProps {
@@ -22,10 +24,15 @@ const ProductVariantPage = async ({
       `/product/${productSlug}/${variantSlug}?size=${sizes[0].id}`
     );
   }
-  const relatedProducts = {
-    products: [],
-  };
-  const { specs, questions, shippingDetails } = productData;
+  const { specs, questions, shippingDetails, category } = productData;
+  const relatedProducts = await getProducts(
+    {
+      category: category.url,
+    },
+    "",
+    1,
+    12
+  );
   return (
     <div>
       <div className="max-w-[1650px] mx-auto p-4 overflow-x-hidden">
@@ -33,6 +40,7 @@ const ProductVariantPage = async ({
           {relatedProducts.products && (
             <>
               <Separator />
+              <RelatedProducts products={relatedProducts.products} />
             </>
           )}
           <Separator className="mt-6" />
@@ -40,6 +48,12 @@ const ProductVariantPage = async ({
           <>
             <Separator className="mt-6" />
             {/* product desc */}
+            <ProductDescription
+              text={[
+                productData.description,
+                productData?.variantDescription || "",
+              ]}
+            />
           </>
           {(specs.product.length > 0 || specs.variant.length > 0) && (
             <>
