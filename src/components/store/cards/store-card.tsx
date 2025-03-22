@@ -1,9 +1,13 @@
 "use client";
 import { cn } from "@/lib/utils";
+import { followStore } from "@/queries/user";
+import { useUser } from "@clerk/nextjs";
 import { Check, MessageSquareMore, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FC, useState } from "react";
+import { toast } from "sonner";
 
 interface StoreCardProps {
   store: {
@@ -18,6 +22,25 @@ interface StoreCardProps {
 const StoreCard: FC<StoreCardProps> = ({ store }) => {
   const { id, name, logo, url, followersCount, isUserFollowingStore } = store;
   const [following, setFollowing] = useState<boolean>(isUserFollowingStore);
+  const [storeFollowersCount, setStoreFollowersCount] =
+    useState<number>(followersCount);
+  const user = useUser();
+  const router = useRouter();
+  const handleStoreFollow = async () => {
+    if (!user.isSignedIn) router.push("/sign-in");
+    try {
+      const res = await followStore(id);
+      setFollowing(res);
+      if (res) {
+        setStoreFollowersCount((prev) => prev + 1);
+      }
+      if (!res) {
+        setStoreFollowersCount((prev) => prev - 1);
+      }
+    } catch (error) {
+      toast.error("Something happend, Try again later !");
+    }
+  };
   return (
     <div className="w-full">
       <div className="bg-[#f5f5f5] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 rounded-xl py-3 px-4">
@@ -40,10 +63,10 @@ const StoreCard: FC<StoreCardProps> = ({ store }) => {
             <div className="text-sm leading-5 mt-1">
               <strong>100%</strong>
               <span> Positive Feedback</span>
-              {followersCount > 0 && (
+              {storeFollowersCount > 0 && (
                 <>
                   &nbsp;|&nbsp;
-                  <strong>{followersCount}</strong>
+                  <strong>{storeFollowersCount}</strong>
                   <strong> Followers</strong>
                 </>
               )}
@@ -58,7 +81,7 @@ const StoreCard: FC<StoreCardProps> = ({ store }) => {
                 "bg-black text-white": following,
               }
             )}
-            // onClick={() => handleStoreFollow()}
+            onClick={() => handleStoreFollow()}
           >
             {following ? (
               <Check className="w-4 me-1" />
