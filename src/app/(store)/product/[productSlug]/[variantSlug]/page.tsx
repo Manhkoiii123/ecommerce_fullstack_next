@@ -1,5 +1,8 @@
+import StoreCard from "@/components/store/cards/store-card";
 import ProductPageContainer from "@/components/store/product-page/container";
 import ProductDescription from "@/components/store/product-page/product-description";
+import ProductQuestions from "@/components/store/product-page/product-questions";
+import ProductSpecs from "@/components/store/product-page/product-specs";
 import RelatedProducts from "@/components/store/product-page/related-product";
 import { Separator } from "@/components/ui/separator";
 import { getProductPageData, getProducts } from "@/queries/product";
@@ -59,15 +62,19 @@ const ProductVariantPage = async ({
             <>
               {/* Specs table */}
               <Separator className="mt-6" />
+              <ProductSpecs specs={specs} />
             </>
           )}
           {questions.length > 0 && (
             <>
               <Separator className="mt-6" />
+              <ProductQuestions questions={productData.questions} />
             </>
           )}
           <Separator className="mt-6" />
           {/*store card  */}
+          <div className="h-6"></div>
+          <StoreCard store={productData.store} />
           {/* store products */}
         </ProductPageContainer>
       </div>
