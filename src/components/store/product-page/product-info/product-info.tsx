@@ -36,8 +36,9 @@ const ProductInfo = ({
     variantName,
     store,
     rating,
-    numReviews,
+    reviewsStatistics,
   } = productData;
+  const { totalReviews } = reviewsStatistics;
   const copySkuToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(sku);
@@ -88,11 +89,11 @@ const ProductInfo = ({
           />
           <Link href="#reviews" className="text-[#ffd804] hover:underline">
             (
-            {numReviews === 0
+            {totalReviews === 0
               ? "No review yet"
-              : numReviews === 1
+              : totalReviews === 1
               ? "1 review"
-              : `${numReviews} reviews`}
+              : `${totalReviews} reviews`}
             )
           </Link>
         </div>

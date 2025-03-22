@@ -6,6 +6,7 @@ import {
   ProductPageType,
   ProductShippingDetailsType,
   ProductWithVariantType,
+  RatingStatisticsType,
   VariantImageType,
   VariantSimplified,
 } from "@/lib/types";
@@ -335,23 +336,29 @@ export const getProductPageData = async (
   if (!product) throw new Error("Product not found.");
   const storeId = product.storeId;
   //calc and retrieve the shipping detail
-  const [productShippingDetails, storeFollowersCount, isUserFollowingStore] =
-    await Promise.all([
-      getShippingDetails(
-        product?.shippingFeeMethod,
-        userCountry,
-        product?.store,
-        product.freeShipping
-      ),
-      getStoreFollowersCount(storeId),
-      user ? checkIfUserFollowingStore(storeId, user.id) : false,
-    ]);
+  const [
+    productShippingDetails,
+    storeFollowersCount,
+    isUserFollowingStore,
+    ratingStatistics,
+  ] = await Promise.all([
+    getShippingDetails(
+      product?.shippingFeeMethod,
+      userCountry,
+      product?.store,
+      product.freeShipping
+    ),
+    getStoreFollowersCount(storeId),
+    user ? checkIfUserFollowingStore(storeId, user.id) : false,
+    getRatingStatistics(product.id),
+  ]);
 
   return formatProductResponse(
     product,
     productShippingDetails,
     storeFollowersCount,
-    isUserFollowingStore
+    isUserFollowingStore,
+    ratingStatistics
   );
 };
 export const retrieveProductDetails = async (
@@ -369,6 +376,7 @@ export const retrieveProductDetails = async (
       store: true,
       specs: true,
       questions: true,
+      reviews: true,
       freeShipping: {
         include: {
           eligibaleCountries: true,
@@ -412,7 +420,8 @@ const formatProductResponse = (
   product: ProductPageType,
   productShippingDetails: ProductShippingDetailsType,
   storeFollowersCount: number,
-  isUserFollowingStore: boolean
+  isUserFollowingStore: boolean,
+  ratingStatistics: RatingStatisticsType
 ) => {
   if (!product) return;
   const variant = product.variants[0];
@@ -455,12 +464,8 @@ const formatProductResponse = (
     questions,
     rating: product.rating,
     relatedProducts: [],
-    reviews: [],
-    numReviews: 123,
-    reviewsStatistics: {
-      ratingStatistics: [],
-      reviewsWithImagesCount: 6,
-    },
+    reviews: product.reviews,
+    reviewsStatistics: ratingStatistics,
     shippingDetails: productShippingDetails,
     variantImages: product.variantImages,
   };
@@ -625,4 +630,42 @@ export const checkIfUserFollowingStore = async (
   }
 
   return isUserFollowingStore;
+};
+export const getRatingStatistics = async (productId: string) => {
+  const ratingStats = await db.review.groupBy({
+    by: ["rating"],
+    where: {
+      productId,
+    },
+    _count: {
+      rating: true,
+    },
+  });
+  const totalReviews = ratingStats.reduce(
+    (sum, stat) => sum + stat._count.rating,
+    0
+  );
+  const ratingCounts = Array(5).fill(0);
+
+  // đưa về dạng [1,2,3,4,5] => 1 là số đánh giá 1*, ...
+  ratingStats.forEach((stat) => {
+    let rating = Math.floor(stat.rating);
+    if (rating >= 1 && rating <= 5) {
+      ratingCounts[rating - 1] = stat._count.rating;
+    }
+  });
+  return {
+    ratingStatistics: ratingCounts.map((count, index) => ({
+      rating: index + 1,
+      numReviews: count,
+      percentage: totalReviews > 0 ? (count / totalReviews) * 100 : 0,
+    })),
+    reviewsWithImagesCount: await db.review.count({
+      where: {
+        productId,
+        images: { some: {} },
+      },
+    }),
+    totalReviews,
+  };
 };

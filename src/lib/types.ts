@@ -2,6 +2,7 @@ import {
   getAllStoreProducts,
   getProductPageData,
   getProducts,
+  getRatingStatistics,
   getShippingDetails,
   retrieveProductDetails,
 } from "@/queries/product";
@@ -148,3 +149,9 @@ export type CartProductType = {
   deliveryTimeMax: number;
   isFreeShipping: boolean;
 };
+export type RatingStatisticsType = Prisma.PromiseReturnType<
+  typeof getRatingStatistics
+>;
+export type StatisticsCardType = Prisma.PromiseReturnType<
+  typeof getRatingStatistics
+>["ratingStatistics"];
