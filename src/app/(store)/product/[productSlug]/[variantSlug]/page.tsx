@@ -54,6 +54,7 @@ const ProductVariantPage = async ({
             productId={productData.productId}
             rating={productData.rating}
             statistics={productData.reviewsStatistics}
+            reviews={productData.reviews}
           />
           <>
             <Separator className="mt-6" />

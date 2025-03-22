@@ -13,9 +13,12 @@ import {
   FreeShippingCountry,
   Prisma,
   ProductVariantImage,
+  Review,
+  ReviewImage,
   ShippingRate,
   Size,
   Spec,
+  User,
 } from "@prisma/client";
 import countries from "@/data/countries.json";
 export interface DashboardSidebarMenuInterface {
@@ -155,3 +158,7 @@ export type RatingStatisticsType = Prisma.PromiseReturnType<
 export type StatisticsCardType = Prisma.PromiseReturnType<
   typeof getRatingStatistics
 >["ratingStatistics"];
+export type ReviewWithImage = Review & {
+  images: ReviewImage[];
+  user: User;
+};
