@@ -4,6 +4,7 @@ import ProductDescription from "@/components/store/product-page/product-descript
 import ProductQuestions from "@/components/store/product-page/product-questions";
 import ProductSpecs from "@/components/store/product-page/product-specs";
 import RelatedProducts from "@/components/store/product-page/related-product";
+import StoreProducts from "@/components/store/product-page/store-products";
 import { Separator } from "@/components/ui/separator";
 import { getProductPageData, getProducts } from "@/queries/product";
 import { notFound, redirect } from "next/navigation";
@@ -76,6 +77,11 @@ const ProductVariantPage = async ({
           <div className="h-6"></div>
           <StoreCard store={productData.store} />
           {/* store products */}
+          <StoreProducts
+            storeUrl={productData.store.url}
+            storeName={productData.store.name}
+            count={5}
+          />
         </ProductPageContainer>
       </div>
     </div>

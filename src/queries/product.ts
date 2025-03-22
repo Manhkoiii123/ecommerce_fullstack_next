@@ -234,6 +234,17 @@ export const getProducts = async (
   const wherClause: any = {
     AND: [],
   };
+  if (filters.store) {
+    const store = await db.store.findUnique({
+      where: {
+        url: filters.store,
+      },
+      select: { id: true },
+    });
+    if (store) {
+      wherClause.AND.push({ storeId: store.id });
+    }
+  }
   if (filters.category) {
     const category = await db.category.findUnique({
       where: {
