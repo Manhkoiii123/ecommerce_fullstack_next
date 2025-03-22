@@ -316,19 +316,32 @@ export const getProductPageData = async (
   productSlug: string,
   variantSlug: string
 ) => {
-  const [product, userCountry] = await Promise.all([
+  const [user, product, userCountry] = await Promise.all([
+    currentUser(),
     retrieveProductDetails(productSlug, variantSlug),
     getUserCountry(),
   ]);
   if (!product) throw new Error("Product not found.");
+  const storeId = product.storeId;
   //calc and retrieve the shipping detail
-  const productShippingDetails = await getShippingDetails(
-    product?.shippingFeeMethod,
-    userCountry,
-    product?.store,
-    product.freeShipping
+  const [productShippingDetails, storeFollowersCount, isUserFollowingStore] =
+    await Promise.all([
+      getShippingDetails(
+        product?.shippingFeeMethod,
+        userCountry,
+        product?.store,
+        product.freeShipping
+      ),
+      getStoreFollowersCount(storeId),
+      user ? checkIfUserFollowingStore(storeId, user.id) : false,
+    ]);
+
+  return formatProductResponse(
+    product,
+    productShippingDetails,
+    storeFollowersCount,
+    isUserFollowingStore
   );
-  return formatProductResponse(product, productShippingDetails);
 };
 export const retrieveProductDetails = async (
   productSlug: string,
@@ -386,7 +399,9 @@ export const retrieveProductDetails = async (
 
 const formatProductResponse = (
   product: ProductPageType,
-  productShippingDetails: ProductShippingDetailsType
+  productShippingDetails: ProductShippingDetailsType,
+  storeFollowersCount: number,
+  isUserFollowingStore: boolean
 ) => {
   if (!product) return;
   const variant = product.variants[0];
@@ -417,8 +432,8 @@ const formatProductResponse = (
       url: store.url,
       name: store.name,
       logo: store.logo,
-      followersCount: 10,
-      isUserFollowingStore: true,
+      followersCount: storeFollowersCount,
+      isUserFollowingStore: isUserFollowingStore,
     },
     colors,
     sizes,
@@ -557,4 +572,46 @@ export const getShippingDetails = async (
     return shippingDetails;
   }
   return false;
+};
+const getStoreFollowersCount = async (storeId: string) => {
+  const storeFollwersCount = await db.store.findUnique({
+    where: {
+      id: storeId,
+    },
+    select: {
+      _count: {
+        select: {
+          followers: true,
+        },
+      },
+    },
+  });
+  return storeFollwersCount?._count.followers || 0;
+};
+
+export const checkIfUserFollowingStore = async (
+  storeId: string,
+  userId: string | undefined
+) => {
+  let isUserFollowingStore = false;
+  if (userId) {
+    const storeFollowersInfo = await db.store.findUnique({
+      where: {
+        id: storeId,
+      },
+      select: {
+        followers: {
+          where: {
+            id: userId,
+          },
+          select: { id: true },
+        },
+      },
+    });
+    if (storeFollowersInfo && storeFollowersInfo.followers.length > 0) {
+      isUserFollowingStore = true;
+    }
+  }
+
+  return isUserFollowingStore;
 };
