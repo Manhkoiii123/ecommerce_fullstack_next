@@ -162,3 +162,11 @@ export type ReviewWithImage = Review & {
   images: ReviewImage[];
   user: User;
 };
+export type SortOrder = "asc" | "desc";
+export type ReviewsFiltersType = {
+  rating?: number;
+  hasImages?: boolean;
+};
+export type ReviewsOrderType = {
+  orderBy: "latest" | "oldest" | "highest";
+};

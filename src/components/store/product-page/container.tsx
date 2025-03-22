@@ -149,7 +149,9 @@ const ProductPageContainer = ({
           </div>
         </div>
       </div>
-      <div className=" w-[calc(100%-390px)] mt-6 pb-16 ">{children}</div>
+      <div className="w-full lg:w-[calc(100%-390px)] mt-6 pb-16 ">
+        {children}
+      </div>
     </div>
   );
 };

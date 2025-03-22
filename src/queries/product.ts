@@ -7,6 +7,7 @@ import {
   ProductShippingDetailsType,
   ProductWithVariantType,
   RatingStatisticsType,
+  SortOrder,
   VariantImageType,
   VariantSimplified,
 } from "@/lib/types";
@@ -673,4 +674,51 @@ export const getRatingStatistics = async (productId: string) => {
     }),
     totalReviews,
   };
+};
+export const getProductFilteredReviews = async (
+  productId: string,
+  filters: { rating?: number; hasImages?: boolean },
+  sort: { orderBy: "latest" | "oldest" | "highest" } | undefined,
+  page: number = 1,
+  pageSize: number = 4
+) => {
+  const reviewFilter: any = {
+    productId,
+  };
+
+  if (filters.rating) {
+    const rating = filters.rating;
+    reviewFilter.rating = {
+      in: [rating, rating + 0.5],
+    };
+  }
+
+  if (filters.hasImages) {
+    reviewFilter.images = {
+      some: {},
+    };
+  }
+
+  const sortOption: { createdAt?: SortOrder; rating?: SortOrder } =
+    sort && sort.orderBy === "latest"
+      ? { createdAt: "desc" }
+      : sort && sort.orderBy === "oldest"
+      ? { createdAt: "asc" }
+      : { rating: "desc" };
+
+  const skip = (page - 1) * pageSize;
+  const take = pageSize;
+
+  const reviews = await db.review.findMany({
+    where: reviewFilter,
+    include: {
+      images: true,
+      user: true,
+    },
+    orderBy: sortOption,
+    skip,
+    take,
+  });
+
+  return reviews;
 };
