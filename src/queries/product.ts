@@ -427,7 +427,7 @@ export const retrieveProductDetails = async (
       variantUrl: `/product/${productSlug}/${variant.slug}`,
       images: variant.images,
       sizes: variant.sizes,
-      colors: variant.colors.map((c) => c.name).join(","),
+      colors: variant.colors,
     })),
   };
 };
@@ -719,6 +719,7 @@ export const getProductFilteredReviews = async (
   const skip = (page - 1) * pageSize;
   const take = pageSize;
 
+  const statistics = await getRatingStatistics(productId);
   const reviews = await db.review.findMany({
     where: reviewFilter,
     include: {
@@ -726,9 +727,9 @@ export const getProductFilteredReviews = async (
       user: true,
     },
     orderBy: sortOption,
-    skip,
-    take,
+    skip, // Skip records for pagination
+    take, // Take records for pagination
   });
 
-  return reviews;
+  return { reviews, statistics };
 };

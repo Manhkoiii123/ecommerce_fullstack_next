@@ -7,6 +7,7 @@ import RelatedProducts from "@/components/store/product-page/related-product";
 import ProductReviews from "@/components/store/product-page/reviews/product-reviews";
 import StoreProducts from "@/components/store/product-page/store-products";
 import { Separator } from "@/components/ui/separator";
+import { VariantInfoType } from "@/lib/types";
 import { getProductPageData, getProducts } from "@/queries/product";
 import { notFound, redirect } from "next/navigation";
 import React from "react";
@@ -53,9 +54,9 @@ const ProductVariantPage = async ({
           <ProductReviews
             productId={productData.productId}
             rating={productData.rating}
-            statistics={productData.reviewsStatistics}
-            reviews={productData.reviews}
+            variantsInfo={productData.variantInfo}
           />
+
           <>
             <Separator className="mt-6" />
             {/* product desc */}

@@ -4,6 +4,7 @@ import Image from "next/image";
 import ReactStars from "react-rating-stars-component";
 
 export default function ReviewCard({ review }: { review: ReviewWithImage }) {
+  console.log("🚀 ~ ReviewCard ~ review:", review);
   const { images, user } = review;
   const colors = review.color
     .split(",")
@@ -29,6 +30,7 @@ export default function ReviewCard({ review }: { review: ReviewWithImage }) {
       <div className="flex flex-1 flex-col justify-between leading-5 overflow-hidden px-1.5">
         <div className="space-y-2">
           <ReactStars
+            key={review.rating}
             count={5}
             size={24}
             color="#F5F5F5"
@@ -38,13 +40,13 @@ export default function ReviewCard({ review }: { review: ReviewWithImage }) {
             edit={false}
           />
           <div className="flex items-center gap-x-2">
-            <Image
+            {/* <Image
               src={review.variantImage}
               alt=""
               width={40}
               height={40}
               className="object-cover w-9 h-9 rounded-full"
-            />
+            /> */}
             <div className="text-main-secondary text-sm">{review.variant}</div>
             <span>.</span>
             <div className="text-main-secondary text-sm">{review.size}</div>

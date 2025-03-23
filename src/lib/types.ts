@@ -171,6 +171,17 @@ export type ReviewsFiltersType = {
 export type ReviewsOrderType = {
   orderBy: "latest" | "oldest" | "highest";
 };
+
+export type ReviewDetailsType = {
+  id: string;
+  review: string;
+  rating: number;
+  images: { url: string }[];
+  size: string;
+  quantity: string;
+  variant: string;
+  color: string;
+};
 export type VariantInfoType = {
   variantName: string;
   variantSlug: string;
@@ -178,5 +189,5 @@ export type VariantInfoType = {
   variantUrl: string;
   images: ProductVariantImage[];
   sizes: Size[];
-  colors: string;
+  colors: Partial<Color>[];
 };

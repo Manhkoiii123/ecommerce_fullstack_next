@@ -122,6 +122,8 @@ model Product {
   questions Question[]       @relation("ProductQuestion")
   reviews   Review[]         @relation("ReviewToProduct")
 
+  numReviews Int @default(0)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
   storeId   String
@@ -318,7 +320,6 @@ model FreeShippingCountry {
 model Review {
   id       String @id @default(uuid())
   variant  String
-  variantImage String
   review   String
   rating   Float
   color    String
