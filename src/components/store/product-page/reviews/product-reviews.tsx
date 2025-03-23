@@ -105,15 +105,17 @@ const ProductReviews = ({ productId, rating, statistics, reviews }: Props) => {
             </div>
           </>
         )}
-        <Pagination
-          page={page}
-          totalPages={
-            filters.rating || filters.hasImages
-              ? data.length / pageSize
-              : statistics.totalReviews / pageSize
-          }
-          setPage={setPage}
-        />
+        {data.length >= pageSize && (
+          <Pagination
+            page={page}
+            totalPages={
+              filters.rating || filters.hasImages
+                ? data.length / pageSize
+                : 1 / pageSize
+            }
+            setPage={setPage}
+          />
+        )}
       </div>
     </div>
   );

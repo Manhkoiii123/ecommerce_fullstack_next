@@ -402,22 +402,32 @@ export const retrieveProductDetails = async (
     },
   });
   if (!product) return null;
-  const variantImages = await db.productVariant.findMany({
+  const variantInfo = await db.productVariant.findMany({
     where: {
       productId: product.id,
     },
-    select: {
-      variantImage: true,
-      slug: true,
+    include: {
+      images: true,
+      sizes: true,
+      colors: true,
+      product: {
+        select: {
+          slug: true,
+        },
+      },
     },
   });
 
   return {
     ...product,
-    variantImages: variantImages.map((i) => ({
-      url: `/product/${product.slug}/${i.slug}`,
-      img: i.variantImage,
-      slug: i.slug,
+    variantInfo: variantInfo.map((variant) => ({
+      variantName: variant.variantName,
+      variantSlug: variant.slug,
+      variantImage: variant.variantImage,
+      variantUrl: `/product/${productSlug}/${variant.slug}`,
+      images: variant.images,
+      sizes: variant.sizes,
+      colors: variant.colors.map((c) => c.name).join(","),
     })),
   };
 };
@@ -473,7 +483,7 @@ const formatProductResponse = (
     reviews: product.reviews,
     reviewsStatistics: ratingStatistics,
     shippingDetails: productShippingDetails,
-    variantImages: product.variantImages,
+    variantInfo: product.variantInfo,
   };
 };
 

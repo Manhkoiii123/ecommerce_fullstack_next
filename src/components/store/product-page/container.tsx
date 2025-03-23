@@ -13,6 +13,7 @@ import {
   ProductVariantDataType,
 } from "@/lib/types";
 import { isProductValidToAdd } from "@/lib/utils";
+import { ProductVariantImage } from "@prisma/client";
 import { useEffect, useState } from "react";
 
 interface ProductPageContainerProps {
@@ -27,6 +28,7 @@ const ProductPageContainer = ({
 }: ProductPageContainerProps) => {
   if (!productData) return null;
   const { images, shippingDetails } = productData;
+  console.log("🚀 ~ images:", images);
   if (typeof shippingDetails === "boolean") return null;
   const data: CartProductType = {
     productId: productData.productId,
@@ -56,6 +58,8 @@ const ProductPageContainer = ({
   const [activeImage, setActiveImage] = useState<{ url: string } | null>(
     images[0]
   );
+  const [variantImages, setVariantImages] =
+    useState<ProductVariantImage[]>(images);
 
   const [isProductValid, setIsProductValid] = useState(false);
   const handleChange = (property: keyof CartProductType, value: any) => {
@@ -76,7 +80,7 @@ const ProductPageContainer = ({
       <div className="w-full xl:flex xl:gap-4">
         <div className="w-full flex-1">
           <ProductSwiper
-            images={images}
+            images={variantImages.length > 0 ? variantImages : images}
             activeImage={activeImage || images[0]}
             setActiveImage={setActiveImage}
           />
@@ -86,6 +90,8 @@ const ProductPageContainer = ({
             productData={productData}
             sizeId={sizeId}
             handleChange={handleChange}
+            setVariantImages={setVariantImages}
+            setActiveImage={setActiveImage}
           />
           <div className="w-full h-auto lg:w-[390px]">
             <div className="z-20">

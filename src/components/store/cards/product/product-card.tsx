@@ -47,7 +47,7 @@ const ProductCard = ({ product }: { product: ProductType }) => {
               />
               <div className="text-xs text-main-secondary">{sales} sold</div>
             </div>
-            {/* )} */}
+            {/* )}  */}
             {/* Price */}
             <ProductPrice sizes={sizes} isCard />
           </Link>

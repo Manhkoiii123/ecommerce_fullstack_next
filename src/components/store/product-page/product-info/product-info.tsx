@@ -6,9 +6,11 @@ import ColorWheel from "@/components/store/shared/color-wheel";
 import Countdown from "@/components/store/shared/countdown";
 import { Separator } from "@/components/ui/separator";
 import { CartProductType, ProductPageDataType } from "@/lib/types";
+import { ProductVariantImage } from "@prisma/client";
 import { CopyIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { Dispatch, SetStateAction } from "react";
 import toast from "react-hot-toast";
 import ReactStars from "react-rating-stars-component";
 interface ProductInfoProps {
@@ -16,12 +18,20 @@ interface ProductInfoProps {
   quantity?: number;
   sizeId: string | undefined;
   handleChange: (property: keyof CartProductType, value: any) => void;
+  setVariantImages: Dispatch<SetStateAction<ProductVariantImage[]>>;
+  setActiveImage: Dispatch<
+    SetStateAction<{
+      url: string;
+    } | null>
+  >;
 }
 const ProductInfo = ({
   productData,
   quantity,
   sizeId,
   handleChange,
+  setVariantImages,
+  setActiveImage,
 }: ProductInfoProps) => {
   if (!productData) return null;
   const {
@@ -29,7 +39,7 @@ const ProductInfo = ({
     name,
     sku,
     colors,
-    variantImages,
+    variantInfo,
     sizes,
     isSale,
     saleEndDate,
@@ -118,10 +128,12 @@ const ProductInfo = ({
           </span>
         </div>
         <div className="mt-4">
-          {variantImages.length > 0 && (
+          {variantInfo.length > 0 && (
             <ProductVariantSelector
-              variants={variantImages}
+              variants={variantInfo}
               slug={productData.variantSlug}
+              setVariantImages={setVariantImages}
+              setActiveImage={setActiveImage}
             />
           )}
         </div>

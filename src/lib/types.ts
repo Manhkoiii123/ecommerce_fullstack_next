@@ -9,6 +9,7 @@ import {
 import { getStoreDefaultShippingDetails } from "@/queries/store";
 import { getAllSubCategories } from "@/queries/subCategories";
 import {
+  Color,
   FreeShipping,
   FreeShippingCountry,
   Prisma,
@@ -169,4 +170,13 @@ export type ReviewsFiltersType = {
 };
 export type ReviewsOrderType = {
   orderBy: "latest" | "oldest" | "highest";
+};
+export type VariantInfoType = {
+  variantName: string;
+  variantSlug: string;
+  variantImage: string;
+  variantUrl: string;
+  images: ProductVariantImage[];
+  sizes: Size[];
+  colors: string;
 };

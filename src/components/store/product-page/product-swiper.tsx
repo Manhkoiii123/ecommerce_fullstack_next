@@ -5,6 +5,7 @@ import Image from "next/image";
 import ImageZoom from "react-image-zooom";
 
 import { cn } from "@/lib/utils";
+import { ProductVariantImage } from "@prisma/client";
 
 export default function ProductSwiper({
   images,

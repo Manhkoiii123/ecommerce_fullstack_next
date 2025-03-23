@@ -15,7 +15,7 @@ interface Props {
   sizeId?: string | undefined;
   sizes: SimplifiedSize[];
   isCard?: boolean;
-  handleChange: (property: keyof CartProductType, value: any) => void;
+  handleChange?: (property: keyof CartProductType, value: any) => void;
 }
 const ProductPrice = ({ sizes, isCard, sizeId, handleChange }: Props) => {
   const pathname = usePathname();
@@ -65,10 +65,12 @@ const ProductPrice = ({ sizes, isCard, sizeId, handleChange }: Props) => {
   const discountedPrice =
     selectedSize.price * (1 - selectedSize.discount / 100);
   useEffect(() => {
-    // khi thay đổi size thì đổi giá theo cái size đấy => update cái data để addtocart
-    handleChange("price", discountedPrice);
-    // thay đổi cả cái stock trong cái data thêm vào
-    handleChange("stock", selectedSize.quantity);
+    if (handleChange) {
+      // khi thay đổi size thì đổi giá theo cái size đấy => update cái data để addtocart
+      handleChange("price", discountedPrice);
+      // thay đổi cả cái stock trong cái data thêm vào
+      handleChange("stock", selectedSize.quantity);
+    }
   }, [sizeId]);
   return (
     <div>
