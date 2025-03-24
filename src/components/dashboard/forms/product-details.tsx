@@ -2,7 +2,7 @@
 
 import { FC, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Category, Store, SubCategory } from "@prisma/client";
+import { Category, OfferTag, Store, SubCategory } from "@prisma/client";
 import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -62,12 +62,14 @@ interface StoreDetailsProps {
   data?: Partial<ProductWithVariantType>;
   categories: Category[];
   storeUrl: string;
+  offerTags: OfferTag[];
 }
 
 const ProductDetails: FC<StoreDetailsProps> = ({
   data,
   categories,
   storeUrl,
+  offerTags,
 }) => {
   const router = useRouter();
   const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
@@ -120,6 +122,7 @@ const ProductDetails: FC<StoreDetailsProps> = ({
       variantImage: data?.variantImage ? [{ url: data.variantImage }] : [],
       subCategoryId: data?.subCategoryId,
       categoryId: data?.categoryId,
+      offerTagId: data?.offerTagId,
       brand: data?.brand,
       sku: data?.sku,
       colors: data?.colors || [{ color: "" }],
@@ -143,6 +146,7 @@ const ProductDetails: FC<StoreDetailsProps> = ({
   }, [form.watch().categoryId]);
   const isLoading = form.formState.isSubmitting;
   const errors = form.formState.errors;
+  console.log("🚀 ~ errors:", errors);
 
   useEffect(() => {
     if (data) {
@@ -190,6 +194,7 @@ const ProductDetails: FC<StoreDetailsProps> = ({
           questions: values.questions,
           saleEndDate: values.saleEndDate,
           weight: values.weight,
+          offerTagId: values.offerTagId || "",
         },
         storeUrl
       );
@@ -462,6 +467,40 @@ const ProductDetails: FC<StoreDetailsProps> = ({
                     )}
                   />
                 )}
+                <FormField
+                  disabled={isLoading}
+                  control={form.control}
+                  name="offerTagId"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Product offer</FormLabel>
+                      <Select
+                        disabled={isLoading || categories.length == 0}
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue
+                              defaultValue={field.value}
+                              placeholder="Select an offer"
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {offerTags &&
+                            offerTags.map((offer) => (
+                              <SelectItem key={offer.id} value={offer.id}>
+                                {offer.name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <div className="flex flex-col lg:flex-row gap-4">

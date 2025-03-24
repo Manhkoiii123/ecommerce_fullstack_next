@@ -63,6 +63,7 @@ export const upsertProduct = async (
       store: { connect: { id: store.id } },
       category: { connect: { id: product.categoryId } },
       subCategory: { connect: { id: product.subCategoryId } },
+      offerTag: { connect: { id: product.offerTagId } },
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
       questions: {
