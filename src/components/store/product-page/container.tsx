@@ -28,7 +28,6 @@ const ProductPageContainer = ({
 }: ProductPageContainerProps) => {
   if (!productData) return null;
   const { images, shippingDetails } = productData;
-  console.log("🚀 ~ images:", images);
   if (typeof shippingDetails === "boolean") return null;
   const data: CartProductType = {
     productId: productData.productId,
@@ -52,6 +51,7 @@ const ProductPageContainer = ({
     deliveryTimeMin: shippingDetails.deliveryTimeMin,
     deliveryTimeMax: shippingDetails.deliveryTimeMax,
     isFreeShipping: shippingDetails.isFreeShipping,
+    freeShippingForAllCountries: productData.freeShippingForAllCountries,
   };
   const [productToBeAddedToCart, setProductToBeAddedToCart] =
     useState<CartProductType>(data);
@@ -108,6 +108,9 @@ const ProductPageContainer = ({
                         quantity={1}
                         shippingDetails={shippingDetails}
                         weight={productData?.weight || 0}
+                        freeShippingForAllCountries={
+                          productData.freeShippingForAllCountries
+                        }
                       />
                     </div>
                     <ReturnPrivacySecurityCard

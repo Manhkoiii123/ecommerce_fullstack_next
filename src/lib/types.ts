@@ -158,6 +158,7 @@ export type CartProductType = {
   deliveryTimeMin: number;
   deliveryTimeMax: number;
   isFreeShipping: boolean;
+  freeShippingForAllCountries: boolean;
 };
 export type RatingStatisticsType = Prisma.PromiseReturnType<
   typeof getRatingStatistics

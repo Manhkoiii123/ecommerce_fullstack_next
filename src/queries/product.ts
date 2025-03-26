@@ -571,6 +571,7 @@ const formatProductResponse = (
     reviewsStatistics: ratingStatistics,
     shippingDetails: productShippingDetails,
     variantInfo: product.variantInfo,
+    freeShippingForAllCountries: product.freeShippingForAllCountries,
   };
 };
 
