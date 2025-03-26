@@ -116,7 +116,7 @@ model Product {
   sales             Int               @default(0)
   shippingFeeMethod ShippingFeeMethod @default(ITEM)
   freeShipping FreeShipping? @relation("ProductFreeShipping")
-
+freeShippingForAllCountries Boolean @default(false)
   variants  ProductVariant[] @relation("ProductToProductVariant")
   specs     Spec[]           @relation("ProductSpec")
   questions Question[]       @relation("ProductQuestion")

@@ -16,6 +16,7 @@ import {
   ProductVariantImage,
   Review,
   ReviewImage,
+  ShippingFeeMethod,
   ShippingRate,
   Size,
   Spec,
@@ -39,15 +40,17 @@ export type ProductWithVariantType = {
   variantName: string;
   variantDescription: string;
   variantImage: string;
-  images: { url: string }[];
+  images: { id?: string; url: string }[];
   categoryId: string;
+  offerTagId: string;
   subCategoryId: string;
   isSale: boolean;
   saleEndDate?: string;
   brand: string;
   sku: string;
-  colors: { color: string }[];
+  colors: { id?: string; color: string }[];
   sizes: {
+    id?: string;
     size: string;
     quantity: number;
     price: number;
@@ -60,6 +63,9 @@ export type ProductWithVariantType = {
   product_specs: { id?: string; name: string; value: string }[];
   variant_specs: { id?: string; name: string; value: string }[];
   questions: { id?: string; question: string; answer: string }[];
+  freeShippingForAllCountries: boolean;
+  freeShippingCountriesIds: { id?: string; label: string; value: string }[];
+  shippingFeeMethod: ShippingFeeMethod;
 };
 
 export type StoreProductType = Prisma.PromiseReturnType<

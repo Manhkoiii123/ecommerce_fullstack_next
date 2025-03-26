@@ -16,11 +16,11 @@ export default async function SellerProductsPage({
 
   const categories = await getAllCategories();
   const offerTags = await getAllOfferTags();
-  // const countries = await db.country.findMany({
-  //   orderBy: {
-  //     createdAt: "desc",
-  //   },
-  // });
+  const countries = await db.country.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
   return (
     <DataTable
       actionButtonText={
@@ -34,7 +34,7 @@ export default async function SellerProductsPage({
           categories={categories}
           offerTags={offerTags}
           storeUrl={params.storeUrl}
-          // countries={countries}
+          countries={countries}
         />
       }
       newTabLink={`/dashboard/seller/stores/${params.storeUrl}/products/new`}

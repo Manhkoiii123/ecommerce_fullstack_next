@@ -111,14 +111,14 @@ export const columns: ColumnDef<StoreProductType>[] = [
       return <span>{row.original.subCategory.name}</span>;
     },
   },
-  //   {
-  //     accessorKey: "offerTag",
-  //     header: "Offer",
-  //     cell: ({ row }) => {
-  //       const offerTag = row.original.offerTag;
-  //       return <span>{offerTag ? offerTag.name : "-"}</span>;
-  //     },
-  //   },
+    {
+      accessorKey: "offerTag",
+      header: "Offer",
+      cell: ({ row }) => {
+        const offerTag = row.original.offerTag;
+        return <span>{offerTag ? offerTag.name : "-"}</span>;
+      },
+    },
   {
     accessorKey: "brand",
     header: "Brand",

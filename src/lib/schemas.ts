@@ -1,3 +1,4 @@
+import { ShippingFeeMethod } from "@prisma/client";
 import * as z from "zod";
 export const CategoryFormSchema = z.object({
   name: z
@@ -292,20 +293,21 @@ export const ProductFormSchema = z.object({
     ),
   isSale: z.boolean().default(false),
   saleEndDate: z.string().optional(),
-  // freeShippingForAllCountries: z.boolean().default(false),
-  // freeShippingCountriesIds: z
-  //   .object({
-  //     id: z.string().optional(),
-  //     label: z.string(),
-  //     value: z.string(),
-  //   })
-  //   .array()
-  //   .optional()
-  //   .refine(
-  //     (ids) => ids?.every((item) => item.label && item.value),
-  //     "Each country must have a valid name and ID."
-  //   )
-  //   .default([]),
+  freeShippingForAllCountries: z.boolean().default(false),
+  freeShippingCountriesIds: z
+    .object({
+      id: z.string().optional(),
+      label: z.string(),
+      value: z.string(),
+    })
+    .array()
+    .optional()
+    .refine(
+      (ids) => ids?.every((item) => item.label && item.value),
+      "Each country must have a valid name and ID."
+    )
+    .default([]),
+  shippingFeeMethod: z.nativeEnum(ShippingFeeMethod),
 });
 
 export const OfferTagFormSchema = z.object({

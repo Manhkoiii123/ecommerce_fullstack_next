@@ -22,140 +22,226 @@ export const upsertProduct = async (
   storeUrl: string
 ) => {
   try {
+    // Retrieve current user
     const user = await currentUser();
+
+    // Check if user is authenticated
     if (!user) throw new Error("Unauthenticated.");
+
+    // Ensure user has seller privileges
     if (user.privateMetadata.role !== "SELLER")
       throw new Error(
         "Unauthorized Access: Seller Privileges Required for Entry."
       );
+
+    // Ensure product data is provided
     if (!product) throw new Error("Please provide product data.");
-    // tìm quán
+
+    // Find the store by URL
     const store = await db.store.findUnique({
       where: { url: storeUrl, userId: user.id },
     });
     if (!store) throw new Error("Store not found.");
-    // đã tồn tại
+
+    // Check if the product already exists
     const existingProduct = await db.product.findUnique({
       where: { id: product.productId },
     });
-    const productSlug = await generateUniqueSlug(
-      slugify(product.name, {
-        replacement: "-",
-        lower: true,
-        trim: true,
-      }),
-      "product"
-    );
-    const variantSlug = await generateUniqueSlug(
-      slugify(product.variantName, {
-        replacement: "-",
-        lower: true,
-        trim: true,
-      }),
-      "productVariant"
-    );
 
-    const commonProductData = {
-      name: product.name,
-      description: product.description,
-      slug: productSlug,
-      brand: product.brand,
-      store: { connect: { id: store.id } },
-      category: { connect: { id: product.categoryId } },
-      subCategory: { connect: { id: product.subCategoryId } },
-      offerTag: { connect: { id: product.offerTagId } },
-      createdAt: product.createdAt,
-      updatedAt: product.updatedAt,
-      questions: {
-        create: product.questions.map((q) => ({
-          question: q.question,
-          answer: q.answer,
-        })),
-      },
-      specs: {
-        create: product.product_specs.map((spec) => ({
-          name: spec.name,
-          value: spec.value,
-        })),
-      },
-    };
-    const commonVariantData = {
-      variantName: product.variantName,
-      variantDescription: product.variantDescription,
-      slug: variantSlug,
-      isSale: product.isSale,
-      sku: product.sku,
-      weight: product.weight,
-      keywords: product.keywords.join(","),
-      saleEndDate: product.saleEndDate,
-      images: {
-        create: product.images.map((image) => ({
-          url: image.url,
-          alt: image.url.split("/").pop() || "",
-        })),
-      },
-      variantImage: product.variantImage,
-      colors: {
-        create: product.colors.map((c) => ({
-          name: c.color,
-        })),
-      },
-      sizes: {
-        create: product.sizes.map((s) => ({
-          size: s.size,
-          quantity: s.quantity,
-          price: s.price,
-          discount: s.discount,
-        })),
-      },
-      specs: {
-        create: product.variant_specs.map((spec) => ({
-          name: spec.name,
-          value: spec.value,
-        })),
-      },
-      createdAt: product.createdAt,
-      updatedAt: product.updatedAt,
-    };
+    // Check if the variant already exists
+    const existingVariant = await db.productVariant.findUnique({
+      where: { id: product.variantId },
+    });
+
     if (existingProduct) {
-      // ghi đè variant của các cái đang có sẵn
-      const variantData = {
-        ...commonVariantData,
-        product: {
-          // connect: { id: product.productId } có nghĩa là liên kết bản ghi variantData với một bản ghi product đã có trong cơ sở dữ liệu dựa trên id.
-          //  thì nó sẽ nối cái productId là cái id của cái product.productId
-          connect: { id: product.productId },
-        },
-      };
-      return await db.productVariant.create({ data: variantData });
+      if (existingVariant) {
+        // Update existing variant and product
+      } else {
+        // Create new variant
+        await handleCreateVariant(product);
+      }
     } else {
-      // Nếu không, tạo một sản phẩm mới với các biến thể
-      const productData = {
-        ...commonProductData,
-        id: product.productId,
-        variants: {
-          create: [
-            {
-              id: product.variantId,
-              ...commonVariantData,
-            },
-          ],
-        },
-      };
-      return await db.product.create({
-        data: productData,
-      });
+      // Create new product and variant
+      await handleProductCreate(product, store.id);
     }
   } catch (error) {
-    console.error(error);
     throw error;
   }
+};
+
+const handleProductCreate = async (
+  product: ProductWithVariantType,
+  storeId: string
+) => {
+  // Generate unique slugs for product and variant
+  const productSlug = await generateUniqueSlug(
+    slugify(product.name, {
+      replacement: "-",
+      lower: true,
+      trim: true,
+    }),
+    "product"
+  );
+
+  const variantSlug = await generateUniqueSlug(
+    slugify(product.variantName, {
+      replacement: "-",
+      lower: true,
+      trim: true,
+    }),
+    "productVariant"
+  );
+
+  const productData = {
+    id: product.productId,
+    name: product.name,
+    description: product.description,
+    slug: productSlug,
+    store: { connect: { id: storeId } },
+    category: { connect: { id: product.categoryId } },
+    subCategory: { connect: { id: product.subCategoryId } },
+    offerTag: { connect: { id: product.offerTagId } },
+    brand: product.brand,
+    specs: {
+      create: product.product_specs.map((spec) => ({
+        name: spec.name,
+        value: spec.value,
+      })),
+    },
+    questions: {
+      create: product.questions.map((q) => ({
+        question: q.question,
+        answer: q.answer,
+      })),
+    },
+    variants: {
+      create: [
+        {
+          id: product.variantId,
+          variantName: product.variantName,
+          variantDescription: product.variantDescription,
+          slug: variantSlug,
+          variantImage: product.variantImage,
+          sku: product.sku,
+          weight: product.weight,
+          keywords: product.keywords.join(","),
+          isSale: product.isSale,
+          saleEndDate: product.saleEndDate,
+          images: {
+            create: product.images.map((img) => ({
+              url: img.url,
+            })),
+          },
+          colors: {
+            create: product.colors.map((color) => ({
+              name: color.color,
+            })),
+          },
+          sizes: {
+            create: product.sizes.map((size) => ({
+              size: size.size,
+              price: size.price,
+              quantity: size.quantity,
+              discount: size.discount,
+            })),
+          },
+          specs: {
+            create: product.variant_specs.map((spec) => ({
+              name: spec.name,
+              value: spec.value,
+            })),
+          },
+          createdAt: product.createdAt,
+          updatedAt: product.updatedAt,
+        },
+      ],
+    },
+    shippingFeeMethod: product.shippingFeeMethod,
+    freeShippingForAllCountries: product.freeShippingForAllCountries,
+    freeShipping: product.freeShippingForAllCountries
+      ? undefined
+      : product.freeShippingCountriesIds &&
+        product.freeShippingCountriesIds.length > 0
+      ? {
+          create: {
+            eligibaleCountries: {
+              create: product.freeShippingCountriesIds.map((country) => ({
+                country: { connect: { id: country.value } },
+              })),
+            },
+          },
+        }
+      : undefined,
+    createdAt: product.createdAt,
+    updatedAt: product.updatedAt,
+  };
+
+  const new_product = await db.product.create({ data: productData });
+  return new_product;
+};
+
+const handleCreateVariant = async (product: ProductWithVariantType) => {
+  const variantSlug = await generateUniqueSlug(
+    slugify(product.variantName, {
+      replacement: "-",
+      lower: true,
+      trim: true,
+    }),
+    "productVariant"
+  );
+
+  const variantData = {
+    id: product.variantId,
+    productId: product.productId,
+    variantName: product.variantName,
+    variantDescription: product.variantDescription,
+    slug: variantSlug,
+    isSale: product.isSale,
+    saleEndDate: product.isSale ? product.saleEndDate : "",
+    sku: product.sku,
+    keywords: product.keywords.join(","),
+    weight: product.weight,
+    variantImage: product.variantImage,
+    images: {
+      create: product.images.map((img) => ({
+        url: img.url,
+      })),
+    },
+    colors: {
+      create: product.colors.map((color) => ({
+        name: color.color,
+      })),
+    },
+    sizes: {
+      create: product.sizes.map((size) => ({
+        size: size.size,
+        price: size.price,
+        quantity: size.quantity,
+        discount: size.discount,
+      })),
+    },
+    specs: {
+      create: product.variant_specs.map((spec) => ({
+        name: spec.name,
+        value: spec.value,
+      })),
+    },
+    createdAt: product.createdAt,
+    updatedAt: product.updatedAt,
+  };
+
+  const new_variant = await db.productVariant.create({ data: variantData });
+  return new_variant;
 };
 
 export const getProductMainInfo = async (productId: string) => {
   const product = await db.product.findUnique({
     where: {
       id: productId,
+    },
+    include: {
+      questions: true,
+      specs: true,
     },
   });
   if (!product) return null;
@@ -167,17 +253,17 @@ export const getProductMainInfo = async (productId: string) => {
     brand: product.brand,
     categoryId: product.categoryId,
     subCategoryId: product.subCategoryId,
-    // offerTagId: product.offerTagId || undefined,
+    offerTagId: product.offerTagId || undefined,
     storeId: product.storeId,
-    // shippingFeeMethod: product.shippingFeeMethod,
-    // questions: product.questions.map((q) => ({
-    //   question: q.question,
-    //   answer: q.answer,
-    // })),
-    // product_specs: product.specs.map((spec) => ({
-    //   name: spec.name,
-    //   value: spec.value,
-    // })),
+    shippingFeeMethod: product.shippingFeeMethod,
+    questions: product.questions.map((q) => ({
+      question: q.question,
+      answer: q.answer,
+    })),
+    product_specs: product.specs.map((spec) => ({
+      name: spec.name,
+      value: spec.value,
+    })),
   };
 };
 
@@ -192,7 +278,7 @@ export const getAllStoreProducts = async (storeUrl: string) => {
     include: {
       category: true,
       subCategory: true,
-      // offerTag: true,
+      offerTag: true,
       variants: {
         include: {
           images: true,
