@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 "use client";
+import { useCartStore } from "@/cart-store/useCartStore";
 import ProductInfo from "@/components/store/product-page/product-info/product-info";
 import ProductSwiper from "@/components/store/product-page/product-swiper";
 import QuantitySelector from "@/components/store/product-page/QuantitySelector";
@@ -7,14 +8,16 @@ import ReturnPrivacySecurityCard from "@/components/store/product-page/returns-s
 import ShipTo from "@/components/store/product-page/shipping/ship-to";
 import ShippingDetails from "@/components/store/product-page/shipping/shipping-details";
 import SocialShare from "@/components/store/shared/social-share";
+import useFromStore from "@/hooks/useFromStore";
 import {
   CartProductType,
   ProductPageDataType,
   ProductVariantDataType,
 } from "@/lib/types";
-import { isProductValidToAdd } from "@/lib/utils";
+import { cn, isProductValidToAdd } from "@/lib/utils";
 import { ProductVariantImage } from "@prisma/client";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface ProductPageContainerProps {
   productData: ProductPageDataType;
@@ -27,7 +30,7 @@ const ProductPageContainer = ({
   sizeId,
 }: ProductPageContainerProps) => {
   if (!productData) return null;
-  const { images, shippingDetails } = productData;
+  const { images, shippingDetails, productId, variantId } = productData;
   if (typeof shippingDetails === "boolean") return null;
   const data: CartProductType = {
     productId: productData.productId,
@@ -74,6 +77,28 @@ const ProductPageContainer = ({
       setIsProductValid(check);
     }
   }, [productToBeAddedToCart]);
+
+  const addToCart = useCartStore((state) => state.addToCart);
+  const cartItems = useFromStore(useCartStore, (state) => state.cart);
+  const maxQty =
+    cartItems && sizeId
+      ? (() => {
+          const search_product = cartItems?.find(
+            (p) =>
+              p.productId === productId &&
+              p.variantId === variantId &&
+              p.sizeId === sizeId
+          );
+          return search_product
+            ? search_product.stock - search_product.quantity
+            : productToBeAddedToCart.stock;
+        })()
+      : productToBeAddedToCart.stock;
+  const handleAddToCart = () => {
+    if (maxQty <= 0) return;
+    addToCart(productToBeAddedToCart);
+    toast.success("Product added to cart successfully");
+  };
 
   return (
     <div className="relative ">
@@ -140,9 +165,13 @@ const ProductPageContainer = ({
                   </button>
                   <button
                     disabled={!isProductValid}
-                    className={`relative w-full py-2.5 min-w-20 bg-orange-border hover:bg-[#e4cdce] text-orange-hover h-11 rounded-3xl leading-6 inline-block font-bold whitespace-nowrap border border-orange-border cursor-pointer transition-all duration-300 ease-bezier-1 select-none ${
-                      !isProductValid ? "cursor-not-allowed" : ""
-                    }`}
+                    className={cn(
+                      "relative w-full py-2.5 min-w-20 bg-orange-border hover:bg-[#e4cdce] text-orange-hover h-11 rounded-3xl leading-6 inline-block font-bold whitespace-nowrap border border-orange-border cursor-pointer transition-all duration-300 ease-bezier-1 select-none",
+                      {
+                        "cursor-not-allowed": !isProductValid || maxQty <= 0,
+                      }
+                    )}
+                    onClick={() => handleAddToCart()}
                   >
                     <span>Add to cart</span>
                   </button>

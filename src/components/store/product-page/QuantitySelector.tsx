@@ -1,4 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks */
+import { useCartStore } from "@/cart-store/useCartStore";
+import useFromStore from "@/hooks/useFromStore";
 import { CartProductType } from "@/lib/types";
 import { Size } from "@prisma/client";
 import { Minus, Plus } from "lucide-react";
@@ -22,11 +24,27 @@ const QuantitySelector = ({
   stock,
 }: QuantitySelectorProps) => {
   if (!sizeId) return null;
+  const cart = useFromStore(useCartStore, (state) => state.cart);
+
+  const maxQty =
+    cart && sizeId
+      ? (() => {
+          const search_product = cart?.find(
+            (p) =>
+              p.productId === productId &&
+              p.variantId === variantId &&
+              p.sizeId === sizeId
+          );
+          return search_product
+            ? search_product.stock - search_product.quantity
+            : stock;
+        })()
+      : stock;
   useEffect(() => {
     handleChange("quantity", 1);
   }, [sizeId]);
   const handleIncrease = () => {
-    if (quantity < stock) {
+    if (quantity < maxQty) {
       handleChange("quantity", quantity + 1);
     }
   };
@@ -40,6 +58,12 @@ const QuantitySelector = ({
       <div className="w-full flex justify-between items-center gap-x-5">
         <div className="grow">
           <span className="block text-xs text-gray-500">Select quantity</span>
+          <span className="block text-xs text-gray-500">
+            {maxQty !== stock &&
+              `(You already have ${
+                stock - maxQty
+              } pieces of this product in cart)`}
+          </span>
           <input
             type="number"
             min={1}
@@ -58,7 +82,7 @@ const QuantitySelector = ({
           </button>
           <button
             onClick={handleIncrease}
-            disabled={quantity === stock}
+            disabled={quantity === maxQty}
             className="size-6 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-full border border-gray-200 bg-white shadow-sm focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
           >
             <Plus className="w-3" />

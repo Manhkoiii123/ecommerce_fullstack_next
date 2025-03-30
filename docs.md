@@ -8,8 +8,10 @@ sync data bằng webhook => deploy ngrok => `ngrok http --domain=pretty-mouse-st
 
 vào webhook của clerk => add endpoind => url `https://pretty-mouse-strangely.ngrok-free.app/api/webhooks` => chọn các event liên quan đến user => add env whsec_lKDVxBMqCxTSlNaOBgl64KZdNg/Gu+Uk
 
-# luông chạy của cái tính tiền + ship
+# 1 vài cái bug fix sau
 
-mua n cái thì cái đầu tiên tính a$ các cái còn lại tính (a-2)$
+- nếu thêm vào giỏ hàng => đang ở VN => free
+- sang bên trang /cart => chuyển sang nước khác thì phí ship có thể thay đổi => chỉnh lại giá ship
 
-ví dụ mua 5 cái giá 1 cái là 5$ => tiền sẽ là 5 + (3 \* 4)
+=> đề xuất => đổi luồng store cart => lưu cái id => vào trang cart => lấy ra thông tin => hiển thị
+`const productData = await getProductPageData(productSlug, variantSlug);`
