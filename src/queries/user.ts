@@ -298,6 +298,7 @@ export const upsertShippingAddress = async (address: ShippingAddress) => {
 
     return upsertedAddress;
   } catch (error) {
-    throw error;
+    console.log("🚀 ~ upsertShippingAddress ~ error:", error);
+    // throw error;
   }
 };

@@ -1,3 +1,4 @@
+import ShippingAddressCard from "@/components/store/cards/address-card";
 import { UserShippingAddressType } from "@/lib/types";
 import { Country, ShippingAddress } from "@prisma/client";
 import { Dispatch, FC, SetStateAction, useEffect } from "react";
@@ -27,7 +28,7 @@ const AddressList: FC<Props> = ({
   };
   return (
     <div className="space-y-5 max-h-80 overflow-y-auto">
-      {/* {addresses.map((address) => (
+      {addresses.map((address) => (
         <ShippingAddressCard
           key={address.id}
           address={address}
@@ -35,7 +36,7 @@ const AddressList: FC<Props> = ({
           isSelected={selectedAddress?.id === address.id}
           onSelect={() => haneldeAddressSelect(address)}
         />
-      ))} */}
+      ))}
     </div>
   );
 };
