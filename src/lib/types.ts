@@ -9,6 +9,8 @@ import {
 import { getStoreDefaultShippingDetails } from "@/queries/store";
 import { getAllSubCategories } from "@/queries/subCategories";
 import {
+  Cart,
+  CartItem,
   Color,
   FreeShipping,
   FreeShippingCountry,
@@ -16,11 +18,13 @@ import {
   ProductVariantImage,
   Review,
   ReviewImage,
+  ShippingAddress,
   ShippingFeeMethod,
   ShippingRate,
   Size,
   Spec,
   User,
+  Country as CountryPrisma,
 } from "@prisma/client";
 import countries from "@/data/countries.json";
 export interface DashboardSidebarMenuInterface {
@@ -197,4 +201,18 @@ export type VariantInfoType = {
   images: ProductVariantImage[];
   sizes: Size[];
   colors: Partial<Color>[];
+};
+export interface Country {
+  name: string;
+  code: string;
+  city: string;
+  region: string;
+}
+export type CartWithCartItemsType = Cart & {
+  cartItems: CartItem[];
+  // coupon: (Coupon & { store: Store }) | null;
+};
+export type UserShippingAddressType = ShippingAddress & {
+  country: CountryPrisma;
+  user: User;
 };

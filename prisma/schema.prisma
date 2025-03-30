@@ -21,17 +21,18 @@ enum Role {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String
-  picture   String   @db.Text
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  stores    Store[]  @relation("UserStores")
-  following Store[]  @relation("UserFollowingStore")
+  id                String            @id @default(uuid())
+  email             String            @unique
+  name              String
+  picture           String            @db.Text
+  role              Role              @default(USER)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  stores            Store[]           @relation("UserStores")
+  following         Store[]           @relation("UserFollowingStore")
   reviews           Review[]          @relation("ReviewToUser")
   cart              Cart?             @relation("UserCart")
+  shippingAddresses ShippingAddress[] @relation("UserShippingAddresses")
 }
 
 model Category {
@@ -109,20 +110,20 @@ enum ShippingFeeMethod {
 }
 
 model Product {
-  id                String            @id @default(uuid())
-  name              String
-  description       String            @db.LongText
-  slug              String            @unique
-  brand             String
-  rating            Float             @default(0)
-  sales             Int               @default(0)
-  shippingFeeMethod ShippingFeeMethod @default(ITEM)
-  freeShipping FreeShipping? @relation("ProductFreeShipping")
-freeShippingForAllCountries Boolean @default(false)
-  variants  ProductVariant[] @relation("ProductToProductVariant")
-  specs     Spec[]           @relation("ProductSpec")
-  questions Question[]       @relation("ProductQuestion")
-  reviews   Review[]         @relation("ReviewToProduct")
+  id                          String            @id @default(uuid())
+  name                        String
+  description                 String            @db.LongText
+  slug                        String            @unique
+  brand                       String
+  rating                      Float             @default(0)
+  sales                       Int               @default(0)
+  shippingFeeMethod           ShippingFeeMethod @default(ITEM)
+  freeShipping                FreeShipping?     @relation("ProductFreeShipping")
+  freeShippingForAllCountries Boolean           @default(false)
+  variants                    ProductVariant[]  @relation("ProductToProductVariant")
+  specs                       Spec[]            @relation("ProductSpec")
+  questions                   Question[]        @relation("ProductQuestion")
+  reviews                     Review[]          @relation("ReviewToProduct")
 
   numReviews Int @default(0)
 
@@ -258,13 +259,14 @@ model OfferTag {
 }
 
 model Country {
-  id            String         @id @default(uuid())
-  name          String         @unique
-  code          String         @unique
-  shippingRates ShippingRate[] @relation("CountryShippingRates")
+  id                    String                @id @default(uuid())
+  name                  String                @unique
+  code                  String                @unique
+  shippingRates         ShippingRate[]        @relation("CountryShippingRates")
   freeShippingCountries FreeShippingCountry[] @relation("FreeShippingToCountry")
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @default(now()) @updatedAt
+  shippingAddresses     ShippingAddress[]     @relation("CountryToShippingAddress")
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @default(now()) @updatedAt
 }
 
 model ShippingRate {
@@ -292,7 +294,6 @@ model ShippingRate {
   @@index([storeId])
 }
 
-
 model FreeShipping {
   id        String  @id @default(uuid())
   productId String  @unique
@@ -303,6 +304,7 @@ model FreeShipping {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 }
+
 model FreeShippingCountry {
   id String @id @default(uuid())
 
@@ -343,6 +345,7 @@ model Review {
   @@index([userId])
   @@index([productId])
 }
+
 model ReviewImage {
   id  String @id @default(uuid())
   url String
@@ -366,12 +369,9 @@ model Cart {
   shippingFees Float      @default(0)
   subTotal     Float
   total        Float
-  
-  
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
 }
 
 model CartItem {
@@ -390,14 +390,39 @@ model CartItem {
   shippingFee Float  @default(0)
   totalPrice  Float
 
-  cartId String
-  cart   Cart   @relation("CartToCartItem", fields: [cartId], references: [id], onDelete: Cascade)
-storeId String
+  cartId  String
+  cart    Cart   @relation("CartToCartItem", fields: [cartId], references: [id], onDelete: Cascade)
+  storeId String
   store   Store  @relation("CartItemToStore", fields: [storeId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([cartId])
-    @@index([storeId])
+  @@index([storeId])
+}
+
+model ShippingAddress {
+  id        String  @id @default(uuid())
+  firstName String
+  lastName  String
+  phone     String
+  address1  String
+  address2  String?
+  state     String
+  city      String
+  zip_code  String
+  default   Boolean @default(false)
+
+  userId String
+  user   User   @relation("UserShippingAddresses", fields: [userId], references: [id])
+
+  countryId String
+  country   Country @relation("CountryToShippingAddress", fields: [countryId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([countryId])
+  @@index([userId])
 }

@@ -3,6 +3,7 @@ import { useCartStore } from "@/cart-store/useCartStore";
 import CartProduct from "@/components/store/cards/cart-product";
 import FastDelivery from "@/components/store/cards/fast-delivery";
 import CartHeader from "@/components/store/cart-page/cart-header";
+import EmptyCart from "@/components/store/cart-page/empty-cart";
 import CartSummary from "@/components/store/cart-page/summary";
 import { SecurityPrivacyCard } from "@/components/store/product-page/returns-security-privacy-card";
 import useFromStore from "@/hooks/useFromStore";
@@ -57,19 +58,7 @@ const CartPage = () => {
           </div>
         </>
       ) : (
-        <>
-          <div className="flex justify-center items-center h-screen">
-            <div className="text-center">
-              <h1 className="text-4xl font-bold mb-4">Your Cart is Empty</h1>
-              <p className="text-gray-600">
-                Looks like you haven&apos;t added anything to your cart yet.
-              </p>
-              <button className="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
-                Go to Store
-              </button>
-            </div>
-          </div>
-        </>
+        <EmptyCart />
       )}
     </div>
   );

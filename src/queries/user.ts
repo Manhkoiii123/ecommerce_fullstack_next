@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { CartProductType } from "@/lib/types";
 import { getShippingDetails } from "@/queries/product";
 import { currentUser } from "@clerk/nextjs/server";
+import { ShippingAddress } from "@prisma/client";
 import { getCookie } from "cookies-next";
 import { cookies } from "next/headers";
 export const followStore = async (storeId: string): Promise<boolean> => {
@@ -229,4 +230,74 @@ export const saveUserCart = async (
   });
   if (cart) return true;
   return false;
+};
+
+export const getUserShippingAddresses = async () => {
+  try {
+    const user = await currentUser();
+
+    if (!user) throw new Error("Unauthenticated.");
+
+    const shippingAddresses = await db.shippingAddress.findMany({
+      where: {
+        userId: user.id,
+      },
+      include: {
+        country: true,
+        user: true,
+      },
+    });
+
+    return shippingAddresses;
+  } catch (error) {
+    throw error;
+  }
+};
+export const upsertShippingAddress = async (address: ShippingAddress) => {
+  try {
+    const user = await currentUser();
+
+    if (!user) throw new Error("Unauthenticated.");
+
+    if (!address) throw new Error("Please provide address data.");
+    // nếu add 1 cái là def thì các cái còn lại sẽ update thành false
+    if (address.default) {
+      const addressDB = await db.shippingAddress.findUnique({
+        where: { id: address.id },
+      });
+      if (addressDB) {
+        try {
+          await db.shippingAddress.updateMany({
+            where: {
+              userId: user.id,
+              default: true,
+            },
+            data: {
+              default: false,
+            },
+          });
+        } catch (error) {
+          throw new Error("Could not reset default shipping addresses");
+        }
+      }
+    }
+
+    const upsertedAddress = await db.shippingAddress.upsert({
+      where: {
+        id: address.id,
+      },
+      update: {
+        ...address,
+        userId: user.id,
+      },
+      create: {
+        ...address,
+        userId: user.id,
+      },
+    });
+
+    return upsertedAddress;
+  } catch (error) {
+    throw error;
+  }
 };
