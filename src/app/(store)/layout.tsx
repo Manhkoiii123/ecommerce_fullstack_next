@@ -9,9 +9,7 @@ import { Toaster } from "react-hot-toast";
 export default function StoreLayout({ children }: { children: ReactNode }) {
   return (
     <div>
-      <Header />
-      <CategoriesHeader />
-      <div className="w-full mb-[75px] p-4">{children}</div>
+      <div className=" ">{children}</div>
       <Footer />
       <Toaster position="top-center" />
     </div>

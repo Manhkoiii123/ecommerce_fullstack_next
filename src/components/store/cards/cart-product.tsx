@@ -1,5 +1,6 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useCartStore } from "@/cart-store/useCartStore";
-import { CartProductType } from "@/lib/types";
+import { CartProductType, Country } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
   Check,
@@ -17,6 +18,7 @@ import React, {
   FC,
   SetStateAction,
   useEffect,
+  useRef,
   useState,
 } from "react";
 interface Props {
@@ -24,12 +26,14 @@ interface Props {
   selectedItems: CartProductType[];
   setSelectedItems: Dispatch<SetStateAction<CartProductType[]>>;
   setTotalShipping: Dispatch<SetStateAction<number>>;
+  userCountry: Country;
 }
 const CartProduct: FC<Props> = ({
   product,
   selectedItems,
   setSelectedItems,
   setTotalShipping,
+  userCountry,
 }) => {
   const {
     productId,
@@ -51,6 +55,9 @@ const CartProduct: FC<Props> = ({
     extraShippingFee,
   } = product;
   const totalPrice = price * quantity;
+
+  const prevShippingFeeRef = useRef(shippingFee);
+  const prevCountryRef = useRef(userCountry);
   const unique_id = `${productId}-${variantId}-${sizeId}`;
   const [shippingInfo, setShippingInfo] = useState({
     initialFee: 0,
@@ -60,7 +67,6 @@ const CartProduct: FC<Props> = ({
     weight: weight,
     shippingService: shippingService,
   });
-  console.log("🚀 ~ shippingInfo:", shippingInfo);
   const selected = selectedItems.find(
     (p) => unique_id === `${p.productId}-${p.variantId}-${p.sizeId}`
   );
@@ -98,9 +104,27 @@ const CartProduct: FC<Props> = ({
     });
   };
 
+  // calc Lại phí khi đổi country
   useEffect(() => {
-    calculateShipping();
-  }, [quantity, selectedItems]);
+    if (
+      shippingFee !== prevShippingFeeRef.current ||
+      userCountry !== prevCountryRef.current
+    ) {
+      calculateShipping();
+      // update ref
+    }
+     prevCountryRef.current = userCountry;
+     prevShippingFeeRef.current = shippingFee;
+     if (!shippingInfo.totalFee) {
+       calculateShipping();
+     }
+  }, [
+    quantity,
+    shippingFee,
+    extraShippingFee,
+    shippingInfo.totalFee,
+    userCountry,
+  ]);
 
   const handleSelectProduct = () => {
     setSelectedItems((prev) => {

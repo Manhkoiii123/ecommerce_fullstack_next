@@ -1,4 +1,5 @@
 import CheckoutContainer from "@/components/store/checkout-page/CheckoutContainer";
+import Header from "@/components/store/layout/header/header";
 import { db } from "@/lib/db";
 import { Country } from "@/lib/types";
 import { getUserShippingAddresses } from "@/queries/user";
@@ -38,16 +39,19 @@ const CheckoutPage = async () => {
     userCountry = JSON.parse(userCountryCookie.value) as Country;
   }
   return (
-    <div className="bg-[#f4f4f4] min-h-[calc(100vh-65px)]">
-      <div className="max-w-container mx-auto py-4 px-2 ">
-        <CheckoutContainer
-          cart={cart}
-          countries={countries}
-          addresses={addresses}
-          //   userCountry={userCountry}
-        />
+    <>
+      <Header />
+      <div className="bg-[#f4f4f4] min-h-[calc(100vh-65px)]">
+        <div className="max-w-container mx-auto py-4 px-2 ">
+          <CheckoutContainer
+            cart={cart}
+            countries={countries}
+            addresses={addresses}
+            //   userCountry={userCountry}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

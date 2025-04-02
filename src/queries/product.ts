@@ -612,6 +612,7 @@ export const getShippingDetails = async (
     countryName: userCountry.name,
     city: userCountry.city,
     isFreeShipping: false,
+    freeShippingForAllCountries: false,
   };
   // tìm cái thông tin country của người dùng đang ở
   const country = await db.country.findUnique({
@@ -668,6 +669,7 @@ export const getShippingDetails = async (
       countryName: userCountry.name,
       city: userCountry.city,
       isFreeShipping: shippingDetails.isFreeShipping,
+      freeShippingForAllCountries: shippingDetails.freeShippingForAllCountries,
     };
     const { isFreeShipping } = shippingDetails;
     switch (shippingFeeMethod) {

@@ -103,7 +103,7 @@ export const useCartStore = create(
           totalPrice,
         }));
 
-        localStorage.setItem("cart", JSON.stringify(updatedCart));
+        // localStorage.setItem("cart", JSON.stringify(updatedCart));
       },
       removeMultipleFromCart: (products: CartProductType[]) => {
         const cart = get().cart;
