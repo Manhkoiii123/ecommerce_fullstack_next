@@ -4,6 +4,8 @@ import { Country, ShippingAddress } from "@prisma/client";
 import React, { useState } from "react";
 import { Country as CountryType } from "@/lib/types";
 import UserShippingAddresses from "@/components/store/shared/shipping-addresses/shipping-addresses";
+import CheckoutProductCard from "@/components/store/cards/checkout-product";
+import PlaceOrderCard from "@/components/store/cards/place-order";
 interface Props {
   cart: CartWithCartItemsType;
   countries: Country[];
@@ -25,13 +27,23 @@ const CheckoutContainer = ({ cart, countries, addresses }: Props) => {
         <div className="w-full p-4 bg-white my-3">
           <div className="relative">
             {cart.cartItems.map((product) => (
-              //CheckoutProductCard
-              <div key={product.id}></div>
+              <CheckoutProductCard
+                key={product.variantId}
+                product={product}
+                // isDiscounted={cartData.coupon?.storeId === product.storeId}
+              />
             ))}
           </div>
         </div>
       </div>
       {/* card side */}
+      <PlaceOrderCard
+        cardId={cart.id}
+        shippingAddress={selectedAddress}
+        shippingFees={cart.shippingFees}
+        subTotal={cart.subTotal}
+        total={cart.total}
+      />
     </div>
   );
 };

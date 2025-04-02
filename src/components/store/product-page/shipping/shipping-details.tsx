@@ -119,7 +119,7 @@ const ShippingDetails: FC<Props> = ({
                 {`${minDate.slice(4)} - ${maxDate.slice(4)}`}
               </strong>
             </span>
-            {!shippingDetails.isFreeShipping && (
+            {!shippingDetails.isFreeShipping && toggle && (
               <ProductShippingFee
                 fee={shippingFee}
                 extraFee={extraShippingFee}
