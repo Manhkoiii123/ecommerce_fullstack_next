@@ -2,6 +2,7 @@
 import { useCartStore } from "@/cart-store/useCartStore";
 import { CartProductType, Country } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { addToWishlist } from "@/queries/user";
 import {
   Check,
   ChevronRight,
@@ -21,6 +22,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { toast } from "sonner";
 interface Props {
   product: CartProductType;
   selectedItems: CartProductType[];
@@ -151,6 +153,15 @@ const CartProduct: FC<Props> = ({
       calculateShipping(quantity - 1);
     }
   };
+
+  const handleaddToWishlist = async () => {
+    try {
+      const res = await addToWishlist(productId, variantId, sizeId);
+      if (res) toast.success("Product successfully added to wishlist.");
+    } catch (error: any) {
+      toast.error(error.toString());
+    }
+  };
   return (
     <div
       className={cn("bg-white px-6 border-t bordet-t-[#ebebeb] select-none", {
@@ -215,7 +226,7 @@ const CartProduct: FC<Props> = ({
               <div className="absolute top-0 right-0">
                 <span
                   className="mr-2.5 cursor-pointer inline-block"
-                  // onClick={() => handleaddToWishlist()}
+                  onClick={() => handleaddToWishlist()}
                 >
                   <Heart className="w-4 hover:stroke-orange-seconadry" />
                 </span>

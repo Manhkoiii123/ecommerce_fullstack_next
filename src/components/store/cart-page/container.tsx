@@ -7,6 +7,7 @@ import EmptyCart from "@/components/store/cart-page/empty-cart";
 import CartSummary from "@/components/store/cart-page/summary";
 
 import { SecurityPrivacyCard } from "@/components/store/product-page/returns-security-privacy-card";
+import CountryNote from "@/components/store/shared/country-note";
 import useFromStore from "@/hooks/useFromStore";
 import { CartProductType, Country } from "@/lib/types";
 import { updateCartWithLatest } from "@/queries/user";
@@ -56,6 +57,9 @@ const CartContainer = ({ userCountry }: { userCountry: Country }) => {
                       selectedItems={selectedItems}
                       setSelectedItems={setSelectedItems}
                     />
+                    <div className="my-2">
+                      <CountryNote country={userCountry.name} />
+                    </div>
                     <div className="h-auto overflow-x-hidden overflow-auto mt-2">
                       {/* cart items */}
                       {cartItems.map((product) => (

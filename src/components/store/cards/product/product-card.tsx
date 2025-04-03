@@ -5,15 +5,24 @@ import ProductPrice from "@/components/store/product-page/product-info/product-p
 import { Button } from "@/components/store/ui/button";
 import { ProductType, VariantSimplified } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { addToWishlist } from "@/queries/user";
 import { Heart } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
 import ReactStars from "react-rating-stars-component";
+import { toast } from "sonner";
 const ProductCard = ({ product }: { product: ProductType }) => {
   const { name, slug, rating, sales, variantImages, variants, id } = product;
   const [variant, setVariant] = useState<VariantSimplified>(variants[0]);
   const { variantSlug, variantName, images, sizes } = variant;
-  const handleaddToWishlist = () => {};
+  const handleaddToWishlist = async () => {
+    try {
+      const res = await addToWishlist(id, variant.variantId);
+      if (res) toast.success("Product successfully added to wishlist.");
+    } catch (error: any) {
+      toast.error(error.toString());
+    }
+  };
   return (
     <div>
       <div

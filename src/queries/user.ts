@@ -667,3 +667,40 @@ export const updateCartWithLatest = async (
   );
   return validatedCartItems;
 };
+
+export const addToWishlist = async (
+  productId: string,
+  variantId: string,
+  sizeId?: string
+) => {
+  const user = await currentUser();
+
+  if (!user) throw new Error("Unauthenticated.");
+
+  const userId = user.id;
+
+  try {
+    const existingWIshlistItem = await db.wishlist.findFirst({
+      where: {
+        userId,
+        productId,
+        variantId,
+      },
+    });
+
+    if (existingWIshlistItem) {
+      throw new Error("Product is already in the wishlist");
+    }
+
+    return await db.wishlist.create({
+      data: {
+        userId,
+        productId,
+        variantId,
+        sizeId,
+      },
+    });
+  } catch (error) {
+    throw error;
+  }
+};
