@@ -35,6 +35,7 @@ const CartProduct: FC<Props> = ({
   setTotalShipping,
   userCountry,
 }) => {
+  console.log("🚀 ~ product:", product);
   const {
     productId,
     variantId,
@@ -111,19 +112,20 @@ const CartProduct: FC<Props> = ({
       userCountry !== prevCountryRef.current
     ) {
       calculateShipping();
-      // update ref
     }
-     prevCountryRef.current = userCountry;
-     prevShippingFeeRef.current = shippingFee;
-     if (!shippingInfo.totalFee) {
-       calculateShipping();
-     }
+    // update ref
+    prevCountryRef.current = userCountry;
+    prevShippingFeeRef.current = shippingFee;
+    if (!shippingInfo.totalFee) {
+      calculateShipping();
+    }
   }, [
     quantity,
     shippingFee,
     extraShippingFee,
     shippingInfo.totalFee,
     userCountry,
+    stock,
   ]);
 
   const handleSelectProduct = () => {

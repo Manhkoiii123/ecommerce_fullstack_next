@@ -80,6 +80,37 @@ const ProductPageContainer = ({
 
   const addToCart = useCartStore((state) => state.addToCart);
   const cartItems = useFromStore(useCartStore, (state) => state.cart);
+  const setCart = useCartStore((state) => state.setCart);
+  // Keeping cart state updated
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      // Check if the "cart" key was changed in localStorage
+      if (event.key === "cart") {
+        try {
+          const parsedValue = event.newValue
+            ? JSON.parse(event.newValue)
+            : null;
+
+          // Check if parsedValue and state are valid and then update the cart
+          if (
+            parsedValue &&
+            parsedValue.state &&
+            Array.isArray(parsedValue.state.cart)
+          ) {
+            setCart(parsedValue.state.cart);
+          }
+        } catch (error) {}
+      }
+    };
+
+    // Attach the event listener
+    window.addEventListener("storage", handleStorageChange);
+
+    // Cleanup the event listener when the component unmounts
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
   const maxQty =
     cartItems && sizeId
       ? (() => {
