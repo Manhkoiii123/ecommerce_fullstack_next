@@ -35,7 +35,8 @@ model User {
   shippingAddresses ShippingAddress[] @relation("UserShippingAddresses")
   orders            Order[]           @relation("UserOrders")
   wishlist          Wishlist[]        @relation("WishlistToUser")
-  // coupons Coupon[]  @relation("CouponToUser")
+  payments          PaymentDetails[]  @relation("PaymentDetailsToUser")
+  coupons           Coupon[]          @relation("CouponToUser")
 }
 
 model Category {
@@ -480,9 +481,13 @@ model Order {
   subTotal     Float
   total        Float
 
-  groups            OrderGroup[]    @relation("OrderGroupToOrder")
-  orderStatus       OrderStatus     @default(Pending)
-  paymentStatus     PaymentStatus   @default(Pending)
+  groups        OrderGroup[]  @relation("OrderGroupToOrder")
+  orderStatus   OrderStatus   @default(Pending)
+  paymentStatus PaymentStatus @default(Pending)
+
+  paymentMethod  PaymentMethod?
+  paymentDetails PaymentDetails? @relation("PaymentDetailsToOrder")
+
   userId            String
   user              User            @relation("UserOrders", fields: [userId], references: [id])
   shippingAddressId String
@@ -515,13 +520,43 @@ model OrderGroup {
   store   Store  @relation("OrderGroupToStore", fields: [storeId], references: [id])
 
   couponId  String?
-  // coupon   Coupon?  @relation("CouponToOrderGroup", fields: [couponId], references: [id])
+  coupon    Coupon?  @relation("CouponToOrderGroup", fields: [couponId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  // @@index([couponId])
 
+  @@index([couponId])
   @@index([orderId])
   @@index([storeId])
+}
+
+enum ProductStatus {
+  Pending
+
+  Processing
+
+  ReadyForShipment
+
+  Shipped
+
+  Delivered
+
+  Canceled
+
+  Returned
+
+  Refunded
+
+  FailedDelivery
+
+  OnHold
+
+  Backordered
+
+  PartiallyShipped
+
+  ExchangeRequested
+
+  AwaitingPickup
 }
 
 model OrderItem {
@@ -545,7 +580,7 @@ model OrderItem {
   orderGroupId String
   orderGroup   OrderGroup @relation("OrderItemToGroup", fields: [orderGroupId], references: [id], onDelete: Cascade)
 
-  // status ProductStatus @default(Pending)
+  status ProductStatus @default(Pending)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -587,8 +622,8 @@ model Coupon {
   storeId String
   store   Store  @relation("CouponToStore", fields: [storeId], references: [id], onDelete: Cascade)
 
-  // orders OrderGroup[]   @relation("CouponToOrderGroup")
-  // users User[]  @relation("CouponToUser")
+  orders OrderGroup[] @relation("CouponToOrderGroup")
+  users  User[]       @relation("CouponToUser")
 
   carts Cart[] @relation("CouponToCart")
 
@@ -596,4 +631,26 @@ model Coupon {
   updatedAt DateTime @updatedAt
 
   @@index([storeId])
+}
+
+model PaymentDetails {
+  id String @id @default(uuid())
+
+  paymentInetntId String
+  paymentMethod   String
+  status          String
+  amount          Float
+  currency        String
+
+  orderId String @unique
+  order   Order  @relation("PaymentDetailsToOrder", fields: [orderId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation("PaymentDetailsToUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([userId])
 }

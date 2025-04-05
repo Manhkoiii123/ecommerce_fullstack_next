@@ -59,7 +59,7 @@ const CheckoutContainer = ({
               <CheckoutProductCard
                 key={product.variantId}
                 product={product}
-                // isDiscounted={cartData.coupon?.storeId === product.storeId}
+                isDiscounted={cartData.coupon?.storeId === product.storeId}
               />
             ))}
           </div>
@@ -73,6 +73,7 @@ const CheckoutContainer = ({
         subTotal={cartData.subTotal}
         total={cartData.total}
         setCartData={setCartData}
+        cartData={cartData}
       />
     </div>
   );

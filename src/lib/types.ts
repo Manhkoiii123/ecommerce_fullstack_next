@@ -25,6 +25,8 @@ import {
   Spec,
   User,
   Country as CountryPrisma,
+  Coupon,
+  Store,
 } from "@prisma/client";
 import countries from "@/data/countries.json";
 export interface DashboardSidebarMenuInterface {
@@ -210,7 +212,7 @@ export interface Country {
 }
 export type CartWithCartItemsType = Cart & {
   cartItems: CartItem[];
-  // coupon: (Coupon & { store: Store }) | null;
+  coupon: (Coupon & { store: Store }) | null;
 };
 export type UserShippingAddressType = ShippingAddress & {
   country: CountryPrisma;

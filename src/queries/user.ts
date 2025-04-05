@@ -326,11 +326,12 @@ export const placeOrder = async (
     },
     include: {
       cartItems: true,
+      coupon: true,
     },
   });
   if (!cart) throw new Error("Cart not found.");
   const cartItems = cart.cartItems;
-
+  const cartCoupon = cart.coupon;
   // lặp qua cái mảng gửi lên để lấy ra phí ship + giá tiền  + quantity để tính được tổng price
   const validatedCartItems = await Promise.all(
     cartItems.map(async (cartProduct) => {
@@ -489,6 +490,12 @@ export const placeOrder = async (
         storeId,
         shippingAddress.countryId
       );
+    const check = storeId === cartCoupon?.storeId;
+    let discountedAmount = 0;
+    if (check && cartCoupon) {
+      discountedAmount = (groupedTotalPrice * cartCoupon.discount) / 100;
+    }
+    const totalAfterDiscount = groupedTotalPrice - discountedAmount;
     const orderGroup = await db.orderGroup.create({
       data: {
         orderId: order.id,
@@ -496,10 +503,11 @@ export const placeOrder = async (
         status: "Pending",
         subTotal: groupedTotalPrice - groupShippingFees,
         shippingFees: groupShippingFees,
-        total: groupedTotalPrice,
+        total: totalAfterDiscount,
         shippingService: shippingService || "International Delivery",
         shippingDeliveryMin: deliveryTimeMin || 7,
         shippingDeliveryMax: deliveryTimeMax || 30,
+        couponId: check && cartCoupon ? cartCoupon?.id : null,
       },
     });
     for (const item of items) {
@@ -523,7 +531,7 @@ export const placeOrder = async (
       });
     }
     // tinhs tienef
-    orderTotalPrice += groupedTotalPrice;
+    orderTotalPrice += totalAfterDiscount;
     orderShippingFee += groupShippingFees;
 
     // update tiền của order
@@ -820,18 +828,18 @@ export const updateCheckoutProductstWithLatest = async (
   );
 
   // Apply coupon if exist
-  // const cartCoupon = await db.cart.findUnique({
-  //   where: {
-  //     id: cartProducts[0].cartId,
-  //   },
-  //   select: {
-  //     coupon: {
-  //       include: {
-  //         store: true,
-  //       },
-  //     },
-  //   },
-  // });
+  const cartCoupon = await db.cart.findUnique({
+    where: {
+      id: cartProducts[0].cartId,
+    },
+    select: {
+      coupon: {
+        include: {
+          store: true,
+        },
+      },
+    },
+  });
   // Recalculate the cart's total price and shipping fees
   const subTotal = validatedCartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
@@ -846,31 +854,31 @@ export const updateCheckoutProductstWithLatest = async (
   let total = subTotal + shippingFees;
 
   // Apply coupon discount if applicable
-  // if (cartCoupon?.coupon) {
-  //   const { coupon } = cartCoupon;
+  if (cartCoupon?.coupon) {
+    const { coupon } = cartCoupon;
 
-  //   const currentDate = new Date();
-  //   const startDate = new Date(coupon.startDate);
-  //   const endDate = new Date(coupon.endDate);
+    const currentDate = new Date();
+    const startDate = new Date(coupon.startDate);
+    const endDate = new Date(coupon.endDate);
 
-  //   if (currentDate > startDate && currentDate < endDate) {
-  //     // Check if the coupon applies to any store in the cart
-  //     const applicableStoreItems = validatedCartItems.filter(
-  //       (item) => item.storeId === coupon.storeId
-  //     );
+    if (currentDate > startDate && currentDate < endDate) {
+      // Check if the coupon applies to any store in the cart
+      const applicableStoreItems = validatedCartItems.filter(
+        (item) => item.storeId === coupon.storeId
+      );
 
-  //     if (applicableStoreItems.length > 0) {
-  //       // Calculate subtotal for the coupon's store (including shipping fees)
-  //       const storeSubTotal = applicableStoreItems.reduce(
-  //         (acc, item) => acc + item.price * item.quantity + item.shippingFee,
-  //         0
-  //       );
-  //       // Apply coupon discount to the store's subtotal
-  //       const discountedAmount = (storeSubTotal * coupon.discount) / 100;
-  //       total -= discountedAmount;
-  //     }
-  //   }
-  // }
+      if (applicableStoreItems.length > 0) {
+        // Calculate subtotal for the coupon's store (including shipping fees)
+        const storeSubTotal = applicableStoreItems.reduce(
+          (acc, item) => acc + item.price * item.quantity + item.shippingFee,
+          0
+        );
+        // Apply coupon discount to the store's subtotal
+        const discountedAmount = (storeSubTotal * coupon.discount) / 100;
+        total -= discountedAmount;
+      }
+    }
+  }
 
   const cart = await db.cart.update({
     where: {
@@ -883,11 +891,11 @@ export const updateCheckoutProductstWithLatest = async (
     },
     include: {
       cartItems: true,
-      // coupon: {
-      //   include: {
-      //     store: true,
-      //   },
-      // },
+      coupon: {
+        include: {
+          store: true,
+        },
+      },
     },
   });
 

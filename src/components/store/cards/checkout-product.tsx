@@ -5,10 +5,10 @@ import Link from "next/link";
 
 export default function CheckoutProductCard({
   product,
-//   isDiscounted,
+  isDiscounted,
 }: {
   product: CartItem;
-//   isDiscounted: boolean;
+  isDiscounted: boolean;
 }) {
   const { productSlug, variantSlug, sizeId, shippingFee } = product;
   return (
@@ -57,11 +57,11 @@ export default function CheckoutProductCard({
                   <span className="inline-block break-all">
                     ${product.price.toFixed(2)} x {product.quantity}
                   </span>
-                  {/* {isDiscounted && (
+                  {isDiscounted && (
                     <span className="text-xs font-normal text-orange-background">
                       (Coupon applied)
                     </span>
-                  )} */}
+                  )}
                 </div>
               </div>
 
