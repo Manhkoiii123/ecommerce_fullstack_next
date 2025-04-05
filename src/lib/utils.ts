@@ -5,6 +5,7 @@ import { PrismaClient } from "@prisma/client";
 import { db } from "@/lib/db";
 import { CartProductType, Country } from "@/lib/types";
 import countries from "@/data/countries.json";
+import { differenceInDays, differenceInHours } from "date-fns";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -209,3 +210,17 @@ export function censorName(firstName: string, lastName: string): CensorReturn {
     fullName: censoredFullName,
   };
 }
+
+export const getTimeUntil = (
+  targetDate: string
+): { days: number; hours: number } => {
+  const target = new Date(targetDate);
+  const now = new Date();
+
+  if (target <= now) return { days: 0, hours: 0 };
+
+  const totalDays = differenceInDays(target, now);
+  const totalHours = differenceInHours(target, now) % 24;
+
+  return { days: totalDays, hours: totalHours };
+};

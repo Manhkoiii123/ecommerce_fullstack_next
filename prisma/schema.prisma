@@ -35,6 +35,7 @@ model User {
   shippingAddresses ShippingAddress[] @relation("UserShippingAddresses")
   orders            Order[]           @relation("UserOrders")
   wishlist          Wishlist[]        @relation("WishlistToUser")
+  // coupons Coupon[]  @relation("CouponToUser")
 }
 
 model Category {
@@ -102,6 +103,7 @@ model Store {
   followers     User[]         @relation("UserFollowingStore")
   cartItems     CartItem[]     @relation("CartItemToStore")
   orderGroups   OrderGroup[]   @relation("OrderGroupToStore")
+  coupons       Coupon[]       @relation("CouponToStore")
 
   @@index([userId])
 }
@@ -372,6 +374,9 @@ model Cart {
   userId String @unique
   user   User   @relation("UserCart", fields: [userId], references: [id], onDelete: Cascade)
 
+  couponId String?
+  coupon   Coupon? @relation("CouponToCart", fields: [couponId], references: [id])
+
   cartItems    CartItem[] @relation("CartToCartItem")
   shippingFees Float      @default(0)
   subTotal     Float
@@ -379,6 +384,8 @@ model Cart {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([couponId])
 }
 
 model CartItem {
@@ -504,10 +511,14 @@ model OrderGroup {
   orderId String
   order   Order  @relation("OrderGroupToOrder", fields: [orderId], references: [id])
 
-  storeId   String
-  store     Store    @relation("OrderGroupToStore", fields: [storeId], references: [id])
+  storeId String
+  store   Store  @relation("OrderGroupToStore", fields: [storeId], references: [id])
+
+  couponId  String?
+  // coupon   Coupon?  @relation("CouponToOrderGroup", fields: [couponId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  // @@index([couponId])
 
   @@index([orderId])
   @@index([storeId])
@@ -564,4 +575,25 @@ model Wishlist {
   @@index([productId])
   @@index([variantId])
   @@index([sizeId])
+}
+
+model Coupon {
+  id        String @id @default(uuid())
+  code      String @unique
+  startDate String
+  endDate   String
+  discount  Int
+
+  storeId String
+  store   Store  @relation("CouponToStore", fields: [storeId], references: [id], onDelete: Cascade)
+
+  // orders OrderGroup[]   @relation("CouponToOrderGroup")
+  // users User[]  @relation("CouponToUser")
+
+  carts Cart[] @relation("CouponToCart")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([storeId])
 }
