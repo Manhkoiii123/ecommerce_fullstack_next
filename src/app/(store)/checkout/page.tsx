@@ -47,7 +47,7 @@ const CheckoutPage = async () => {
             cart={cart}
             countries={countries}
             addresses={addresses}
-            //   userCountry={userCountry}
+            userCountry={userCountry}
           />
         </div>
       </div>

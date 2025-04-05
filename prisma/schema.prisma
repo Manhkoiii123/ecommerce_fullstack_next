@@ -162,7 +162,7 @@ model ProductVariant {
   sku                String
   keywords           String
   sales              Int                   @default(0)
-  weight             Float?
+  weight             Float
   productId          String
   product            Product               @relation("ProductToProductVariant", fields: [productId], references: [id], onDelete: Cascade)
   createdAt          DateTime              @default(now())

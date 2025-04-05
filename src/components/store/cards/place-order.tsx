@@ -47,6 +47,7 @@ const PlaceOrderCard: React.FC<Props> = ({
         <Info title="Subtotal" text={`${subTotal.toFixed(2)}`} />
         <Info title="Shipping Fees" text={`+${shippingFees.toFixed(2)}`} />
         <Info title="Taxes" text="+0.00" />
+        <Info title="Total" text={`${total.toFixed(2)}`} />
         <div className="mt-2 p-4 bg-white">
           <Button onClick={() => handlePlaceOrder()}>
             {loading ? (

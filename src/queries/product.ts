@@ -16,7 +16,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import slugify from "slugify";
 import { getCookie } from "cookies-next";
 import { cookies } from "next/headers";
-import { FreeShipping, Store } from "@prisma/client";
+import { Country, FreeShipping, Store } from "@prisma/client";
 export const upsertProduct = async (
   product: ProductWithVariantType,
   storeUrl: string
@@ -866,4 +866,73 @@ export const getDeliveryDetailsForStoreByCountry = async (
     deliveryTimeMin,
     deliveryTimeMax,
   };
+};
+
+export const getProductShippingFee = async (
+  shippingFeeMethod: string,
+  userCountry: Country,
+  store: Store,
+  freeShipping: FreeShippingWithCountriesType | null,
+  weight: number,
+  quantity: number
+) => {
+  const country = await db.country.findUnique({
+    where: {
+      name: userCountry.name,
+      code: userCountry.code,
+    },
+  });
+
+  if (country) {
+    if (freeShipping) {
+      const free_shipping_countries = freeShipping.eligibaleCountries;
+      const isEligableForFreeShipping = free_shipping_countries.some(
+        (c) => c.countryId === country.id
+      );
+      if (isEligableForFreeShipping) {
+        return 0;
+      }
+    }
+
+    const shippingRate = await db.shippingRate.findFirst({
+      where: {
+        countryId: country.id,
+        storeId: store.id,
+      },
+    });
+
+    // const {
+    //   shippingFeePerItem = store.defaultShippingFeePerItem,
+    //   shippingFeeForAdditionalItem = store.defaultShippingFeeForAdditionalItem,
+    //   shippingFeePerKg = store.defaultShippingFeePerKg,
+    //   shippingFeeFixed = store.defaultShippingFeeFixed,
+    // } = shippingRate || {};
+    const shippingFeePerItem =
+      shippingRate?.shippingFeePerItem || store.defaultShippingFeePerItem;
+    const shippingFeeForAdditionalItem =
+      shippingRate?.shippingFeeForAdditionalItem ||
+      store.defaultShippingFeeForAdditionalItem;
+    const shippingFeePerKg =
+      shippingRate?.shippingFeePerKg || store.defaultShippingFeePerKg;
+    const shippingFeeFixed =
+      shippingRate?.shippingFeeFixed || store.defaultShippingFeeFixed;
+
+    const additionalItemsQty = quantity - 1;
+
+    const feeCalculators: Record<string, () => number> = {
+      ITEM: () =>
+        shippingFeePerItem + shippingFeeForAdditionalItem * additionalItemsQty,
+      WEIGHT: () => shippingFeePerKg * weight * quantity,
+      FIXED: () => shippingFeeFixed,
+    };
+
+    const calculateFee = feeCalculators[shippingFeeMethod];
+    if (calculateFee) {
+      return calculateFee();
+    }
+
+    return 0;
+  }
+
+  return 0;
 };
