@@ -494,3 +494,11 @@ export const CouponFormSchema = z.object({
     .min(1, { message: "Discount must be at least 1." })
     .max(99, { message: "Discount cannot exceed 99." }),
 });
+export const ApplyCouponFormSchema = z.object({
+  coupon: z
+    .string({
+      required_error: "Coupon is required",
+      invalid_type_error: "Coupon must be a string",
+    })
+    .min(2, "Coupon must be atleast 2 characters."),
+});

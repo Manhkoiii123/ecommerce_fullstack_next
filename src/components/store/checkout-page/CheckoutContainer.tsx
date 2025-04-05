@@ -72,6 +72,7 @@ const CheckoutContainer = ({
         shippingFees={cartData.shippingFees}
         subTotal={cartData.subTotal}
         total={cartData.total}
+        setCartData={setCartData}
       />
     </div>
   );

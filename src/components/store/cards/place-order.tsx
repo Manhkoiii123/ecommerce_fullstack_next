@@ -9,12 +9,15 @@ import { PulseLoader } from "react-spinners";
 import { emptyUserCart, placeOrder } from "@/queries/user";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/cart-store/useCartStore";
+import ApplyCouponForm from "@/components/store/forms/apply-coupon";
+import { CartWithCartItemsType } from "@/lib/types";
 interface Props {
   shippingFees: number;
   subTotal: number;
   total: number;
   shippingAddress: ShippingAddress | null;
   cardId: string;
+  setCartData: React.Dispatch<React.SetStateAction<CartWithCartItemsType>>;
 }
 const PlaceOrderCard: React.FC<Props> = ({
   cardId,
@@ -22,6 +25,7 @@ const PlaceOrderCard: React.FC<Props> = ({
   shippingFees,
   subTotal,
   total,
+  setCartData,
 }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const { push } = useRouter();
@@ -47,8 +51,13 @@ const PlaceOrderCard: React.FC<Props> = ({
         <Info title="Subtotal" text={`${subTotal.toFixed(2)}`} />
         <Info title="Shipping Fees" text={`+${shippingFees.toFixed(2)}`} />
         <Info title="Taxes" text="+0.00" />
-        <Info title="Total" text={`${total.toFixed(2)}`} />
-        <div className="mt-2 p-4 bg-white">
+        <Info title="Total" text={`${total.toFixed(2)}`} isBold noBorder />
+        <div className="mt-2">
+          <div className=" bg-white">
+            <ApplyCouponForm cartId={cardId} setCartData={setCartData} />
+          </div>
+        </div>
+        <div className="">
           <Button onClick={() => handlePlaceOrder()}>
             {loading ? (
               <PulseLoader size={5} color="#fff" />
