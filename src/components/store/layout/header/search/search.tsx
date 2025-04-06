@@ -1,4 +1,6 @@
 "use client";
+import SearchSuggestions from "@/components/store/layout/header/search/suggestions";
+import { SearchResult } from "@/lib/types";
 import { Search as SearchIcon } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChangeEvent, useState } from "react";
@@ -13,7 +15,8 @@ export default function Search() {
   const [searchQuery, setSearchQuery] = useState<string>(
     search_query_url || ""
   );
-  //   const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
+  const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
+  console.log("🚀 ~ Search ~ suggestions:", suggestions);
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
@@ -39,10 +42,11 @@ export default function Search() {
       try {
         const res = await fetch(`/api/search-products?search=${value}`);
         const data = await res.json();
-        // setSuggestions(data);
+        console.log("🚀 ~ handleInputChange ~ data:", data);
+        setSuggestions(data);
       } catch (error) {}
     } else {
-      //   setSuggestions([]);
+      setSuggestions([]);
     }
   };
 
@@ -59,9 +63,9 @@ export default function Search() {
           value={searchQuery}
           onChange={handleInputChange}
         />
-        {/* {suggestions.length > 0 && (
+        {suggestions.length > 0 && (
           <SearchSuggestions suggestions={suggestions} query={searchQuery} />
-        )} */}
+        )}
         <button
           type="submit"
           className="border-[1px] rounded-[20px] w-[56px] h-8 mt-1 mr-1 mb-0 ml-0 bg-gradient-to-r from-slate-500 to bg-slate-600 grid place-items-center cursor-pointer"
