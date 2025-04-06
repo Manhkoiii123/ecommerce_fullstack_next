@@ -1,15 +1,27 @@
 "use client";
+import { generateOrderPDFBlob } from "@/components/store/order-page/pdf-invoice";
 import OrderStatusTag from "@/components/store/shared/order-status";
 import PaymentStatusTag from "@/components/store/shared/payment-status";
 import { Button } from "@/components/ui/button";
 import { OrderFulltType, OrderStatus, PaymentStatus } from "@/lib/types";
+import { downloadBlobAsFile, printPDF } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, Download, Printer } from "lucide-react";
 import React from "react";
 
 const OrderHeader = ({ order }: { order: OrderFulltType }) => {
   if (!order) return;
-  const handleDownload = () => {};
-  const handlePrint = () => {};
+  const handleDownload = async () => {
+    try {
+      const pdfBlob = await generateOrderPDFBlob(order);
+      downloadBlobAsFile(pdfBlob, `Order_${order.id}.pdf`);
+    } catch (error) {}
+  };
+  const handlePrint = async () => {
+    try {
+      const pdfBlob = await generateOrderPDFBlob(order);
+      printPDF(pdfBlob);
+    } catch (error) {}
+  };
 
   return (
     <div>
