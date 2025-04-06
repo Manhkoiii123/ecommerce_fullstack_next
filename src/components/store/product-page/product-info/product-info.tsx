@@ -1,5 +1,6 @@
 import ProductAssurancePolicy from "@/components/store/product-page/product-info/assurance-policy";
 import ProductPrice from "@/components/store/product-page/product-info/product-price";
+import ProductWatch from "@/components/store/product-page/product-info/product-watch";
 import SizeSelector from "@/components/store/product-page/product-info/size-selector";
 import ProductVariantSelector from "@/components/store/product-page/product-info/variant-selector";
 import ColorWheel from "@/components/store/shared/color-wheel";
@@ -119,6 +120,9 @@ const ProductInfo = ({
             <Countdown targetDate={saleEndDate} />
           </div>
         )}
+      </div>
+      <div>
+        <ProductWatch productId={productData.productId} />
       </div>
       <div className="mt-4 space-y-2">
         <div className="relative flex items-center justify-between text-main-primary font-bold">
