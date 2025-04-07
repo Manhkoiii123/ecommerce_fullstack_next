@@ -14,7 +14,7 @@ import {
   ProductPageDataType,
   ProductVariantDataType,
 } from "@/lib/types";
-import { cn, isProductValidToAdd } from "@/lib/utils";
+import { cn, isProductValidToAdd, updateProductHistory } from "@/lib/utils";
 import { ProductVariantImage } from "@prisma/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -111,6 +111,9 @@ const ProductPageContainer = ({
       window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
+
+  updateProductHistory(variantId);
+
   const maxQty =
     cartItems && sizeId
       ? (() => {

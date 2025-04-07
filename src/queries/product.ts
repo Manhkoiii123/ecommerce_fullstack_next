@@ -936,3 +936,90 @@ export const getProductShippingFee = async (
 
   return 0;
 };
+
+export const getProductsByIds = async (
+  ids: string[],
+  page: number = 1,
+  pageSize: number = 10
+): Promise<{ products: any; totalPages: number }> => {
+  if (!ids || ids.length === 0) {
+    throw new Error("Ids are undefined");
+  }
+
+  const currentPage = page;
+  const limit = pageSize;
+  const skip = (currentPage - 1) * limit;
+
+  try {
+    const variants = await db.productVariant.findMany({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+      select: {
+        id: true,
+        variantName: true,
+        slug: true,
+        images: {
+          select: {
+            url: true,
+          },
+        },
+        sizes: true,
+        product: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            rating: true,
+            sales: true,
+          },
+        },
+      },
+      take: limit,
+      skip: skip,
+    });
+
+    const new_products = variants.map((variant) => ({
+      id: variant.product.id,
+      slug: variant.product.slug,
+      name: variant.product.name,
+      rating: variant.product.rating,
+      sales: variant.product.sales,
+      variants: [
+        {
+          variantId: variant.id,
+          variantName: variant.variantName,
+          variantSlug: variant.slug,
+          images: variant.images,
+          sizes: variant.sizes,
+        },
+      ],
+      variantImages: [],
+    }));
+
+    const ordered_products = ids
+      .map((id) =>
+        new_products.find((product) => product.variants[0].variantId === id)
+      )
+      .filter(Boolean);
+
+    const allProducts = await db.productVariant.count({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+    });
+
+    const totalPages = Math.ceil(allProducts / pageSize);
+
+    return {
+      products: ordered_products,
+      totalPages,
+    };
+  } catch (error) {
+    throw new Error("Failed to fetch products. Please try again.");
+  }
+};

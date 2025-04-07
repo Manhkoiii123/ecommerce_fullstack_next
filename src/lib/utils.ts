@@ -242,3 +242,26 @@ export const printPDF = (blob: Blob) => {
     });
   }
 };
+
+export const updateProductHistory = (variantId: string) => {
+  let productHistory: string[] = [];
+  const historyString = localStorage.getItem("productHistory");
+
+  if (historyString) {
+    try {
+      productHistory = JSON.parse(historyString);
+    } catch (error) {
+      productHistory = [];
+    }
+  }
+
+  productHistory = productHistory.filter((id) => id !== variantId);
+  productHistory.unshift(variantId);
+
+  const MAX_PRODUCTS = 100;
+  if (productHistory.length > MAX_PRODUCTS) {
+    productHistory.pop();
+  }
+
+  localStorage.setItem("productHistory", JSON.stringify(productHistory));
+};
