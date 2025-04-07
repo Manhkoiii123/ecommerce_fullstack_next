@@ -357,7 +357,17 @@ export const getProducts = async (
       wherClause.AND.push({ subCategoryId: subCategory.id });
     }
   }
-
+  if (filters.offer) {
+    const offer = await db.offerTag.findUnique({
+      where: {
+        url: filters.offer,
+      },
+      select: { id: true },
+    });
+    if (offer) {
+      wherClause.AND.push({ offerTagId: offer.id });
+    }
+  }
   if (filters.search) {
     wherClause.AND.push({
       OR: [
