@@ -4,6 +4,7 @@ import ProductCard from "@/components/store/cards/product/product-card";
 import Header from "@/components/store/layout/header/header";
 import { FiltersQueryType } from "@/lib/types";
 import { getProducts } from "@/queries/product";
+import { getFilteredSizes } from "@/queries/size";
 import React from "react";
 
 const BrowsePage = async ({
@@ -40,6 +41,7 @@ const BrowsePage = async ({
     sort
   );
   const { products } = products_data;
+
   return (
     <div className="relative h-screen overflow-hidden">
       <div className="fixed top-0 left-0 w-full z-10">

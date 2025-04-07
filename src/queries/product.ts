@@ -406,6 +406,22 @@ export const getProducts = async (
     });
   }
 
+  if (filters.size && Array.isArray(filters.size)) {
+    wherClause.AND.push({
+      variants: {
+        some: {
+          sizes: {
+            some: {
+              size: {
+                in: filters.size,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
   // let orderBy: Record<string, SortOrder> = {};
   // switch (sortBy) {
   // case "most-popular":

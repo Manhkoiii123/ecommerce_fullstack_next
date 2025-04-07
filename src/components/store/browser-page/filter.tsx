@@ -1,6 +1,7 @@
 import CategoryFilter from "@/components/store/browser-page/filters/category/category-filter";
 import OfferFilter from "@/components/store/browser-page/filters/offer/offer-filter";
 import PriceFilter from "@/components/store/browser-page/filters/price/price";
+import SizeFilter from "@/components/store/browser-page/filters/size/size-filter";
 import { FiltersQueryType } from "@/lib/types";
 import { getAllCategories } from "@/queries/category";
 import { getAllOfferTags } from "@/queries/offer-tag";
@@ -21,6 +22,7 @@ const ProductFilters = async ({
         <PriceFilter />
         <CategoryFilter categories={categories} />
         <OfferFilter offers={offers} />
+        <SizeFilter queries={queries} storeUrl={storeUrl} />
       </div>
     </div>
   );
