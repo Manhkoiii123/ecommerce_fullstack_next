@@ -1,4 +1,5 @@
 import CategoryFilter from "@/components/store/browser-page/filters/category/category-filter";
+import ColorFilter from "@/components/store/browser-page/filters/color/color-filter";
 import FiltersHeader from "@/components/store/browser-page/filters/header";
 import OfferFilter from "@/components/store/browser-page/filters/offer/offer-filter";
 import PriceFilter from "@/components/store/browser-page/filters/price/price";
@@ -23,6 +24,7 @@ const ProductFilters = async ({
       <div className="border-t w-40 md:w-44">
         <PriceFilter />
         <CategoryFilter categories={categories} />
+        <ColorFilter queries={queries} storeUrl={storeUrl} />
         <OfferFilter offers={offers} />
         <SizeFilter queries={queries} storeUrl={storeUrl} />
       </div>
