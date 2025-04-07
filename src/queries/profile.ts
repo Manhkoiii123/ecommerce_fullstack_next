@@ -257,3 +257,134 @@ export const getUserReviews = async (
     totalCount,
   };
 };
+
+export const getUserWishlist = async (
+  page: number = 1,
+  pageSize: number = 10
+) => {
+  const user = await currentUser();
+
+  if (!user) throw new Error("Unauthenticated.");
+
+  const skip = (page - 1) * pageSize;
+
+  const wishlist = await db.wishlist.findMany({
+    where: {
+      userId: user.id,
+    },
+    include: {
+      product: {
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          rating: true,
+          sales: true,
+          numReviews: true,
+          variants: {
+            select: {
+              id: true,
+              variantName: true,
+              slug: true,
+              images: true,
+              sizes: true,
+            },
+          },
+        },
+      },
+    },
+    take: pageSize,
+    skip,
+  });
+
+  const formattedWishlist = wishlist.map((item) => ({
+    id: item.product.id,
+    slug: item.product.slug,
+    name: item.product.name,
+    rating: item.product.rating,
+    sales: item.product.sales,
+    numReviews: item.product.numReviews,
+    variants: [
+      {
+        variantId: item.product.variants[0].id,
+        variantSlug: item.product.variants[0].slug,
+        variantName: item.product.variants[0].variantName,
+        images: item.product.variants[0].images,
+        sizes: item.product.variants[0].sizes,
+      },
+    ],
+    variantImages: [],
+  }));
+
+  const totalCount = await db.wishlist.count({
+    where: {
+      userId: user.id,
+    },
+  });
+
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  return {
+    wishlist: formattedWishlist,
+    totalPages,
+  };
+};
+
+export const getUserFollowedStores = async (
+  page: number = 1,
+  pageSize: number = 10
+) => {
+  const user = await currentUser();
+
+  if (!user) throw new Error("Unauthenticated.");
+
+  const skip = (page - 1) * pageSize;
+
+  const followedStores = await db.store.findMany({
+    where: {
+      followers: {
+        some: {
+          id: user.id,
+        },
+      },
+    },
+    select: {
+      id: true,
+      url: true,
+      name: true,
+      logo: true,
+      followers: {
+        select: {
+          id: true,
+        },
+      },
+    },
+    take: pageSize,
+    skip,
+  });
+
+  const totalCount = await db.store.count({
+    where: {
+      followers: {
+        some: {
+          id: user.id,
+        },
+      },
+    },
+  });
+
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  const stores = followedStores.map((store) => ({
+    id: store.id,
+    url: store.url,
+    name: store.name,
+    logo: store.logo,
+    followersCount: store.followers.length,
+    isUserFollowingStore: true,
+  }));
+  return {
+    stores,
+    totalPages,
+  };
+};

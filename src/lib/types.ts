@@ -32,7 +32,11 @@ import {
 } from "@prisma/client";
 import countries from "@/data/countries.json";
 import { getOrder } from "@/queries/order";
-import { getUserOrders, getUserPayments } from "@/queries/profile";
+import {
+  getUserOrders,
+  getUserPayments,
+  getUserWishlist,
+} from "@/queries/profile";
 export interface DashboardSidebarMenuInterface {
   label: string;
   icon: string;
@@ -319,3 +323,6 @@ export type ReviewWithImageType = Review & {
   images: ReviewImage[];
   user: User;
 };
+export type ProductWishlistType = Prisma.PromiseReturnType<
+  typeof getUserWishlist
+>["wishlist"][0];
