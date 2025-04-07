@@ -29,6 +29,8 @@ import {
   Store,
   OrderGroup,
   OrderItem,
+  Category,
+  SubCategory,
 } from "@prisma/client";
 import countries from "@/data/countries.json";
 import { getOrder } from "@/queries/order";
@@ -326,3 +328,18 @@ export type ReviewWithImageType = Review & {
 export type ProductWishlistType = Prisma.PromiseReturnType<
   typeof getUserWishlist
 >["wishlist"][0];
+
+export type FiltersQueryType = {
+  search: string;
+  category: string;
+  subCategory: string;
+  offer: string;
+  size: string;
+  sort: string;
+  // minPrice: string;
+  // maxPrice: string;
+  // color: string;
+};
+export type CatgegoryWithSubsType = Category & {
+  subCategories: SubCategory[];
+};

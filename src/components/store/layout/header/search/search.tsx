@@ -16,7 +16,6 @@ export default function Search() {
     search_query_url || ""
   );
   const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
-  console.log("🚀 ~ Search ~ suggestions:", suggestions);
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
@@ -42,7 +41,6 @@ export default function Search() {
       try {
         const res = await fetch(`/api/search-products?search=${value}`);
         const data = await res.json();
-        console.log("🚀 ~ handleInputChange ~ data:", data);
         setSuggestions(data);
       } catch (error) {}
     } else {

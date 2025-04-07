@@ -357,6 +357,27 @@ export const getProducts = async (
       wherClause.AND.push({ subCategoryId: subCategory.id });
     }
   }
+
+  if (filters.search) {
+    wherClause.AND.push({
+      OR: [
+        {
+          name: { contains: filters.search },
+        },
+        {
+          description: { contains: filters.search },
+        },
+        {
+          variants: {
+            some: {
+              variantName: { contains: filters.search },
+              variantDescription: { contains: filters.search },
+            },
+          },
+        },
+      ],
+    });
+  }
   const products = await db.product.findMany({
     where: wherClause,
     take: limit,

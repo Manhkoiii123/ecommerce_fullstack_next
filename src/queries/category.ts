@@ -51,8 +51,34 @@ export const upsertCategory = async (category: Category) => {
   }
 };
 
-export const getAllCategories = async () => {
+export const getAllCategories = async (storeUrl?: string) => {
+  let storeId: string | undefined;
+
+  if (storeUrl) {
+    const store = await db.store.findUnique({
+      where: { url: storeUrl },
+    });
+
+    if (!store) {
+      return [];
+    }
+
+    storeId = store.id;
+  }
+
   const categories = await db.category.findMany({
+    where: storeId
+      ? {
+          products: {
+            some: {
+              storeId: storeId,
+            },
+          },
+        }
+      : {},
+    include: {
+      subCategories: true,
+    },
     orderBy: {
       updatedAt: "desc",
     },
