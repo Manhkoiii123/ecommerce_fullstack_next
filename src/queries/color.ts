@@ -46,7 +46,6 @@ export const getFilteredColors = async (
     take,
   });
 
-  // Get Colors count
   const count = await db.color.count({
     where: {
       productVariant: {
@@ -62,12 +61,10 @@ export const getFilteredColors = async (
     },
   });
 
-  // Remove duplicate colors
   const uniqueColorsArray = Array.from(
     new Set(colors.map((color) => color.name))
   );
 
-  // Return the unique colors in the desired format
   return {
     colors: uniqueColorsArray.map((color) => ({ name: color })),
     count,

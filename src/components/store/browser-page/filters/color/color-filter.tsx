@@ -32,7 +32,6 @@ export default function ColorFilter({
     setColors(data.colors);
     setTotal(data.count);
   };
-  console.log("colors", colors);
   return (
     <div className="pt-5 pb-4">
       {/* Header */}
