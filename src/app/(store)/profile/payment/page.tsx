@@ -1,7 +1,12 @@
-import React from "react";
+import PaymentsTable from "@/components/store/profile/payments/payments-table";
+import { getUserPayments } from "@/queries/profile";
 
-const PaymentPage = () => {
-  return <div>PaymentPage</div>;
-};
-
-export default PaymentPage;
+export default async function ProfilePaymentPage() {
+  const payments_data = await getUserPayments();
+  const { payments, totalPages } = payments_data;
+  return (
+    <div>
+      <PaymentsTable payments={payments} totalPages={totalPages} />
+    </div>
+  );
+}
