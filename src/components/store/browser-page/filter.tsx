@@ -1,4 +1,5 @@
 import CategoryFilter from "@/components/store/browser-page/filters/category/category-filter";
+import FiltersHeader from "@/components/store/browser-page/filters/header";
 import OfferFilter from "@/components/store/browser-page/filters/offer/offer-filter";
 import PriceFilter from "@/components/store/browser-page/filters/price/price";
 import SizeFilter from "@/components/store/browser-page/filters/size/size-filter";
@@ -18,6 +19,7 @@ const ProductFilters = async ({
   const offers = await getAllOfferTags(storeUrl);
   return (
     <div className="h-full w-48 transition-transform overflow-auto pr-6 pb-2.5 flex-none basis-[196px] sticky top-0 overflow-x-hidden scrollbar">
+      <FiltersHeader queries={queries} />
       <div className="border-t w-40 md:w-44">
         <PriceFilter />
         <CategoryFilter categories={categories} />
