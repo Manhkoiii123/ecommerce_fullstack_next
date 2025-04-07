@@ -18,6 +18,11 @@ const CheckoutPage = async () => {
     },
     include: {
       cartItems: true,
+      coupon: {
+        include: {
+          store: true,
+        },
+      },
     },
   });
 
