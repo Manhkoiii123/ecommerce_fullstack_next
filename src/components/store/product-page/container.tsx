@@ -16,6 +16,7 @@ import {
 } from "@/lib/types";
 import { cn, isProductValidToAdd, updateProductHistory } from "@/lib/utils";
 import { ProductVariantImage } from "@prisma/client";
+import { setCookie } from "cookies-next";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -56,6 +57,7 @@ const ProductPageContainer = ({
     isFreeShipping: shippingDetails.isFreeShipping,
     freeShippingForAllCountries: productData.freeShippingForAllCountries,
   };
+
   const [productToBeAddedToCart, setProductToBeAddedToCart] =
     useState<CartProductType>(data);
   const [activeImage, setActiveImage] = useState<{ url: string } | null>(
@@ -134,6 +136,40 @@ const ProductPageContainer = ({
     toast.success("Product added to cart successfully");
   };
 
+  setCookie(`viewedProduct_${productData.productId}`, "true", {
+    maxAge: 3600,
+    path: "/",
+  });
+
+  const [isFixed, setIsFixed] = useState(false);
+  const [offsetLeft, setOffsetLeft] = useState(0);
+
+  const handleScroll = () => {
+    const childrenElement = document.getElementById("children-container");
+    if (childrenElement) {
+      const rect = childrenElement.getBoundingClientRect();
+
+      if (window.scrollY > 600) {
+        setIsFixed(true);
+        setOffsetLeft(rect.right);
+      } else {
+        setIsFixed(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+
+    window.addEventListener("resize", handleScroll);
+
+    handleScroll();
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, []);
   return (
     <div className="relative ">
       <div className="w-full xl:flex xl:gap-4">
@@ -152,76 +188,87 @@ const ProductPageContainer = ({
             setVariantImages={setVariantImages}
             setActiveImage={setActiveImage}
           />
-          <div className="w-full h-auto lg:w-[390px]">
-            <div className="z-20">
-              <div className="bg-white border rounded-md overflow-hidden  p-4 pb-0">
-                {typeof shippingDetails !== "boolean" && (
-                  <>
-                    <ShipTo
-                      countryCode={shippingDetails.countryCode}
-                      countryName={shippingDetails.countryName}
-                      city={shippingDetails.city}
-                    />
-                    <div className="mt-3 space-y-3">
-                      <ShippingDetails
-                        quantity={1}
-                        shippingDetails={shippingDetails}
-                        weight={productData?.weight || 0}
-                        freeShippingForAllCountries={
-                          productData.freeShippingForAllCountries
-                        }
-                      />
-                    </div>
-                    <ReturnPrivacySecurityCard
-                      returnPolicy={shippingDetails?.returnPolicy}
-                      loading={false}
-                    />
-                  </>
-                )}
-                <div className="mt-5 bg-white bottom-0 pb-4 space-y-3 sticky ">
-                  {/* quantity selector */}
-                  {sizeId && (
-                    <div className=" w-full flex justify-end mt-4">
-                      <QuantitySelector
-                        productId={productToBeAddedToCart.productId}
-                        quantity={productToBeAddedToCart.quantity}
-                        size={productData.sizes}
-                        sizeId={productToBeAddedToCart.sizeId}
-                        handleChange={handleChange}
-                        variantId={productToBeAddedToCart.variantId}
-                        stock={productToBeAddedToCart.stock}
-                      />
-                    </div>
-                  )}
-                  {/* action button */}
-                  <button className="relative w-full py-2.5 min-w-20 bg-orange-background hover:bg-orange-hover text-white rounded-3xl h-11 leading-6 inline-block font-bold whitespace-nowrap border border-orange-border cursor-pointer transition-all duration-300 ease-bezier-1 select-none">
-                    <span>Buy now</span>
-                  </button>
-                  <button
-                    disabled={!isProductValid}
-                    className={cn(
-                      "relative w-full py-2.5 min-w-20 bg-orange-border hover:bg-[#e4cdce] text-orange-hover h-11 rounded-3xl leading-6 inline-block font-bold whitespace-nowrap border border-orange-border cursor-pointer transition-all duration-300 ease-bezier-1 select-none",
-                      {
-                        "cursor-not-allowed": !isProductValid || maxQty <= 0,
-                      }
-                    )}
-                    onClick={() => handleAddToCart()}
-                  >
-                    <span>Add to cart</span>
-                  </button>
-                  <SocialShare
-                    // url=""
-                    // quote=""
-                    url={`/product/${productData.productSlug}/${productData.variantSlug}`}
-                    quote={`${productData.name} · ${productData.variantName}`}
+          <div
+            className={`w-full lg:w-[390px] ${
+              isFixed
+                ? `lg:fixed lg:top-2 transition-all duration-300 transform`
+                : "relative"
+            } z-20`}
+            style={{
+              left: isFixed ? `${offsetLeft + 20}px` : "auto",
+              transform: isFixed ? "translateY(0)" : "translateY(-10px)",
+            }}
+          >
+            <div className="bg-white border rounded-md overflow-hidden  p-4 pb-0">
+              {typeof shippingDetails !== "boolean" && (
+                <>
+                  <ShipTo
+                    countryCode={shippingDetails.countryCode}
+                    countryName={shippingDetails.countryName}
+                    city={shippingDetails.city}
                   />
-                </div>
+                  <div className="mt-3 space-y-3">
+                    <ShippingDetails
+                      quantity={1}
+                      shippingDetails={shippingDetails}
+                      weight={productData?.weight || 0}
+                      freeShippingForAllCountries={
+                        productData.freeShippingForAllCountries
+                      }
+                    />
+                  </div>
+                  <ReturnPrivacySecurityCard
+                    returnPolicy={shippingDetails?.returnPolicy}
+                    loading={false}
+                  />
+                </>
+              )}
+              <div className="mt-5 bg-white bottom-0 pb-4 space-y-3 sticky ">
+                {/* quantity selector */}
+                {sizeId && (
+                  <div className=" w-full flex justify-end mt-4">
+                    <QuantitySelector
+                      productId={productToBeAddedToCart.productId}
+                      quantity={productToBeAddedToCart.quantity}
+                      size={productData.sizes}
+                      sizeId={productToBeAddedToCart.sizeId}
+                      handleChange={handleChange}
+                      variantId={productToBeAddedToCart.variantId}
+                      stock={productToBeAddedToCart.stock}
+                    />
+                  </div>
+                )}
+                {/* action button */}
+                <button className="relative w-full py-2.5 min-w-20 bg-orange-background hover:bg-orange-hover text-white rounded-3xl h-11 leading-6 inline-block font-bold whitespace-nowrap border border-orange-border cursor-pointer transition-all duration-300 ease-bezier-1 select-none">
+                  <span>Buy now</span>
+                </button>
+                <button
+                  disabled={!isProductValid}
+                  className={cn(
+                    "relative w-full py-2.5 min-w-20 bg-orange-border hover:bg-[#e4cdce] text-orange-hover h-11 rounded-3xl leading-6 inline-block font-bold whitespace-nowrap border border-orange-border cursor-pointer transition-all duration-300 ease-bezier-1 select-none",
+                    {
+                      "cursor-not-allowed": !isProductValid || maxQty <= 0,
+                    }
+                  )}
+                  onClick={() => handleAddToCart()}
+                >
+                  <span>Add to cart</span>
+                </button>
+                <SocialShare
+                  // url=""
+                  // quote=""
+                  url={`/product/${productData.productSlug}/${productData.variantSlug}`}
+                  quote={`${productData.name} · ${productData.variantName}`}
+                />
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div className="w-full lg:w-[calc(100%-390px)] mt-6 pb-16 ">
+      <div
+        id="children-container"
+        className="lg:w-[calc(100%-410px)] mt-6 pb-16"
+      >
         {children}
       </div>
     </div>

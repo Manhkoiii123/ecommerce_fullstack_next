@@ -14,6 +14,7 @@ export default async function Home() {
       <div className="p-14">
         <ProductList products={products} title="Products" arrow={true} />
       </div>
+      <Footer />
     </div>
   );
 }

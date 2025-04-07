@@ -10,7 +10,6 @@ export default function StoreLayout({ children }: { children: ReactNode }) {
   return (
     <div>
       <div className=" ">{children}</div>
-      <Footer />
       <Toaster position="top-center" />
     </div>
   );

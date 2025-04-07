@@ -520,7 +520,7 @@ export const getProductPageData = async (
     user ? checkIfUserFollowingStore(storeId, user.id) : false,
     getRatingStatistics(product.id),
   ]);
-
+  await incrementProductViews(product.id);
   return formatProductResponse(
     product,
     productShippingDetails,
@@ -1101,5 +1101,25 @@ export const getProductsByIds = async (
     };
   } catch (error) {
     throw new Error("Failed to fetch products. Please try again.");
+  }
+};
+
+const incrementProductViews = async (productId: string) => {
+  const isProductAlreadyViewed = await getCookie(`viewedProduct_${productId}`, {
+    cookies,
+  });
+
+  if (!isProductAlreadyViewed) {
+    console.log("aaaaa");
+    await db.product.update({
+      where: {
+        id: productId,
+      },
+      data: {
+        views: {
+          increment: 1,
+        },
+      },
+    });
   }
 };
