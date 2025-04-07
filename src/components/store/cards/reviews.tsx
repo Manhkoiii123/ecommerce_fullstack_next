@@ -4,7 +4,6 @@ import Image from "next/image";
 import ReactStars from "react-rating-stars-component";
 
 export default function ReviewCard({ review }: { review: ReviewWithImage }) {
-  console.log("🚀 ~ ReviewCard ~ review:", review);
   const { images, user } = review;
   const colors = review.color
     .split(",")

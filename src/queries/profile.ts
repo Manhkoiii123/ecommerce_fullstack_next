@@ -8,6 +8,8 @@ import {
   PaymentStatus,
   PaymentTableDateFilter,
   PaymentTableFilter,
+  ReviewDateFilter,
+  ReviewFilter,
 } from "@/lib/types";
 import { currentUser } from "@clerk/nextjs/server";
 import { subMonths, subYears } from "date-fns";
@@ -183,6 +185,72 @@ export const getUserPayments = async (
 
   return {
     payments,
+    totalPages,
+    currentPage: page,
+    pageSize,
+    totalCount,
+  };
+};
+
+export const getUserReviews = async (
+  filter: ReviewFilter = "",
+  period: ReviewDateFilter = "",
+  search = "",
+  page: number = 1,
+  pageSize: number = 10
+) => {
+  const user = await currentUser();
+
+  if (!user) throw new Error("Unauthenticated.");
+
+  const skip = (page - 1) * pageSize;
+
+  const whereClause: any = {
+    AND: [
+      {
+        userId: user.id,
+      },
+    ],
+  };
+
+  if (filter) whereClause.AND.push({ rating: parseFloat(filter) });
+
+  const now = new Date();
+  if (period === "last-6-months") {
+    whereClause.AND.push({
+      createdAt: { gte: subMonths(now, 6) },
+    });
+  }
+  if (period === "last-1-year")
+    whereClause.AND.push({ createdAt: { gte: subYears(now, 1) } });
+  if (period === "last-2-years")
+    whereClause.AND.push({ createdAt: { gte: subYears(now, 2) } });
+
+  if (search.trim()) {
+    whereClause.AND.push({
+      review: { contains: search },
+    });
+  }
+
+  const reviews = await db.review.findMany({
+    where: whereClause,
+    include: {
+      images: true,
+      user: true,
+    },
+    take: pageSize,
+    skip,
+    orderBy: {
+      updatedAt: "desc",
+    },
+  });
+
+  const totalCount = await db.review.count({ where: whereClause });
+
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  return {
+    reviews,
     totalPages,
     currentPage: page,
     pageSize,

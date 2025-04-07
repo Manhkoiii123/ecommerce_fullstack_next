@@ -306,3 +306,16 @@ export type PaymentTableDateFilter =
 export type UserPaymentType = Prisma.PromiseReturnType<
   typeof getUserPayments
 >["payments"][0];
+
+export type ReviewFilter = "5" | "4" | "3" | "2" | "1" | "";
+
+export type ReviewDateFilter =
+  | ""
+  | "last-6-months"
+  | "last-1-year"
+  | "last-2-years";
+
+export type ReviewWithImageType = Review & {
+  images: ReviewImage[];
+  user: User;
+};
