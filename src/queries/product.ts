@@ -388,8 +388,41 @@ export const getProducts = async (
       ],
     });
   }
+
+  if (filters.minPrice || filters.maxPrice) {
+    wherClause.AND.push({
+      variants: {
+        some: {
+          sizes: {
+            some: {
+              price: {
+                gte: filters.minPrice || 0,
+                lte: filters.maxPrice || Infinity,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  // let orderBy: Record<string, SortOrder> = {};
+  // switch (sortBy) {
+  // case "most-popular":
+  //   orderBy = { views: "desc" };
+  //   break;
+  //   case "new-arrivals":
+  //     orderBy = { createdAt: "desc" };
+  //     break;
+  //   case "top-rated":
+  //     orderBy = { rating: "desc" };
+  //     break;
+  //   default:
+  //     orderBy = { views: "desc" };
+  // }
   const products = await db.product.findMany({
     where: wherClause,
+    // orderBy,
     take: limit,
     skip: skip,
     include: {

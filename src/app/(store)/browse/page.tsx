@@ -1,4 +1,5 @@
 import ProductFilters from "@/components/store/browser-page/filter";
+import ProductSort from "@/components/store/browser-page/sort";
 import ProductCard from "@/components/store/cards/product/product-card";
 import Header from "@/components/store/layout/header/header";
 import { FiltersQueryType } from "@/lib/types";
@@ -17,15 +18,15 @@ const BrowsePage = async ({
     size,
     sort,
     subCategory,
-    // maxPrice,
-    // minPrice,
+    maxPrice,
+    minPrice,
     // color,
   } = searchParams;
   const products_data = await getProducts(
     {
       search,
-      // minPrice: Number(minPrice) || 0,
-      // maxPrice: Number(maxPrice) || Number.MAX_SAFE_INTEGER,
+      minPrice: Number(minPrice) || 0,
+      maxPrice: Number(maxPrice) || Number.MAX_SAFE_INTEGER,
       category,
       subCategory,
       offer,
@@ -50,7 +51,7 @@ const BrowsePage = async ({
       </div>
       <div className="ml-[190px] md:ml-[220px] pt-[140px] lg:pt-20">
         <div className="sticky top-[64px] z-10 px-4 py-2 flex items-center">
-          {/* <ProductSort /> */}
+          <ProductSort />
         </div>
 
         <div className="mt-4 px-4 w-full overflow-y-auto max-h-[calc(100vh-155px)] pb-28 scrollbar flex flex-wrap">
