@@ -16,7 +16,13 @@ import { currentUser } from "@clerk/nextjs/server";
 import slugify from "slugify";
 import { getCookie } from "cookies-next";
 import { cookies } from "next/headers";
-import { Country, FreeShipping, Store } from "@prisma/client";
+import {
+  Country,
+  FreeShipping,
+  ProductVariant,
+  Size,
+  Store,
+} from "@prisma/client";
 export const upsertProduct = async (
   product: ProductWithVariantType,
   storeUrl: string
@@ -422,23 +428,23 @@ export const getProducts = async (
     });
   }
 
-  // let orderBy: Record<string, SortOrder> = {};
-  // switch (sortBy) {
-  // case "most-popular":
-  //   orderBy = { views: "desc" };
-  //   break;
-  //   case "new-arrivals":
-  //     orderBy = { createdAt: "desc" };
-  //     break;
-  //   case "top-rated":
-  //     orderBy = { rating: "desc" };
-  //     break;
-  //   default:
-  //     orderBy = { views: "desc" };
-  // }
+  let orderBy: Record<string, SortOrder> = {};
+  switch (sortBy) {
+    case "most-popular":
+      orderBy = { views: "desc" };
+      break;
+    case "new-arrivals":
+      orderBy = { createdAt: "desc" };
+      break;
+    case "top-rated":
+      orderBy = { rating: "desc" };
+      break;
+    default:
+      orderBy = { views: "desc" };
+  }
   const products = await db.product.findMany({
     where: wherClause,
-    // orderBy,
+    orderBy,
     take: limit,
     skip: skip,
     include: {
@@ -451,7 +457,32 @@ export const getProducts = async (
       },
     },
   });
+  type VariantWithSizes = ProductVariant & { sizes: Size[] };
 
+  products.sort((a, b) => {
+    const getMinPrice = (product: any) =>
+      Math.min(
+        ...product.variants.flatMap((variant: VariantWithSizes) =>
+          variant.sizes.map((size) => {
+            let discount = size.discount;
+            let discountedPrice = size.price * (1 - discount / 100);
+            return discountedPrice;
+          })
+        ),
+        Infinity
+      );
+
+    const minPriceA = getMinPrice(a);
+    const minPriceB = getMinPrice(b);
+
+    if (sortBy === "price-low-to-high") {
+      return minPriceA - minPriceB;
+    } else if (sortBy === "price-high-to-low") {
+      return minPriceB - minPriceA;
+    }
+
+    return 0;
+  });
   const productsWithFilteredVariants = products.map((product) => {
     const filteredVariants = product.variants;
 
@@ -1110,7 +1141,6 @@ const incrementProductViews = async (productId: string) => {
   });
 
   if (!isProductAlreadyViewed) {
-    console.log("aaaaa");
     await db.product.update({
       where: {
         id: productId,
