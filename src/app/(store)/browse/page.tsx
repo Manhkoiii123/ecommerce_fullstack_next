@@ -21,7 +21,7 @@ const BrowsePage = async ({
     subCategory,
     maxPrice,
     minPrice,
-    // color,
+    color,
   } = searchParams;
   const products_data = await getProducts(
     {
@@ -32,11 +32,7 @@ const BrowsePage = async ({
       subCategory,
       offer,
       size: Array.isArray(size) ? size : size ? [size] : undefined,
-      // color: Array.isArray(color)
-      //   ? color
-      //   : color
-      //   ? [color]
-      //   : undefined,
+      color: Array.isArray(color) ? color : color ? [color] : undefined,
     },
     sort
   );

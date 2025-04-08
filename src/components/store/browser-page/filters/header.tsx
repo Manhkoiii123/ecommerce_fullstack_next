@@ -22,7 +22,6 @@ export default function FiltersHeader({
   }, [searchParams]);
 
   const queriesArray = Object.entries(queries);
-  console.log("🚀 ~ queriesArray:", queriesArray);
   const queriesLength = queriesArray.reduce((count, [queryKey, queryValue]) => {
     if (queryKey === "sort") return count;
     if (queryKey === "search" && queryValue === "") return count;

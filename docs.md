@@ -10,8 +10,4 @@ vào webhook của clerk => add endpoind => url `https://pretty-mouse-strangely.
 
 # 1 vài cái bug fix sau
 
-- nếu thêm vào giỏ hàng => đang ở VN => free
-- sang bên trang /cart => chuyển sang nước khác thì phí ship có thể thay đổi => chỉnh lại giá ship
-
-=> đề xuất => đổi luồng store cart => lưu cái id => vào trang cart => lấy ra thông tin => hiển thị
-`const productData = await getProductPageData(productSlug, variantSlug);`
+cập nhật stock và đã bán khi order done => fix
