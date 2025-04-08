@@ -246,3 +246,62 @@ export const upsertShippingRate = async (
     throw error;
   }
 };
+
+export const getStoreOrders = async (storeUrl: string) => {
+  try {
+    const user = await currentUser();
+
+    if (!user) throw new Error("Unauthenticated.");
+
+    if (user.privateMetadata.role !== "SELLER")
+      throw new Error(
+        "Unauthorized Access: Seller Privileges Required for Entry."
+      );
+
+    const store = await db.store.findUnique({
+      where: {
+        url: storeUrl,
+      },
+    });
+
+    if (!store) throw new Error("Store not found.");
+
+    if (user.id !== store.userId) {
+      throw new Error("You don't have persmission to access this store.");
+    }
+
+    const orders = await db.orderGroup.findMany({
+      where: {
+        storeId: store.id,
+      },
+      include: {
+        items: true,
+        coupon: true,
+        order: {
+          select: {
+            paymentStatus: true,
+
+            shippingAddress: {
+              include: {
+                country: true,
+                user: {
+                  select: {
+                    email: true,
+                  },
+                },
+              },
+            },
+            paymentDetails: true,
+          },
+        },
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+    });
+
+    return orders;
+  } catch (error) {
+    throw error;
+  }
+};
