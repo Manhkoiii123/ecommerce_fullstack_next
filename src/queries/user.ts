@@ -529,7 +529,28 @@ export const placeOrder = async (
           totalPrice: item.totalPrice,
         },
       });
+      await db.size.update({
+        where: {
+          id: item.sizeId,
+        },
+        data: {
+          quantity: {
+            decrement: item.quantity,
+          },
+        },
+      });
+      await db.product.update({
+        where: {
+          id: item.productId,
+        },
+        data: {
+          sales: {
+            increment: item.quantity,
+          },
+        },
+      });
     }
+
     // tinhs tienef
     orderTotalPrice += totalAfterDiscount;
     orderShippingFee += groupShippingFees;
