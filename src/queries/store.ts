@@ -1,8 +1,9 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { StoreDefaultShippingType } from "@/lib/types";
-import { currentUser } from "@clerk/nextjs/server";
+import { StoreDefaultShippingType, StoreStatus, StoreType } from "@/lib/types";
+import { checkIfUserFollowingStore } from "@/queries/product";
+import { clerkClient, currentUser } from "@clerk/nextjs/server";
 import { ShippingRate, Store } from "@prisma/client";
 
 export const upsertStore = async (store: Partial<Store>) => {
@@ -304,4 +305,208 @@ export const getStoreOrders = async (storeUrl: string) => {
   } catch (error) {
     throw error;
   }
+};
+
+export const applySeller = async (store: StoreType) => {
+  try {
+    const user = await currentUser();
+
+    if (!user) throw new Error("Unauthenticated.");
+
+    if (!store) throw new Error("Please provide store data.");
+
+    const existingStore = await db.store.findFirst({
+      where: {
+        AND: [
+          {
+            OR: [
+              { name: store.name },
+              { email: store.email },
+              { phone: store.phone },
+              { url: store.url },
+            ],
+          },
+        ],
+      },
+    });
+
+    if (existingStore) {
+      let errorMessage = "";
+      if (existingStore.name === store.name) {
+        errorMessage = "A store with the same name already exists";
+      } else if (existingStore.email === store.email) {
+        errorMessage = "A store with the same email already exists";
+      } else if (existingStore.phone === store.phone) {
+        errorMessage = "A store with the same phone number already exists";
+      } else if (existingStore.url === store.url) {
+        errorMessage = "A store with the same URL already exists";
+      }
+      throw new Error(errorMessage);
+    }
+
+    const storeDetails = await db.store.create({
+      data: {
+        ...store,
+        defaultShippingService:
+          store.defaultShippingService || "International Delivery",
+        returnPolicy: store.returnPolicy || "Return in 30 days.",
+        userId: user.id,
+      },
+    });
+    const client = await clerkClient();
+    await client.users.updateUserMetadata(user.id, {
+      privateMetadata: {
+        role: "SELLER",
+      },
+    });
+    await db.user.upsert({
+      where: {
+        email: user.emailAddresses[0].emailAddress,
+      },
+      update: {
+        role: "SELLER",
+      },
+      create: {
+        id: user.id!,
+        name: user.firstName || "",
+        email: user.emailAddresses[0].emailAddress,
+        picture: user.imageUrl || "",
+        role: "SELLER",
+      },
+    });
+
+    return storeDetails;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getStorePageDetails = async (storeUrl: string) => {
+  const user = await currentUser();
+
+  const store = await db.store.findUnique({
+    where: {
+      url: storeUrl,
+      status: "ACTIVE",
+    },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      logo: true,
+      cover: true,
+      averageRating: true,
+      numReviews: true,
+      _count: {
+        select: {
+          followers: true,
+        },
+      },
+    },
+  });
+  let isUserFollowingStore = false;
+  if (user && store) {
+    isUserFollowingStore = await checkIfUserFollowingStore(store.id, user.id);
+  }
+  if (!store) {
+    throw new Error(`Store with URL "${storeUrl}" not found.`);
+  }
+  return { ...store, isUserFollowingStore };
+};
+
+export const deleteStore = async (storeId: string) => {
+  try {
+    const user = await currentUser();
+
+    if (!user) throw new Error("Unauthenticated.");
+
+    if (user.privateMetadata.role !== "ADMIN")
+      throw new Error(
+        "Unauthorized Access: Admin Privileges Required for Entry."
+      );
+
+    if (!storeId) throw new Error("Please provide store ID.");
+
+    const response = await db.store.delete({
+      where: {
+        id: storeId,
+      },
+    });
+
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getAllStores = async () => {
+  try {
+    const user = await currentUser();
+
+    if (!user) throw new Error("Unauthenticated.");
+
+    if (user.privateMetadata.role !== "ADMIN") {
+      throw new Error(
+        "Unauthorized Access: Admin Privileges Required to View Stores."
+      );
+    }
+
+    const stores = await db.store.findMany({
+      include: {
+        user: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+    return stores;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const updateStoreStatus = async (
+  storeId: string,
+  status: StoreStatus
+) => {
+  const user = await currentUser();
+
+  if (!user) throw new Error("Unauthenticated.");
+
+  if (user.privateMetadata.role !== "ADMIN")
+    throw new Error(
+      "Unauthorized Access: Admin Privileges Required for Entry."
+    );
+
+  const store = await db.store.findUnique({
+    where: {
+      id: storeId,
+    },
+  });
+
+  if (!store) {
+    throw new Error("Store not found !");
+  }
+
+  const updatedStore = await db.store.update({
+    where: {
+      id: storeId,
+    },
+    data: {
+      status,
+    },
+  });
+
+  if (store.status === "PENDING" && updatedStore.status === "ACTIVE") {
+    await db.user.update({
+      where: {
+        id: updatedStore.userId,
+      },
+      data: {
+        role: "SELLER",
+      },
+    });
+  }
+
+  return updatedStore.status;
 };

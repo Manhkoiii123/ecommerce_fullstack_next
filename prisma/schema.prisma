@@ -85,6 +85,7 @@ model Store {
   status                              StoreStatus @default(PENDING)
   averageRating                       Float       @default(0)
   featured                            Boolean     @default(false)
+  numReviews                          Int       @default(0)
   returnPolicy                        String      @default("Return in 30days.")
   defaultShippingService              String      @default("International Delivery")
   defaultShippingFeePerItem           Float       @default(0)

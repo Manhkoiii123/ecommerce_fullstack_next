@@ -1,0 +1,17 @@
+import { getAllStores } from "@/queries/store";
+
+import DataTable from "@/components/ui/data-table";
+import { columns } from "./columns";
+
+export default async function AdminStoresPage() {
+  const stores = await getAllStores();
+
+  return (
+    <DataTable
+      filterValue="name"
+      data={stores}
+      searchPlaceholder="Search store name..."
+      columns={columns}
+    />
+  );
+}
