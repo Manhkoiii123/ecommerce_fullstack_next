@@ -10,6 +10,7 @@ import {
   getAllStores,
   getStoreDefaultShippingDetails,
   getStoreOrders,
+  getStorePageDetails,
 } from "@/queries/store";
 import { getAllSubCategories } from "@/queries/subCategories";
 import {
@@ -419,3 +420,6 @@ export enum StoreStatus {
   DISABLED = "DISABLED",
 }
 export type AdminStoreType = Prisma.PromiseReturnType<typeof getAllStores>[0];
+export type StoreDetailsType = Prisma.PromiseReturnType<
+  typeof getStorePageDetails
+>;
