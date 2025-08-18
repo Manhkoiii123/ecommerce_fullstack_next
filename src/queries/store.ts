@@ -696,9 +696,44 @@ export const getStoreDashboardStats = async (storeUrl: string) => {
     },
   });
 
-  const monthlyUniqueCustomers = new Set(
-    monthlyNewCustomers.map((item) => item.orderId)
-  ).size;
+  // Lấy userId từ các order để xác định khách hàng mới
+  const monthlyOrderIds = monthlyNewCustomers.map((item) => item.orderId);
+  const monthlyOrdersWithUsers = await db.order.findMany({
+    where: {
+      id: { in: monthlyOrderIds },
+    },
+    select: {
+      userId: true,
+      createdAt: true,
+    },
+  });
+
+  // Lấy danh sách userId trong tháng hiện tại
+  const monthlyUserIds = monthlyOrdersWithUsers.map(
+    (order: any) => order.userId
+  );
+
+  // Lấy danh sách userId đã mua hàng trước tháng hiện tại
+  const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const previousMonthOrders = await db.order.findMany({
+    where: {
+      userId: { in: monthlyUserIds },
+      createdAt: { lt: startOfMonth },
+    },
+    select: {
+      userId: true,
+    },
+  });
+
+  const previousMonthUserIds = new Set(
+    previousMonthOrders.map((order: any) => order.userId)
+  );
+
+  // Chỉ đếm những userId chưa từng mua hàng trước tháng hiện tại
+  const trulyNewMonthlyCustomers = monthlyUserIds.filter(
+    (userId: string) => !previousMonthUserIds.has(userId)
+  );
+  const monthlyUniqueCustomers = new Set(trulyNewMonthlyCustomers).size;
 
   // Số khách hàng mới năm nay
   const yearlyNewCustomers = await db.orderGroup.groupBy({
@@ -709,9 +744,42 @@ export const getStoreDashboardStats = async (storeUrl: string) => {
     },
   });
 
-  const yearlyUniqueCustomers = new Set(
-    yearlyNewCustomers.map((item) => item.orderId)
-  ).size;
+  // Lấy userId từ các order để xác định khách hàng mới
+  const yearlyOrderIds = yearlyNewCustomers.map((item) => item.orderId);
+  const yearlyOrdersWithUsers = await db.order.findMany({
+    where: {
+      id: { in: yearlyOrderIds },
+    },
+    select: {
+      userId: true,
+      createdAt: true,
+    },
+  });
+
+  // Lấy danh sách userId trong năm hiện tại
+  const yearlyUserIds = yearlyOrdersWithUsers.map((order: any) => order.userId);
+
+  // Lấy danh sách userId đã mua hàng trước năm hiện tại
+  const previousYearStart = new Date(now.getFullYear() - 1, 0, 1);
+  const previousYearOrders = await db.order.findMany({
+    where: {
+      userId: { in: yearlyUserIds },
+      createdAt: { lt: startOfYear },
+    },
+    select: {
+      userId: true,
+    },
+  });
+
+  const previousYearUserIds = new Set(
+    previousYearOrders.map((order: any) => order.userId)
+  );
+
+  // Chỉ đếm những userId chưa từng mua hàng trước năm hiện tại
+  const trulyNewYearlyCustomers = yearlyUserIds.filter(
+    (userId: string) => !previousYearUserIds.has(userId)
+  );
+  const yearlyUniqueCustomers = new Set(trulyNewYearlyCustomers).size;
 
   return {
     monthly: {
@@ -1015,9 +1083,44 @@ export const getStoreStatsByMonth = async (
     },
   });
 
-  const monthlyUniqueCustomers = new Set(
-    monthlyNewCustomers.map((item) => item.orderId)
-  ).size;
+  // Lấy userId từ các order để xác định khách hàng mới
+  const monthlyOrderIds = monthlyNewCustomers.map((item) => item.orderId);
+  const monthlyOrdersWithUsers = await db.order.findMany({
+    where: {
+      id: { in: monthlyOrderIds },
+    },
+    select: {
+      userId: true,
+      createdAt: true,
+    },
+  });
+
+  // Lấy danh sách userId trong tháng hiện tại
+  const monthlyUserIds = monthlyOrdersWithUsers.map(
+    (order: any) => order.userId
+  );
+
+  // Lấy danh sách userId đã mua hàng trước tháng hiện tại
+  const previousMonthStart = new Date(year, month - 2, 1); // Tháng trước
+  const previousOrders = await db.order.findMany({
+    where: {
+      userId: { in: monthlyUserIds },
+      createdAt: { lt: startOfMonth },
+    },
+    select: {
+      userId: true,
+    },
+  });
+
+  const previousUserIds = new Set(
+    previousOrders.map((order: any) => order.userId)
+  );
+
+  // Chỉ đếm những userId chưa từng mua hàng trước tháng hiện tại
+  const trulyNewCustomers = monthlyUserIds.filter(
+    (userId: string) => !previousUserIds.has(userId)
+  );
+  const monthlyUniqueCustomers = new Set(trulyNewCustomers).size;
 
   // Thống kê trạng thái đơn hàng theo tháng
   const orderStatusStats = await db.orderGroup.groupBy({
@@ -1223,9 +1326,41 @@ export const getStoreDashboardStatsByPeriod = async (
     },
   });
 
-  const periodUniqueCustomers = new Set(
-    periodNewCustomers.map((item) => item.orderId)
-  ).size;
+  // Lấy userId từ các order để xác định khách hàng mới
+  const periodOrderIds = periodNewCustomers.map((item) => item.orderId);
+  const periodOrdersWithUsers = await db.order.findMany({
+    where: {
+      id: { in: periodOrderIds },
+    },
+    select: {
+      userId: true,
+      createdAt: true,
+    },
+  });
+
+  // Lấy danh sách userId trong kỳ hiện tại
+  const periodUserIds = periodOrdersWithUsers.map((order: any) => order.userId);
+
+  // Lấy danh sách userId đã mua hàng trước kỳ hiện tại
+  const previousPeriodOrders = await db.order.findMany({
+    where: {
+      userId: { in: periodUserIds },
+      createdAt: { lt: startOfPeriod },
+    },
+    select: {
+      userId: true,
+    },
+  });
+
+  const previousPeriodUserIds = new Set(
+    previousPeriodOrders.map((order: any) => order.userId)
+  );
+
+  // Chỉ đếm những userId chưa từng mua hàng trước kỳ hiện tại
+  const trulyNewPeriodCustomers = periodUserIds.filter(
+    (userId: string) => !previousPeriodUserIds.has(userId)
+  );
+  const periodUniqueCustomers = new Set(trulyNewPeriodCustomers).size;
 
   return {
     period: {
@@ -1243,27 +1378,234 @@ export const getStoreDashboardStatsByPeriod = async (
   };
 };
 
-/**
- * 
- * // Get overview statistics
-const dashboardStats = await getStoreDashboardStats(storeUrl);
+// Auto-cancel unpaid orders after 3 days
+export const autoCancelUnpaidOrders = async () => {
+  try {
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
-// Get order status statistics
-const orderStatusStats = await getStoreOrderStatusStats(storeUrl);
+    // Find all unpaid orders older than 3 days
+    const unpaidOrders = await db.order.findMany({
+      where: {
+        paymentStatus: "Pending",
+        createdAt: {
+          lt: threeDaysAgo,
+        },
+      },
+      include: {
+        groups: {
+          include: {
+            items: true,
+          },
+        },
+        user: {
+          select: {
+            email: true,
+            name: true,
+          },
+        },
+      },
+    });
 
-// Get weekly revenue
-const weeklyRevenue = await getStoreWeeklyRevenue(storeUrl);
+    if (unpaidOrders.length === 0) {
+      console.log("No unpaid orders older than 3 days found");
+      return { cancelled: 0, message: "No orders to cancel" };
+    }
 
-// Get top selling products
-const topProducts = await getStoreTopRevenueProducts(storeUrl);
+    const cancelledOrders = [];
 
-// Get conversion rate
-const conversionRate = await getStoreConversionRate(storeUrl);
+    for (const order of unpaidOrders) {
+      try {
+        // Update order status to cancelled
+        await db.order.update({
+          where: { id: order.id },
+          data: {
+            paymentStatus: "Cancelled",
+            orderStatus: "Cancelled",
+            updatedAt: new Date(),
+          },
+        });
 
-// Get statistics for specific month (e.g., August 2025)
-const monthlyStats = await getStoreStatsByMonth(storeUrl, 2025, 8);
+        // Update all order groups to cancelled
+        await db.orderGroup.updateMany({
+          where: { orderId: order.id },
+          data: {
+            status: "Cancelled",
+            updatedAt: new Date(),
+          },
+        });
 
-// Get statistics by period (month or year)
-const periodStats = await getStoreDashboardStatsByPeriod(storeUrl, 2025, 8); // August 2025
-const yearStats = await getStoreDashboardStatsByPeriod(storeUrl, 2024); // Year 2024
- */
+        // Note: Inventory restoration would need to be implemented based on your specific inventory management system
+        // This is a placeholder for the inventory restoration logic
+
+        cancelledOrders.push({
+          orderId: order.id,
+          customerEmail: order.user?.email || "Unknown",
+          totalAmount: order.total,
+          cancelledAt: new Date(),
+        });
+
+        console.log(
+          `Order ${order.id} cancelled automatically after 3 days of non-payment`
+        );
+      } catch (error) {
+        console.error(`Error cancelling order ${order.id}:`, error);
+      }
+    }
+
+    return {
+      cancelled: cancelledOrders.length,
+      message: `Successfully cancelled ${cancelledOrders.length} unpaid orders`,
+      cancelledOrders,
+    };
+  } catch (error) {
+    console.error("Error in autoCancelUnpaidOrders:", error);
+    throw error;
+  }
+};
+
+// Get orders that are at risk of being cancelled (unpaid for 2+ days)
+export const getOrdersAtRiskOfCancellation = async (storeUrl?: string) => {
+  try {
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+
+    const whereClause: any = {
+      paymentStatus: "Pending",
+      createdAt: {
+        lt: twoDaysAgo,
+      },
+    };
+
+    if (storeUrl) {
+      whereClause.groups = {
+        some: {
+          store: {
+            url: storeUrl,
+          },
+        },
+      };
+    }
+
+    const atRiskOrders = await db.order.findMany({
+      where: whereClause,
+      include: {
+        user: {
+          select: {
+            email: true,
+            name: true,
+          },
+        },
+        groups: {
+          include: {
+            store: {
+              select: {
+                name: true,
+                url: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
+    return atRiskOrders.map((order) => ({
+      id: order.id,
+      customerEmail: order.user?.email || "Unknown",
+      customerName: order.user?.name || "Unknown",
+      totalAmount: order.total,
+      createdAt: order.createdAt,
+      daysUnpaid: Math.floor(
+        (Date.now() - order.createdAt.getTime()) / (1000 * 60 * 60 * 24)
+      ),
+      stores: order.groups.map((og) => og.store.name).join(", "),
+      willBeCancelledIn:
+        3 -
+        Math.floor(
+          (Date.now() - order.createdAt.getTime()) / (1000 * 60 * 60 * 24)
+        ),
+    }));
+  } catch (error) {
+    console.error("Error getting orders at risk of cancellation:", error);
+    throw error;
+  }
+};
+
+// Manual cancellation of specific order
+export const manuallyCancelOrder = async (orderId: string, reason?: string) => {
+  try {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthenticated.");
+
+    // Check if user is admin or seller
+    if (
+      user.privateMetadata.role !== "ADMIN" &&
+      user.privateMetadata.role !== "SELLER"
+    ) {
+      throw new Error("Unauthorized: Admin or Seller privileges required.");
+    }
+
+    const order = await db.order.findUnique({
+      where: { id: orderId },
+      include: {
+        groups: {
+          include: {
+            items: true,
+          },
+        },
+      },
+    });
+
+    if (!order) {
+      throw new Error("Order not found");
+    }
+
+    // Check if order is already cancelled or paid
+    if (order.paymentStatus === "Cancelled" || order.paymentStatus === "Paid") {
+      throw new Error(
+        `Order cannot be cancelled. Current status: ${order.paymentStatus}`
+      );
+    }
+
+    // Update order status to cancelled
+    await db.order.update({
+      where: { id: orderId },
+      data: {
+        paymentStatus: "Cancelled",
+        orderStatus: "Cancelled",
+        updatedAt: new Date(),
+        // Add cancellation reason if provided
+        ...(reason && {
+          notes: `Cancelled manually by ${user.emailAddresses[0].emailAddress}. Reason: ${reason}`,
+        }),
+      },
+    });
+
+    // Update all order groups to cancelled
+    await db.orderGroup.updateMany({
+      where: { orderId },
+      data: {
+        status: "Cancelled",
+        updatedAt: new Date(),
+      },
+    });
+
+    // Note: Inventory restoration would need to be implemented based on your specific inventory management system
+    // This is a placeholder for the inventory restoration logic
+
+    return {
+      success: true,
+      message: `Order ${orderId} cancelled successfully`,
+      orderId,
+      cancelledAt: new Date(),
+      cancelledBy: user.emailAddresses[0].emailAddress,
+      reason,
+    };
+  } catch (error) {
+    console.error("Error manually cancelling order:", error);
+    throw error;
+  }
+};

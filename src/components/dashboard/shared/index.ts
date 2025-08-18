@@ -5,5 +5,6 @@ export { default as WeeklyRevenueChartInner } from "./weekly-revenue-chart-inner
 export { TopProductsTable } from "./top-products-table";
 export { ConversionRateCard } from "./conversion-rate-card";
 export { DashboardOverview } from "./dashboard-overview";
-export { DashboardPage } from "./dashboard-example";
+export { DashboardPage } from "./dashboard-page";
 export { PeriodSelector } from "./period-selector";
+export { OrdersAtRisk } from "./orders-at-risk";

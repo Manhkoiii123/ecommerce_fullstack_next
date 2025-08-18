@@ -14,6 +14,7 @@ import { WeeklyRevenueChart } from "./weekly-revenue-chart";
 import { TopProductsTable } from "./top-products-table";
 import { ConversionRateCard } from "./conversion-rate-card";
 import { PeriodSelector } from "./period-selector";
+import { OrdersAtRisk } from "./orders-at-risk";
 
 interface DashboardStats {
   monthly: {
@@ -221,6 +222,9 @@ export const DashboardOverview = ({
         {/* Conversion Rate Card */}
         <ConversionRateCard stats={currentConversionRate} />
       </div>
+
+      {/* Orders at Risk Section */}
+      <OrdersAtRisk storeUrl={monthlyStats ? undefined : undefined} />
 
       {/* Yearly Summary - Chỉ hiển thị khi không chọn tháng cụ thể */}
       {!monthlyStats && (

@@ -10,7 +10,6 @@ const OrderGroupsContainer = ({
   groups: OrderGroupWithItemsType[];
   check: boolean;
 }) => {
-  console.log("🚀 ~ groups:", groups);
   const deliveryDetails = groups.map((group) => {
     const { minDate, maxDate } = getShippingDatesRange(
       group.shippingDeliveryMin,

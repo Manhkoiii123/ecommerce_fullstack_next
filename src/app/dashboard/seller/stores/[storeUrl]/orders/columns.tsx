@@ -17,7 +17,7 @@ export const columns: ColumnDef<StoreOrderType>[] = [
     accessorKey: "id",
     header: "Order",
     cell: ({ row }) => {
-      return <span>{row.original.id}</span>;
+      return <span>{row.original.orderId}</span>;
     },
   },
   {
