@@ -19,6 +19,7 @@ import { ProductVariantImage } from "@prisma/client";
 import { setCookie } from "cookies-next";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface ProductPageContainerProps {
   productData: ProductPageDataType;
@@ -136,6 +137,15 @@ const ProductPageContainer = ({
     toast.success("Product added to cart successfully");
   };
 
+  const router = useRouter();
+
+  const handleBuyNow = () => {
+    if (!isProductValid || maxQty <= 0) return;
+    addToCart(productToBeAddedToCart);
+    toast.success("Product added. Redirecting to checkout");
+    router.push("/checkout");
+  };
+
   setCookie(`viewedProduct_${productData.productId}`, "true", {
     maxAge: 3600,
     path: "/",
@@ -239,7 +249,11 @@ const ProductPageContainer = ({
                   </div>
                 )}
                 {/* action button */}
-                <button className="relative w-full py-2.5 min-w-20 bg-orange-background hover:bg-orange-hover text-white rounded-3xl h-11 leading-6 inline-block font-bold whitespace-nowrap border border-orange-border cursor-pointer transition-all duration-300 ease-bezier-1 select-none">
+                <button
+                  disabled={!isProductValid || maxQty <= 0}
+                  onClick={handleBuyNow}
+                  className="relative w-full py-2.5 min-w-20 bg-orange-background hover:bg-orange-hover text-white rounded-3xl h-11 leading-6 inline-block font-bold whitespace-nowrap border border-orange-border cursor-pointer transition-all duration-300 ease-bezier-1 select-none"
+                >
                   <span>Buy now</span>
                 </button>
                 <button
