@@ -62,6 +62,7 @@ export const upsertProduct = async (
     if (existingProduct) {
       if (existingVariant) {
         // Update existing variant and product
+        await handleProductUpdate(product);
       } else {
         // Create new variant
         await handleCreateVariant(product);
@@ -240,6 +241,144 @@ const handleCreateVariant = async (product: ProductWithVariantType) => {
   return new_variant;
 };
 
+const handleProductUpdate = async (product: ProductWithVariantType) => {
+  // Update product
+  await db.product.update({
+    where: { id: product.productId },
+    data: {
+      name: product.name,
+      description: product.description,
+      brand: product.brand,
+      categoryId: product.categoryId,
+      subCategoryId: product.subCategoryId,
+      offerTagId: product.offerTagId || null,
+      shippingFeeMethod: product.shippingFeeMethod,
+      freeShippingForAllCountries: product.freeShippingForAllCountries,
+      updatedAt: new Date(),
+    },
+  });
+
+  // Delete existing related data
+  await db.spec.deleteMany({
+    where: { productId: product.productId },
+  });
+  await db.question.deleteMany({
+    where: { productId: product.productId },
+  });
+  await db.freeShipping.deleteMany({
+    where: { productId: product.productId },
+  });
+
+  // Update variant
+  await db.productVariant.update({
+    where: { id: product.variantId },
+    data: {
+      variantName: product.variantName,
+      variantDescription: product.variantDescription,
+      variantImage: product.variantImage,
+      sku: product.sku,
+      weight: product.weight,
+      keywords: product.keywords.join(","),
+      isSale: product.isSale,
+      saleEndDate: product.saleEndDate,
+      updatedAt: new Date(),
+    },
+  });
+
+  // Delete existing variant related data (except images - we'll handle them separately)
+  await db.color.deleteMany({
+    where: { productVariantId: product.variantId },
+  });
+  await db.size.deleteMany({
+    where: { productVariantId: product.variantId },
+  });
+  await db.spec.deleteMany({
+    where: { variantId: product.variantId },
+  });
+
+  // Create new related data
+  await db.spec.createMany({
+    data: product.product_specs.map((spec) => ({
+      name: spec.name,
+      value: spec.value,
+      productId: product.productId,
+    })),
+  });
+
+  await db.question.createMany({
+    data: product.questions.map((q) => ({
+      question: q.question,
+      answer: q.answer,
+      productId: product.productId,
+    })),
+  });
+
+  // Handle images: preserve existing ones and add new ones
+  const existingImages = await db.productVariantImage.findMany({
+    where: { productVariantId: product.variantId },
+    select: { url: true },
+  });
+
+  const existingImageUrls = existingImages.map((img) => img.url);
+  const newImageUrls = product.images.filter(
+    (img) => !existingImageUrls.includes(img.url)
+  );
+
+  // Only create new images that don't exist
+  if (newImageUrls.length > 0) {
+    await db.productVariantImage.createMany({
+      data: newImageUrls.map((img) => ({
+        url: img.url,
+        productVariantId: product.variantId,
+      })),
+    });
+  }
+
+  await db.color.createMany({
+    data: product.colors.map((color) => ({
+      name: color.color,
+      productVariantId: product.variantId,
+    })),
+  });
+
+  await db.size.createMany({
+    data: product.sizes.map((size) => ({
+      size: size.size,
+      quantity: size.quantity,
+      price: size.price,
+      discount: size.discount,
+      productVariantId: product.variantId,
+    })),
+  });
+
+  await db.spec.createMany({
+    data: product.variant_specs.map((spec) => ({
+      name: spec.name,
+      value: spec.value,
+      variantId: product.variantId,
+    })),
+  });
+
+  // Handle free shipping
+  if (product.freeShippingForAllCountries) {
+    // No specific countries needed
+  } else if (
+    product.freeShippingCountriesIds &&
+    product.freeShippingCountriesIds.length > 0
+  ) {
+    await db.freeShipping.create({
+      data: {
+        productId: product.productId,
+        eligibaleCountries: {
+          create: product.freeShippingCountriesIds.map((country) => ({
+            country: { connect: { id: country.value } },
+          })),
+        },
+      },
+    });
+  }
+};
+
 export const getProductMainInfo = async (productId: string) => {
   const product = await db.product.findUnique({
     where: {
@@ -273,6 +412,108 @@ export const getProductMainInfo = async (productId: string) => {
   };
 };
 
+export const getProductForEdit = async (
+  productId: string,
+  storeUrl: string
+) => {
+  // authn + authz
+  const user = await currentUser();
+  if (!user) throw new Error("Unauthenticated.");
+  if (user.privateMetadata.role !== "SELLER")
+    throw new Error(
+      "Unauthorized Access: Seller Privileges Required for Entry."
+    );
+
+  if (!productId) throw new Error("Please provide product id.");
+  if (!storeUrl) throw new Error("Please provide store url.");
+
+  const store = await db.store.findUnique({
+    where: { url: storeUrl, userId: user.id },
+    select: { id: true },
+  });
+  if (!store) throw new Error("Store not found.");
+
+  // fetch product within the seller's store
+  const product = await db.product.findFirst({
+    where: { id: productId, storeId: store.id },
+    include: {
+      specs: true,
+      questions: true,
+      variants: {
+        include: {
+          images: true,
+          colors: true,
+          sizes: true,
+          specs: true,
+        },
+      },
+      freeShipping: {
+        include: {
+          eligibaleCountries: {
+            include: { country: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!product) throw new Error("Product not found.");
+  const variant = product.variants[0];
+  if (!variant) throw new Error("Product has no variants.");
+
+  return {
+    productId: product.id,
+    variantId: variant.id,
+    name: product.name,
+    description: product.description,
+    variantName: variant.variantName,
+    variantDescription: variant.variantDescription || "",
+    variantImage:
+      variant.variantImage || (variant.images[0] ? variant.images[0].url : ""),
+    images: variant.images.map((img) => ({ url: img.url })),
+    categoryId: product.categoryId,
+    subCategoryId: product.subCategoryId,
+    offerTagId: product.offerTagId || "",
+    isSale: variant.isSale,
+    saleEndDate: variant.saleEndDate || "",
+    brand: product.brand,
+    sku: variant.sku,
+    colors: variant.colors.map((c) => ({ color: c.name })),
+    sizes: variant.sizes.map((s) => ({
+      size: s.size,
+      quantity: s.quantity,
+      price: s.price,
+      discount: s.discount,
+    })),
+    keywords: variant.keywords
+      ? variant.keywords.split(",").filter(Boolean)
+      : [],
+    createdAt: product.createdAt,
+    updatedAt: product.updatedAt,
+    weight: variant.weight,
+    product_specs: product.specs.map((spec) => ({
+      name: spec.name,
+      value: spec.value,
+    })),
+    variant_specs: variant.specs.map((spec) => ({
+      name: spec.name,
+      value: spec.value,
+    })),
+    questions: product.questions.map((q) => ({
+      question: q.question,
+      answer: q.answer,
+    })),
+    freeShippingForAllCountries: product.freeShippingForAllCountries,
+    freeShippingCountriesIds: product.freeShipping
+      ? product.freeShipping.eligibaleCountries.map((ec) => ({
+          value: ec.country.id,
+          label: ec.country.name,
+        }))
+      : [],
+    shippingFeeMethod: product.shippingFeeMethod,
+  };
+};
+
 export const getAllStoreProducts = async (storeUrl: string) => {
   const store = await db.store.findUnique({ where: { url: storeUrl } });
   if (!store) throw new Error("Please provide a valid store URL.");
@@ -281,15 +522,59 @@ export const getAllStoreProducts = async (storeUrl: string) => {
     where: {
       storeId: store.id,
     },
-    include: {
-      category: true,
-      subCategory: true,
-      offerTag: true,
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      slug: true,
+      brand: true,
+      categoryId: true,
+      subCategoryId: true,
+      offerTagId: true,
+      category: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      offerTag: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
       variants: {
-        include: {
-          images: true,
-          colors: true,
-          sizes: true,
+        select: {
+          id: true,
+          variantName: true,
+          variantDescription: true,
+          variantImage: true,
+          sku: true,
+          weight: true,
+          keywords: true,
+          isSale: true,
+          saleEndDate: true,
+          images: {
+            select: {
+              id: true,
+              url: true,
+            },
+          },
+          colors: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          sizes: {
+            select: {
+              id: true,
+              size: true,
+              quantity: true,
+              price: true,
+              discount: true,
+            },
+          },
         },
       },
       store: {
@@ -301,7 +586,64 @@ export const getAllStoreProducts = async (storeUrl: string) => {
     },
   });
 
-  return products;
+  // Handle null subCategory by providing a default value
+  const productsWithSubCategory = await Promise.all(
+    products.map(async (product) => {
+      let subCategory;
+
+      if (product.subCategoryId) {
+        // Fetch actual subcategory data
+        const subCat = await db.subCategory.findUnique({
+          where: { id: product.subCategoryId },
+          select: {
+            id: true,
+            name: true,
+            image: true,
+            url: true,
+            featured: true,
+            categoryId: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        });
+
+        if (subCat) {
+          subCategory = subCat;
+        } else {
+          // Fallback if subcategory not found
+          subCategory = {
+            id: product.subCategoryId,
+            name: "Unknown Subcategory",
+            image: "",
+            url: "",
+            featured: false,
+            categoryId: product.categoryId,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+        }
+      } else {
+        // No subcategory
+        subCategory = {
+          id: "",
+          name: "No Subcategory",
+          image: "",
+          url: "",
+          featured: false,
+          categoryId: product.categoryId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+      }
+
+      return {
+        ...product,
+        subCategory,
+      };
+    })
+  );
+
+  return productsWithSubCategory;
 };
 
 export const deleteProduct = async (productId: string) => {

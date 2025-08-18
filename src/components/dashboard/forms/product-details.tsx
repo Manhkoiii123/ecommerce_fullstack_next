@@ -107,7 +107,7 @@ const ProductDetails: FC<StoreDetailsProps> = ({
   }));
   const router = useRouter();
   const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
-  const [images, setImages] = useState<{ url: string }[]>([]);
+  const [images, setImages] = useState<{ url: string }[]>(data?.images || []);
   const [colors, setColors] = useState<{ color: string }[]>(
     data?.colors || [{ color: "" }]
   );
@@ -125,7 +125,7 @@ const ProductDetails: FC<StoreDetailsProps> = ({
   const [variantSpecs, setVariantSpecs] = useState<
     { name: string; value: string }[]
   >(data?.variant_specs || [{ name: "", value: "" }]);
-  const [keywords, setKeywords] = useState<string[]>([]);
+  const [keywords, setKeywords] = useState<string[]>(data?.keywords || []);
   const handleAddition = (keyword: Keyword) => {
     if (keywords.length === 10) return;
     setKeywords([...keywords, keyword.text]);
@@ -185,6 +185,10 @@ const ProductDetails: FC<StoreDetailsProps> = ({
     const getSubCategories = async () => {
       const res = await getAllCategoriesForCategory(form.watch().categoryId);
       setSubCategories(res);
+
+      if (res.length === 0) {
+        form.setValue("subCategoryId", "");
+      }
     };
     getSubCategories();
   }, [form.watch().categoryId]);
@@ -198,6 +202,17 @@ const ProductDetails: FC<StoreDetailsProps> = ({
         ...data,
         variantImage: data.variantImage ? [{ url: data.variantImage }] : [],
       });
+
+      // Sync local state with form data
+      setImages(data.images || []);
+      setColors(data.colors || [{ color: "" }]);
+      setSizes(
+        data.sizes || [{ size: "", price: 1, quantity: 0.01, discount: 0 }]
+      );
+      setProductSpecs(data.product_specs || [{ name: "", value: "" }]);
+      setVariantSpecs(data.variant_specs || [{ name: "", value: "" }]);
+      setQuestions(data.questions || [{ question: "", answer: "" }]);
+      setKeywords(data.keywords || []);
     }
   }, [data, form]);
   const saleEndDate = form.getValues().saleEndDate || new Date().toISOString();
@@ -224,7 +239,7 @@ const ProductDetails: FC<StoreDetailsProps> = ({
           variantDescription: values.variantDescription || "",
           images: values.images,
           categoryId: values.categoryId,
-          subCategoryId: values.subCategoryId,
+          subCategoryId: values.subCategoryId || "",
           isSale: values.isSale,
           brand: values.brand,
           sku: values.sku,
@@ -264,13 +279,23 @@ const ProductDetails: FC<StoreDetailsProps> = ({
   };
 
   useEffect(() => {
+    form.setValue("images", images);
     form.setValue("colors", colors);
     form.setValue("sizes", sizes);
     form.setValue("keywords", keywords);
     form.setValue("product_specs", productSpecs);
     form.setValue("variant_specs", variantSpecs);
     form.setValue("questions", questions);
-  }, [colors, sizes, keywords, form, productSpecs, variantSpecs, questions]);
+  }, [
+    images,
+    colors,
+    sizes,
+    keywords,
+    form,
+    productSpecs,
+    variantSpecs,
+    questions,
+  ]);
 
   return (
     <AlertDialog>
@@ -306,6 +331,7 @@ const ProductDetails: FC<StoreDetailsProps> = ({
                           <ImagesPreviewGrid
                             images={form.getValues().images}
                             onRemove={(url) => {
+                              // Remove from both local state and form
                               const updatedImages = images.filter(
                                 (img) => img.url !== url
                               );
@@ -322,19 +348,29 @@ const ProductDetails: FC<StoreDetailsProps> = ({
                             value={field.value.map((image) => image.url)}
                             disabled={isLoading}
                             onChange={(url) => {
-                              setImages((prevImages) => {
-                                const updatedImages = [...prevImages, { url }];
-                                field.onChange(updatedImages);
-                                return updatedImages;
-                              });
+                              // Check if image already exists
+                              const imageExists = field.value.some(
+                                (img) => img.url === url
+                              );
+                              if (!imageExists) {
+                                setImages((prevImages) => {
+                                  const updatedImages = [
+                                    ...prevImages,
+                                    { url },
+                                  ];
+                                  field.onChange(updatedImages);
+                                  return updatedImages;
+                                });
+                              }
                             }}
-                            onRemove={(url) =>
-                              field.onChange([
-                                ...field.value.filter(
-                                  (current) => current.url !== url
-                                ),
-                              ])
-                            }
+                            onRemove={(url) => {
+                              // Remove from both local state and form
+                              const updatedImages = field.value.filter(
+                                (current) => current.url !== url
+                              );
+                              setImages(updatedImages);
+                              field.onChange(updatedImages);
+                            }}
                           />
                         </>
                       </FormControl>
@@ -344,7 +380,7 @@ const ProductDetails: FC<StoreDetailsProps> = ({
                 {/* Colors */}
                 <div className="w-full flex flex-col gap-y-3 xl:pl-5">
                   <ClickToAddInputs
-                    details={data?.colors || colors}
+                    details={colors}
                     setDetails={setColors}
                     initialDetail={{ color: "" }}
                     header="Colors"

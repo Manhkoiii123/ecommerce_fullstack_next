@@ -26,7 +26,13 @@ import {
 
 import { useModal } from "@/providers/modal-provider";
 
-import { CopyPlus, FilePenLine, MoreHorizontal, Trash } from "lucide-react";
+import {
+  CopyPlus,
+  FilePenLine,
+  MoreHorizontal,
+  Trash,
+  Edit,
+} from "lucide-react";
 
 import { ColumnDef } from "@tanstack/react-table";
 
@@ -111,14 +117,14 @@ export const columns: ColumnDef<StoreProductType>[] = [
       return <span>{row.original.subCategory.name}</span>;
     },
   },
-    {
-      accessorKey: "offerTag",
-      header: "Offer",
-      cell: ({ row }) => {
-        const offerTag = row.original.offerTag;
-        return <span>{offerTag ? offerTag.name : "-"}</span>;
-      },
+  {
+    accessorKey: "offerTag",
+    header: "Offer",
+    cell: ({ row }) => {
+      const offerTag = row.original.offerTag;
+      return <span>{offerTag ? offerTag.name : "-"}</span>;
     },
+  },
   {
     accessorKey: "brand",
     header: "Brand",
@@ -145,16 +151,19 @@ export const columns: ColumnDef<StoreProductType>[] = [
     cell: ({ row }) => {
       const rowData = row.original;
 
-      return <CellActions productId={rowData.id} />;
+      return (
+        <CellActions productId={rowData.id} storeUrl={rowData.store.url} />
+      );
     },
   },
 ];
 
 interface CellActionsProps {
   productId: string;
+  storeUrl: string;
 }
 
-const CellActions: React.FC<CellActionsProps> = ({ productId }) => {
+const CellActions: React.FC<CellActionsProps> = ({ productId, storeUrl }) => {
   const { setClose } = useModal();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -172,6 +181,14 @@ const CellActions: React.FC<CellActionsProps> = ({ productId }) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <Link
+            href={`/dashboard/seller/stores/${storeUrl}/products/${productId}/edit`}
+            className="cursor-pointer"
+          >
+            <DropdownMenuItem className="flex gap-2">
+              <Edit size={15} /> Edit product
+            </DropdownMenuItem>
+          </Link>
           <AlertDialogTrigger asChild>
             <DropdownMenuItem className="flex gap-2" onClick={() => {}}>
               <Trash size={15} /> Delete product

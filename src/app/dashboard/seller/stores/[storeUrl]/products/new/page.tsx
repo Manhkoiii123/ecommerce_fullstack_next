@@ -12,10 +12,10 @@ const SellerNewProductPage = async ({
   const categories = await getAllCategories();
   const offerTags = await getAllOfferTags();
   const countries = await db.country.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
   return (
     <div className="w-full">
       <ProductDetails

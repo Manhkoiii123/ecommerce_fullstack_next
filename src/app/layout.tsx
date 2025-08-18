@@ -23,6 +23,26 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "GoShop",
+    url: "/",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: "/browse?search={search_term_string}",
+      "query-input": "required name=search_term_string",
+    },
+  };
+
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "GoShop",
+    url: "/",
+    logo: "/assets/icons/app-store.webp",
+  };
+
   return (
     <ClerkProvider>
       <html lang="en">
@@ -33,6 +53,19 @@ export default function RootLayout({
             enableSystem={true}
             disableTransitionOnChange={true}
           >
+            {/* Structured Data */}
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                __html: JSON.stringify(websiteJsonLd),
+              }}
+            />
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                __html: JSON.stringify(organizationJsonLd),
+              }}
+            />
             <ModalProvider>{children}</ModalProvider>
             <Toaster />
           </ThemeProvider>
