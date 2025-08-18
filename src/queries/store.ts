@@ -387,7 +387,7 @@ export const getStorePageDetails = async (storeUrl: string) => {
   const store = await db.store.findUnique({
     where: {
       url: storeUrl,
-      status: "ACTIVE",
+      // status: "ACTIVE",
     },
     select: {
       id: true,

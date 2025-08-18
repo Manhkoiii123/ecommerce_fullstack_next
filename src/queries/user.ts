@@ -14,6 +14,7 @@ import {
 } from "@prisma/client";
 import { getCookie } from "cookies-next";
 import { cookies } from "next/headers";
+import { getProductFlashSaleDiscount } from "@/queries/flash-sale";
 export const followStore = async (storeId: string): Promise<boolean> => {
   try {
     //  lấy ng hiện tại
@@ -380,9 +381,46 @@ export const placeOrder = async (
 
       const validQuantity = Math.min(quantity, size.quantity);
 
-      const price = size.discount
+      // Calculate base price with size discount
+      let basePrice = size.discount
         ? size.price - size.price * (size.discount / 100)
         : size.price;
+
+      // Apply flash sale discount if available
+      let finalPrice = basePrice;
+      try {
+        const flashSaleDiscount = await getProductFlashSaleDiscount(productId);
+
+        if (flashSaleDiscount) {
+          if (flashSaleDiscount.discountType === "PERCENTAGE") {
+            const customDiscount =
+              flashSaleDiscount.customDiscountValue ||
+              flashSaleDiscount.discountValue;
+            finalPrice = basePrice * (1 - customDiscount / 100);
+
+            // Apply max discount limit if exists
+            if (flashSaleDiscount.maxDiscount) {
+              const maxDiscountAmount =
+                (basePrice * flashSaleDiscount.maxDiscount) / 100;
+              const currentDiscount = basePrice - finalPrice;
+              if (currentDiscount > maxDiscountAmount) {
+                finalPrice = basePrice - maxDiscountAmount;
+              }
+            }
+          } else {
+            const customDiscount =
+              flashSaleDiscount.customDiscountValue ||
+              flashSaleDiscount.discountValue;
+            finalPrice = Math.max(basePrice - customDiscount, 0);
+          }
+        }
+      } catch (error) {
+        console.error("Error applying flash sale discount:", error);
+        // Fallback to base price if flash sale calculation fails
+        finalPrice = basePrice;
+      }
+
+      const price = finalPrice;
 
       // lấy contry từ cái shipping address
       const countryId = shippingAddress.countryId;
@@ -819,9 +857,46 @@ export const updateCheckoutProductstWithLatest = async (
         shippingFee = fee;
       }
 
-      const price = size.discount
+      // Calculate base price with size discount
+      let basePrice = size.discount
         ? size.price - (size.price * size.discount) / 100
         : size.price;
+
+      // Apply flash sale discount if available
+      let finalPrice = basePrice;
+      try {
+        const flashSaleDiscount = await getProductFlashSaleDiscount(productId);
+
+        if (flashSaleDiscount) {
+          if (flashSaleDiscount.discountType === "PERCENTAGE") {
+            const customDiscount =
+              flashSaleDiscount.customDiscountValue ||
+              flashSaleDiscount.discountValue;
+            finalPrice = basePrice * (1 - customDiscount / 100);
+
+            // Apply max discount limit if exists
+            if (flashSaleDiscount.maxDiscount) {
+              const maxDiscountAmount =
+                (basePrice * flashSaleDiscount.maxDiscount) / 100;
+              const currentDiscount = basePrice - finalPrice;
+              if (currentDiscount > maxDiscountAmount) {
+                finalPrice = basePrice - maxDiscountAmount;
+              }
+            }
+          } else {
+            const customDiscount =
+              flashSaleDiscount.customDiscountValue ||
+              flashSaleDiscount.discountValue;
+            finalPrice = Math.max(basePrice - customDiscount, 0);
+          }
+        }
+      } catch (error) {
+        console.error("Error applying flash sale discount:", error);
+        // Fallback to base price if flash sale calculation fails
+        finalPrice = basePrice;
+      }
+
+      const price = finalPrice;
 
       const validated_qty = Math.min(quantity, size.quantity);
 

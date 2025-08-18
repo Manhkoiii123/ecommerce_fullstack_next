@@ -3,7 +3,7 @@ import { SecurityPrivacyCard } from "@/components/store/product-page/returns-sec
 import { Button } from "@/components/store/ui/button";
 import { cn } from "@/lib/utils";
 import { ShippingAddress } from "@prisma/client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { PulseLoader } from "react-spinners";
 import { emptyUserCart, placeOrder } from "@/queries/user";
@@ -30,8 +30,84 @@ const PlaceOrderCard: React.FC<Props> = ({
   cartData,
 }) => {
   const [loading, setLoading] = useState<boolean>(false);
+  const [flashSaleSubtotal, setFlashSaleSubtotal] = useState<number>(subTotal);
+  const [originalSubtotal, setOriginalSubtotal] = useState<number>(subTotal);
   const { push } = useRouter();
   const emptyCart = useCartStore((state) => state.emptyCart);
+
+  // Since updateCheckoutProductstWithLatest already applies flash sale to item.price,
+  // we need to calculate original prices (without flash sale) for comparison
+  useEffect(() => {
+    const calculateOriginalPrices = async () => {
+      try {
+        const productIds = cartData.cartItems.map((item) => item.productId);
+
+        if (productIds.length === 0) {
+          setFlashSaleSubtotal(subTotal);
+          setOriginalSubtotal(subTotal);
+          return;
+        }
+
+        const response = await fetch("/api/flash-sale-cart-prices", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ productIds }),
+        });
+
+        if (response.ok) {
+          const { flashSalePrices } = await response.json();
+
+          let originalTotal = 0;
+
+          for (const item of cartData.cartItems) {
+            const flashSaleData = flashSalePrices.find(
+              (fp: any) => fp.productId === item.productId
+            );
+
+            if (flashSaleData?.discount) {
+              // Calculate original price by reversing the flash sale discount
+              const discount = flashSaleData.discount;
+              let originalPrice = item.price;
+
+              if (discount.discountType === "PERCENTAGE") {
+                const customDiscount =
+                  discount.customDiscountValue || discount.discountValue;
+                // Reverse: originalPrice = finalPrice / (1 - discount/100)
+                originalPrice = item.price / (1 - customDiscount / 100);
+              } else {
+                const customDiscount =
+                  discount.customDiscountValue || discount.discountValue;
+                // Reverse: originalPrice = finalPrice + discount
+                originalPrice = item.price + customDiscount;
+              }
+
+              originalTotal += originalPrice * item.quantity;
+            } else {
+              // No flash sale, use current price
+              originalTotal += item.price * item.quantity;
+            }
+          }
+
+          setFlashSaleSubtotal(subTotal);
+          setOriginalSubtotal(originalTotal);
+        } else {
+          // Fallback to current prices if API fails
+          setFlashSaleSubtotal(subTotal);
+          setOriginalSubtotal(subTotal);
+        }
+      } catch (error) {
+        console.error("Error calculating original prices:", error);
+        // Fallback to current prices if calculation fails
+        setFlashSaleSubtotal(subTotal);
+        setOriginalSubtotal(subTotal);
+      }
+    };
+
+    calculateOriginalPrices();
+  }, [cartData.cartItems, subTotal]);
+
   const handlePlaceOrder = async () => {
     setLoading(true);
     if (!shippingAddress) {
@@ -64,7 +140,15 @@ const PlaceOrderCard: React.FC<Props> = ({
     <div className="sticky top-4 mt-3 ml-5 w-[380px] max-h-max">
       <div className="relative py-4 px-6 bg-white">
         <h1 className="text-gray-900 text-2xl font-bold mb-4">Summary</h1>
-        <Info title="Subtotal" text={`${subTotal.toFixed(2)}`} />
+        <Info
+          title="Subtotal"
+          text={`${flashSaleSubtotal.toFixed(2)}`}
+          originalText={
+            flashSaleSubtotal !== originalSubtotal
+              ? `$${originalSubtotal.toFixed(2)}`
+              : undefined
+          }
+        />
         <Info title="Shipping Fees" text={`+${shippingFees.toFixed(2)}`} />
         <Info title="Taxes" text="+0.00" />
         {cartData.coupon && (
@@ -73,7 +157,31 @@ const PlaceOrderCard: React.FC<Props> = ({
             text={`-$${discountedAmount.toFixed(2)}`}
           />
         )}{" "}
-        <Info title="Total" text={`+${total.toFixed(2)}`} isBold noBorder />
+        <Info
+          title="Total"
+          text={`+${(flashSaleSubtotal + shippingFees).toFixed(2)}`}
+          isBold
+          noBorder
+        />
+        {/* Flash Sale Notice */}
+        {flashSaleSubtotal !== originalSubtotal && (
+          <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center gap-2 text-red-700">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span className="text-sm font-medium">Flash Sale Active!</span>
+            </div>
+            <p className="text-xs text-red-600 mt-1">
+              You&apos;re saving $
+              {(originalSubtotal - flashSaleSubtotal).toFixed(2)} on your order!
+            </p>
+          </div>
+        )}
       </div>
       <div className="mt-2">
         {cartData.coupon ? (
@@ -118,6 +226,49 @@ const PlaceOrderCard: React.FC<Props> = ({
           </div>
         )}
       </div>
+      {/* Order Summary */}
+      <div className="bg-white p-4">
+        <h2 className="text-lg font-semibold mb-3">Order Summary</h2>
+
+        <Info
+          title="Subtotal"
+          text={`$${flashSaleSubtotal.toFixed(2)}`}
+          originalText={
+            flashSaleSubtotal !== originalSubtotal
+              ? `$${originalSubtotal.toFixed(2)}`
+              : undefined
+          }
+        />
+
+        <Info title="Shipping Fees" text={`$${shippingFees.toFixed(2)}`} />
+
+        <Info
+          title="Total"
+          text={`$${(flashSaleSubtotal + shippingFees).toFixed(2)}`}
+          isBold
+          noBorder
+        />
+
+        {flashSaleSubtotal !== originalSubtotal && (
+          <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+            <div className="flex items-center gap-2 text-orange-700">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span className="text-sm font-medium">Flash Sale Active!</span>
+            </div>
+            <p className="text-xs text-orange-600 mt-1">
+              You&apos;re saving $
+              {(originalSubtotal - flashSaleSubtotal).toFixed(2)} on your order!
+            </p>
+          </div>
+        )}
+      </div>
+
       <div className="bg-white p-4">
         <Button onClick={() => handlePlaceOrder()}>
           {loading ? (
@@ -141,11 +292,13 @@ export default PlaceOrderCard;
 const Info = ({
   title,
   text,
+  originalText,
   isBold,
   noBorder,
 }: {
   title: string;
   text: string;
+  originalText?: string;
   isBold?: boolean;
   noBorder?: boolean;
 }) => {
@@ -167,6 +320,11 @@ const Info = ({
           <span className="text-black text-lg inline-block break-all">
             {text}
           </span>
+          {originalText && (
+            <div className="text-sm text-gray-500 line-through">
+              {originalText}
+            </div>
+          )}
         </div>
       </h3>
     </div>

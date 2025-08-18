@@ -194,7 +194,6 @@ const ProductDetails: FC<StoreDetailsProps> = ({
   }, [form.watch().categoryId]);
   const isLoading = form.formState.isSubmitting;
   const errors = form.formState.errors;
-  console.log("🚀 ~ errors:", errors);
 
   useEffect(() => {
     if (data) {

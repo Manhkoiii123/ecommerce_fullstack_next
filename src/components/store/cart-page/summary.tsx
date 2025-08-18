@@ -1,5 +1,5 @@
 import { CartProductType } from "@/lib/types";
-import { FC, useState } from "react";
+import { FC, useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -14,14 +14,98 @@ interface Props {
 const CartSummary: FC<Props> = ({ cartItems, shippingFees }) => {
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(false);
+  const [flashSaleSubtotal, setFlashSaleSubtotal] = useState<number>(0);
+  const [originalSubtotal, setOriginalSubtotal] = useState<number>(0);
 
-  // Calculate subtotal from cartItems
-  const subtotal = cartItems.reduce((total, item) => {
-    return total + item.price * item.quantity;
-  }, 0);
+  // Calculate subtotal with flash sale discounts
+  useEffect(() => {
+    const calculateFlashSaleSubtotal = async () => {
+      try {
+        const productIds = cartItems.map((item) => item.productId);
+
+        if (productIds.length === 0) {
+          setFlashSaleSubtotal(0);
+          setOriginalSubtotal(0);
+          return;
+        }
+
+        const response = await fetch("/api/flash-sale-cart-prices", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ productIds }),
+        });
+
+        if (response.ok) {
+          const { flashSalePrices } = await response.json();
+
+          let total = 0;
+          let originalTotal = 0;
+
+          for (const item of cartItems) {
+            const flashSaleData = flashSalePrices.find(
+              (fp: any) => fp.productId === item.productId
+            );
+
+            let finalPrice = item.price;
+
+            if (flashSaleData?.discount) {
+              const discount = flashSaleData.discount;
+
+              if (discount.discountType === "PERCENTAGE") {
+                const customDiscount =
+                  discount.customDiscountValue || discount.discountValue;
+                finalPrice = item.price * (1 - customDiscount / 100);
+
+                // Apply max discount limit if exists
+                if (discount.maxDiscount) {
+                  const maxDiscountAmount =
+                    (item.price * discount.maxDiscount) / 100;
+                  const currentDiscount = item.price - finalPrice;
+                  if (currentDiscount > maxDiscountAmount) {
+                    finalPrice = item.price - maxDiscountAmount;
+                  }
+                }
+              } else {
+                const customDiscount =
+                  discount.customDiscountValue || discount.discountValue;
+                finalPrice = Math.max(item.price - customDiscount, 0);
+              }
+            }
+
+            total += finalPrice * item.quantity;
+            originalTotal += item.price * item.quantity;
+          }
+
+          setFlashSaleSubtotal(total);
+          setOriginalSubtotal(originalTotal);
+        } else {
+          // Fallback to original prices if API fails
+          const total = cartItems.reduce(
+            (sum, item) => sum + item.price * item.quantity,
+            0
+          );
+          setFlashSaleSubtotal(total);
+          setOriginalSubtotal(total);
+        }
+      } catch (error) {
+        console.error("Error calculating flash sale subtotal:", error);
+        // Fallback to original prices if API fails
+        const total = cartItems.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0
+        );
+        setFlashSaleSubtotal(total);
+        setOriginalSubtotal(total);
+      }
+    };
+
+    calculateFlashSaleSubtotal();
+  }, [cartItems]);
 
   // Calculate total price including shipping fees
-  const total = subtotal + shippingFees;
+  const total = flashSaleSubtotal + shippingFees;
 
   const handleSaveCart = async () => {
     try {
@@ -43,8 +127,13 @@ const CartSummary: FC<Props> = ({ cartItems, shippingFees }) => {
         <h3 className="flex-1 w-0 min-w-0 text-right">
           <span className="px-0.5 text-black">
             <div className="text-black text-lg inline-block break-all">
-              ${subtotal.toFixed(2)}
+              ${flashSaleSubtotal.toFixed(2)}
             </div>
+            {flashSaleSubtotal !== originalSubtotal && (
+              <div className="text-sm text-gray-500 line-through">
+                ${originalSubtotal.toFixed(2)}
+              </div>
+            )}
           </span>
         </h3>
       </div>

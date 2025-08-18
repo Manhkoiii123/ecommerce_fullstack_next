@@ -54,9 +54,14 @@ export default function CheckoutProductCard({
             <div className="flex flex-col justify-between mt-2 relative">
               <div className="font-bold w-full flex items-start justify-between">
                 <div className="flex items-center gap-x-2">
-                  <span className="inline-block break-all">
-                    ${product.price.toFixed(2)} x {product.quantity}
-                  </span>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-orange-primary">
+                        ${product.price.toFixed(2)} x {product.quantity} = $
+                        {(product.price * product.quantity).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
                   {isDiscounted && (
                     <span className="text-xs font-normal text-orange-background">
                       (Coupon applied)

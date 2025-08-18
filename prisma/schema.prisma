@@ -106,6 +106,7 @@ model Store {
   cartItems     CartItem[]     @relation("CartItemToStore")
   orderGroups   OrderGroup[]   @relation("OrderGroupToStore")
   coupons       Coupon[]       @relation("CouponToStore")
+  flashSales    FlashSale[]    @relation("StoreFlashSales")
 
   @@index([userId])
 }
@@ -133,6 +134,7 @@ model Product {
   questions                   Question[]        @relation("ProductQuestion")
   reviews                     Review[]          @relation("ReviewToProduct")
   wishlist                    Wishlist[]        @relation("WishlistToProduct")
+  flashSales                  FlashSaleProduct[] @relation("ProductFlashSales")
 
   numReviews Int @default(0)
 
@@ -268,6 +270,61 @@ model OfferTag {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
+}
+
+model FlashSale {
+  id          String   @id @default(uuid())
+  name        String
+  description String?  @db.Text
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(false)
+  featured    Boolean  @default(false)
+  
+  // Discount settings
+  discountType     DiscountType @default(PERCENTAGE)
+  discountValue    Float
+  maxDiscount      Float? // Maximum discount amount for fixed discount
+  
+  // Product selection
+  products FlashSaleProduct[] @relation("FlashSaleProducts")
+  
+  // Store association
+  storeId String
+  store   Store @relation("StoreFlashSales", fields: [storeId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([storeId])
+  @@index([startDate])
+  @@index([endDate])
+  @@index([isActive])
+}
+
+model FlashSaleProduct {
+  id         String    @id @default(uuid())
+  flashSaleId String
+  flashSale   FlashSale @relation("FlashSaleProducts", fields: [flashSaleId], references: [id], onDelete: Cascade)
+  
+  productId String
+  product   Product  @relation("ProductFlashSales", fields: [productId], references: [id], onDelete: Cascade)
+  
+  // Individual product discount override
+  customDiscountValue Float?
+  customMaxDiscount   Float?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([flashSaleId, productId])
+  @@index([flashSaleId])
+  @@index([productId])
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
 }
 
 model Country {

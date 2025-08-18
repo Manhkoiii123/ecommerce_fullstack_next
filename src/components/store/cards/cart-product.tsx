@@ -23,6 +23,7 @@ import React, {
   useState,
 } from "react";
 import { toast } from "sonner";
+import FlashSaleCartPrice from "@/components/store/shared/flash-sale-cart-price";
 interface Props {
   product: CartProductType;
   selectedItems: CartProductType[];
@@ -37,7 +38,6 @@ const CartProduct: FC<Props> = ({
   setTotalShipping,
   userCountry,
 }) => {
-  console.log("🚀 ~ product:", product);
   const {
     productId,
     variantId,
@@ -255,9 +255,12 @@ const CartProduct: FC<Props> = ({
             <div className="flex flex-col gap-y-2 sm:flex-row sm:items-center sm:justify-between mt-2 relative">
               {stock > 0 ? (
                 <div>
-                  <span className="inline-block break-all">
-                    ${price.toFixed(2)} x {quantity} = ${totalPrice.toFixed(2)}
-                  </span>
+                  <FlashSaleCartPrice
+                    productId={productId}
+                    originalPrice={price}
+                    quantity={quantity}
+                    showFlashSaleBadge={true}
+                  />
                 </div>
               ) : (
                 <div>

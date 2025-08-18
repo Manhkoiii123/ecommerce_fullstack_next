@@ -1,7 +1,7 @@
 "use client";
 import ProductCardImageSwiper from "@/components/store/cards/product/swiper";
 import VariantSwitcher from "@/components/store/cards/product/variant-switcher";
-import ProductPrice from "@/components/store/product-page/product-info/product-price";
+import FlashSalePrice from "@/components/store/shared/flash-sale-price";
 import { Button } from "@/components/store/ui/button";
 import { ProductType, VariantSimplified } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -58,7 +58,7 @@ const ProductCard = ({ product }: { product: ProductType }) => {
             </div>
             {/* )}  */}
             {/* Price */}
-            <ProductPrice sizes={sizes} isCard />
+            <FlashSalePrice productId={id} sizes={sizes} isCard />
           </Link>
         </div>
         <div className="hidden  group-hover:block absolute -left-[1px] bg-white border border-t-0  w-[calc(100%+2px)] px-4 pb-4 rounded-b-3xl shadow-xl z-30 space-y-2">

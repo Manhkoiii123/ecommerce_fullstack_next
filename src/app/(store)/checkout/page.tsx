@@ -16,7 +16,6 @@ const CheckoutPage = async () => {
       id: user.id,
     },
   });
-  console.log("🚀 ~ CheckoutPage ~ userData:", userData);
 
   const cart = await db.cart.findFirst({
     where: {

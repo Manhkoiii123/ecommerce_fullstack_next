@@ -34,7 +34,6 @@ const defaultData = {
 };
 const ProductReviews = ({ productId, rating, variantsInfo }: Props) => {
   const [data, setData] = useState<ReviewWithImage[]>([]);
-  console.log("🚀 ~ ProductReviews ~ data:", data);
   const half = Math.ceil(data.length / 2);
   const [averageRating, setAverageRating] = useState<number>(rating);
   const filtered_data = {

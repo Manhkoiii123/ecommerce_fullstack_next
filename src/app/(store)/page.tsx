@@ -12,9 +12,12 @@ import MainSwiper from "@/components/store/shared/swiper";
 import { SimpleProduct } from "@/lib/types";
 import { getHomeDataDynamic } from "@/queries/home";
 import { getProducts } from "@/queries/product";
+import { getActiveFlashSales } from "@/queries/flash-sale";
 import Image from "next/image";
 import SuperDealsImg from "@/public/assets/images/ads/super-deals.avif";
 import FeaturedCategories from "@/components/store/home/featured-categories";
+import FlashSaleBanner from "@/components/store/home/flash-sale-banner";
+
 export default async function Home() {
   const productsData = await getProducts();
   const { products } = productsData;
@@ -30,6 +33,12 @@ export default async function Home() {
     { property: "offer", value: "offer_tag_3", type: "simple" },
     { property: "offer", value: "offer_tag_4", type: "simple" },
   ]);
+
+  // Get active flash sales
+  const activeFlashSales = await getActiveFlashSales();
+  const firstFlashSale =
+    activeFlashSales.length > 0 ? activeFlashSales[0] : undefined;
+
   return (
     <>
       <Header />
@@ -71,8 +80,14 @@ export default async function Home() {
                   (product): product is SimpleProduct =>
                     "variantSlug" in product
                 )}
+                flashSale={firstFlashSale}
               />
             </div>
+            {/* Flash Sales Banner */}
+            <div className="mt-10">
+              <FlashSaleBanner flashSales={activeFlashSales.slice(1)} />
+            </div>
+
             <div className="mt-10 space-y-10">
               <div className="bg-white rounded-md">
                 <MainSwiper products={products_offer_tag_1_full} type="curved">

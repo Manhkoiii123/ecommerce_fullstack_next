@@ -334,6 +334,85 @@ export const OfferTagFormSchema = z.object({
         "Only letters, numbers, hyphen, and underscore are allowed in the category url, and consecutive occurrences of hyphens, underscores, or spaces are not permitted.",
     }),
 });
+
+export const FlashSaleFormSchema = z
+  .object({
+    name: z
+      .string({
+        required_error: "Flash sale name is required.",
+        invalid_type_error: "Flash sale name must be a string.",
+      })
+      .min(2, {
+        message: "Flash sale name must be at least 2 characters long.",
+      })
+      .max(100, { message: "Flash sale name cannot exceed 100 characters." }),
+
+    description: z.string().optional(),
+
+    startDate: z.date({
+      required_error: "Start date is required.",
+    }),
+
+    endDate: z.date({
+      required_error: "End date is required.",
+    }),
+
+    isActive: z.boolean().default(false),
+
+    featured: z.boolean().default(false),
+
+    discountType: z.enum(["PERCENTAGE", "FIXED_AMOUNT"]),
+
+    discountValue: z
+      .number({
+        required_error: "Discount value is required.",
+      })
+      .min(0, { message: "Discount value must be positive." }),
+
+    maxDiscount: z.number().optional(),
+
+    storeId: z.string({
+      required_error: "Store is required.",
+    }),
+
+    productIds: z
+      .array(z.string())
+      .min(1, { message: "At least one product must be selected." }),
+
+    customDiscounts: z
+      .array(
+        z.object({
+          productId: z.string(),
+          customDiscountValue: z.number().optional(),
+          customMaxDiscount: z.number().optional(),
+        })
+      )
+      .optional(),
+  })
+  .refine(
+    (data) => {
+      // Ensure end date is after start date
+      return data.endDate > data.startDate;
+    },
+    {
+      message: "End date must be after start date",
+      path: ["endDate"],
+    }
+  )
+  .refine(
+    (data) => {
+      // Ensure discount value is valid
+      if (data.discountType === "PERCENTAGE") {
+        return data.discountValue <= 100;
+      }
+      return true;
+    },
+    {
+      message: "Percentage discount cannot exceed 100%",
+      path: ["discountValue"],
+    }
+  );
+
 export const StoreShippingFormSchema = z.object({
   defaultShippingService: z
     .string({

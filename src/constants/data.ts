@@ -55,6 +55,11 @@ export const SellerDashboardSidebarOptions: DashboardSidebarMenuInterface[] = [
     link: "orders",
   },
   {
+    label: "Flash Sales",
+    icon: "fire",
+    link: "flash-sales",
+  },
+  {
     label: "Inventory",
     icon: "inventory",
     link: "inventory",

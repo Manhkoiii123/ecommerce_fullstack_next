@@ -34,7 +34,6 @@ const ProductInfo = ({
   setVariantImages,
   setActiveImage,
 }: ProductInfoProps) => {
-  console.log("🚀 ~ ProductInfo ~ productData:", productData);
   if (!productData) return null;
   const {
     productId,
@@ -112,6 +111,7 @@ const ProductInfo = ({
       </div>
       <div className="my-2 relative flex flex-col sm:flex-row justify-between">
         <ProductPrice
+          productId={productData.productId}
           sizes={sizes}
           sizeId={sizeId}
           handleChange={handleChange}
