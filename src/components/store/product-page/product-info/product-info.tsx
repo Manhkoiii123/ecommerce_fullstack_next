@@ -34,6 +34,7 @@ const ProductInfo = ({
   setVariantImages,
   setActiveImage,
 }: ProductInfoProps) => {
+  console.log("🚀 ~ ProductInfo ~ productData:", productData);
   if (!productData) return null;
   const {
     productId,

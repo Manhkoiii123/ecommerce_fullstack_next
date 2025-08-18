@@ -9,7 +9,6 @@ export default function ProductCardClean({
 }: {
   product: ProductType;
 }) {
-  console.log("🚀 ~ product:", product);
   const [variant, setVariant] = useState<VariantSimplified>(
     product.variants[0]
   );

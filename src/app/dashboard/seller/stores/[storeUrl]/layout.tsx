@@ -20,7 +20,6 @@ const SellerStoreDashboardLayout = async ({
       userId: user.id,
     },
   });
-  console.log("🚀 ~ stores:", stores);
   return (
     <div className="h-full w-full flex">
       <Sidebar stores={stores} />

@@ -510,3 +510,760 @@ export const updateStoreStatus = async (
 
   return updatedStore.status;
 };
+
+export const getStoreRevenueStats = async (
+  storeUrl: string,
+  type: "day" | "month" = "day",
+  year?: number,
+  month?: number
+) => {
+  const user = await currentUser();
+  if (!user) throw new Error("Unauthenticated.");
+
+  const store = await db.store.findUnique({
+    where: { url: storeUrl, userId: user.id },
+  });
+  if (!store) throw new Error("Store not found.");
+
+  let where: any = { storeId: store.id };
+
+  if (type === "day" && year && month) {
+    where.createdAt = {
+      gte: new Date(year, month - 1, 1),
+      lt: new Date(year, month, 1),
+    };
+    const stats = await db.orderGroup.groupBy({
+      by: ["createdAt"],
+      where,
+      _sum: { total: true },
+      orderBy: { createdAt: "asc" },
+    });
+    // Format result: group by day
+    return stats.map((item) => ({
+      period: item.createdAt.getDate(),
+      revenue: item._sum.total || 0,
+    }));
+  } else if (type === "month" && year) {
+    where.createdAt = {
+      gte: new Date(year, 0, 1),
+      lt: new Date(year + 1, 0, 1),
+    };
+    const stats = await db.orderGroup.groupBy({
+      by: ["createdAt"],
+      where,
+      _sum: { total: true },
+      orderBy: { createdAt: "asc" },
+    });
+    // Format result: group by month
+    return stats.reduce((acc, item) => {
+      const month = item.createdAt.getMonth() + 1;
+      acc[month] = (acc[month] || 0) + (item._sum.total || 0);
+      return acc;
+    }, {} as Record<number, number>);
+  } else {
+    throw new Error("Please provide valid year/month parameters.");
+  }
+};
+
+// Thống kê sản phẩm bán chạy nhất trong tháng/năm
+export const getStoreBestSellingProducts = async (
+  storeUrl: string,
+  year?: number,
+  month?: number,
+  limit: number = 5
+) => {
+  const user = await currentUser();
+  if (!user) throw new Error("Unauthenticated.");
+
+  const store = await db.store.findUnique({
+    where: { url: storeUrl, userId: user.id },
+  });
+  if (!store) throw new Error("Store not found.");
+
+  let where: any = {
+    orderGroup: { storeId: store.id },
+  };
+  if (year && month) {
+    where.orderGroup.createdAt = {
+      gte: new Date(year, month - 1, 1),
+      lt: new Date(year, month, 1),
+    };
+  } else if (year) {
+    where.orderGroup.createdAt = {
+      gte: new Date(year, 0, 1),
+      lt: new Date(year + 1, 0, 1),
+    };
+  }
+
+  // Lấy sản phẩm bán chạy nhất dựa trên tổng số lượng bán ra
+  const stats = await db.orderItem.groupBy({
+    by: ["productId"],
+    where,
+    _sum: { quantity: true },
+    orderBy: { _sum: { quantity: "desc" } },
+    take: limit,
+  });
+
+  // Lấy thông tin sản phẩm
+  const products = await db.product.findMany({
+    where: { id: { in: stats.map((s) => s.productId) } },
+  });
+
+  return stats.map((stat) => ({
+    product: products.find((p) => p.id === stat.productId),
+    sold: stat._sum.quantity || 0,
+  }));
+};
+
+// Thống kê tổng quan cho dashboard
+export const getStoreDashboardStats = async (storeUrl: string) => {
+  const user = await currentUser();
+  if (!user) throw new Error("Unauthenticated.");
+
+  const store = await db.store.findUnique({
+    where: { url: storeUrl, userId: user.id },
+  });
+  if (!store) throw new Error("Store not found.");
+
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+  // Tổng doanh thu tháng này
+  const monthlyRevenue = await db.orderGroup.aggregate({
+    where: {
+      storeId: store.id,
+      createdAt: { gte: startOfMonth },
+      order: { paymentStatus: "Paid" },
+    },
+    _sum: { total: true },
+  });
+
+  // Tổng doanh thu năm nay
+  const yearlyRevenue = await db.orderGroup.aggregate({
+    where: {
+      storeId: store.id,
+      createdAt: { gte: startOfYear },
+      order: { paymentStatus: "Paid" },
+    },
+    _sum: { total: true },
+  });
+
+  // Tổng số đơn hàng tháng này
+  const monthlyOrders = await db.orderGroup.count({
+    where: {
+      storeId: store.id,
+      createdAt: { gte: startOfMonth },
+    },
+  });
+
+  // Tổng số đơn hàng năm nay
+  const yearlyOrders = await db.orderGroup.count({
+    where: {
+      storeId: store.id,
+      createdAt: { gte: startOfYear },
+    },
+  });
+
+  // Tổng số sản phẩm đã bán tháng này
+  const monthlyProductsSold = await db.orderItem.aggregate({
+    where: {
+      orderGroup: {
+        storeId: store.id,
+        createdAt: { gte: startOfMonth },
+      },
+    },
+    _sum: { quantity: true },
+  });
+
+  // Tổng số sản phẩm đã bán năm nay
+  const yearlyProductsSold = await db.orderItem.aggregate({
+    where: {
+      orderGroup: {
+        storeId: store.id,
+        createdAt: { gte: startOfYear },
+      },
+    },
+    _sum: { quantity: true },
+  });
+
+  // Số khách hàng mới tháng này
+  const monthlyNewCustomers = await db.orderGroup.groupBy({
+    by: ["orderId"],
+    where: {
+      storeId: store.id,
+      createdAt: { gte: startOfMonth },
+    },
+  });
+
+  const monthlyUniqueCustomers = new Set(
+    monthlyNewCustomers.map((item) => item.orderId)
+  ).size;
+
+  // Số khách hàng mới năm nay
+  const yearlyNewCustomers = await db.orderGroup.groupBy({
+    by: ["orderId"],
+    where: {
+      storeId: store.id,
+      createdAt: { gte: startOfYear },
+    },
+  });
+
+  const yearlyUniqueCustomers = new Set(
+    yearlyNewCustomers.map((item) => item.orderId)
+  ).size;
+
+  return {
+    monthly: {
+      revenue: monthlyRevenue._sum.total || 0,
+      orders: monthlyOrders,
+      productsSold: monthlyProductsSold._sum.quantity || 0,
+      newCustomers: monthlyUniqueCustomers,
+    },
+    yearly: {
+      revenue: yearlyRevenue._sum.total || 0,
+      orders: yearlyOrders,
+      productsSold: yearlyProductsSold._sum.quantity || 0,
+      newCustomers: yearlyUniqueCustomers,
+    },
+  };
+};
+
+// Thống kê đơn hàng theo trạng thái
+export const getStoreOrderStatusStats = async (storeUrl: string) => {
+  const user = await currentUser();
+  if (!user) throw new Error("Unauthenticated.");
+
+  const store = await db.store.findUnique({
+    where: { url: storeUrl, userId: user.id },
+  });
+  if (!store) throw new Error("Store not found.");
+
+  const stats = await db.orderGroup.groupBy({
+    by: ["status"],
+    where: { storeId: store.id },
+    _count: true,
+  });
+
+  const result = {
+    pending: 0,
+    processing: 0,
+    shipped: 0,
+    delivered: 0,
+    cancelled: 0,
+  };
+
+  stats.forEach((stat) => {
+    if (stat.status === "Pending") result.pending = stat._count;
+    else if (stat.status === "Processing") result.processing = stat._count;
+    else if (stat.status === "Shipped") result.shipped = stat._count;
+    else if (stat.status === "Delivered") result.delivered = stat._count;
+    else if (stat.status === "Cancelled") result.cancelled = stat._count;
+  });
+
+  return result;
+};
+
+// Thống kê doanh thu theo ngày trong tuần
+export const getStoreWeeklyRevenue = async (
+  storeUrl: string,
+  year?: number,
+  month?: number
+) => {
+  const user = await currentUser();
+  if (!user) throw new Error("Unauthenticated.");
+
+  const store = await db.store.findUnique({
+    where: { url: storeUrl, userId: user.id },
+  });
+  if (!store) throw new Error("Store not found.");
+
+  let where: any = { storeId: store.id };
+
+  if (year && month) {
+    // Thống kê theo tháng cụ thể
+    const startOfMonth = new Date(year, month - 1, 1);
+    const endOfMonth = new Date(year, month, 1);
+    where.createdAt = {
+      gte: startOfMonth,
+      lt: endOfMonth,
+    };
+  } else {
+    // Thống kê theo tuần hiện tại
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    where.createdAt = { gte: startOfWeek };
+  }
+
+  const stats = await db.orderGroup.groupBy({
+    by: ["createdAt"],
+    where: {
+      ...where,
+      order: { paymentStatus: "Paid" },
+    },
+    _sum: { total: true },
+  });
+
+  if (year && month) {
+    // Nhóm theo ngày trong tháng
+    const dailyData = Array.from(
+      { length: new Date(year, month, 0).getDate() },
+      (_, i) => ({
+        day: i + 1,
+        revenue: 0,
+      })
+    );
+
+    stats.forEach((stat) => {
+      const day = stat.createdAt.getDate();
+      const index = day - 1;
+      if (index >= 0 && index < dailyData.length) {
+        dailyData[index].revenue =
+          (dailyData[index].revenue || 0) + (stat._sum.total || 0);
+      }
+    });
+
+    return dailyData;
+  } else {
+    // Nhóm theo ngày trong tuần
+    const weeklyData = Array(7).fill(0);
+    stats.forEach((stat) => {
+      const dayOfWeek = stat.createdAt.getDay();
+      weeklyData[dayOfWeek] =
+        (weeklyData[dayOfWeek] || 0) + (stat._sum.total || 0);
+    });
+
+    return weeklyData.map((revenue, index) => ({
+      day: [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ][index],
+      revenue,
+    }));
+  }
+};
+
+// Thống kê top 5 sản phẩm có doanh thu cao nhất
+export const getStoreTopRevenueProducts = async (
+  storeUrl: string,
+  year?: number,
+  month?: number,
+  limit: number = 5
+) => {
+  const user = await currentUser();
+  if (!user) throw new Error("Unauthenticated.");
+
+  const store = await db.store.findUnique({
+    where: { url: storeUrl, userId: user.id },
+  });
+  if (!store) throw new Error("Store not found.");
+
+  let where: any = {
+    orderGroup: { storeId: store.id },
+  };
+  if (year && month) {
+    where.orderGroup.createdAt = {
+      gte: new Date(year, month - 1, 1),
+      lt: new Date(year, month, 1),
+    };
+  } else if (year) {
+    where.orderGroup.createdAt = {
+      gte: new Date(year, 0, 1),
+      lt: new Date(year + 1, 0, 1),
+    };
+  }
+
+  // Lấy sản phẩm có doanh thu cao nhất
+  const stats = await db.orderItem.groupBy({
+    by: ["productId"],
+    where,
+    _sum: {
+      quantity: true,
+      totalPrice: true,
+    },
+    orderBy: { _sum: { totalPrice: "desc" } },
+    take: limit,
+  });
+
+  // Lấy thông tin sản phẩm
+  const products = await db.product.findMany({
+    where: { id: { in: stats.map((s) => s.productId) } },
+  });
+
+  return stats.map((stat) => ({
+    product: products.find((p) => p.id === stat.productId),
+    sold: stat._sum.quantity || 0,
+    revenue: stat._sum.totalPrice || 0,
+  }));
+};
+
+// Thống kê tỷ lệ chuyển đổi đơn hàng
+export const getStoreConversionRate = async (storeUrl: string) => {
+  const user = await currentUser();
+  if (!user) throw new Error("Unauthenticated.");
+
+  const store = await db.store.findUnique({
+    where: { url: storeUrl, userId: user.id },
+  });
+  if (!store) throw new Error("Store not found.");
+
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  // Tổng số đơn hàng đã hoàn thành
+  const completedOrders = await db.orderGroup.count({
+    where: {
+      storeId: store.id,
+      createdAt: { gte: startOfMonth },
+      status: "Delivered",
+    },
+  });
+
+  // Tổng số đơn hàng
+  const totalOrders = await db.orderGroup.count({
+    where: {
+      storeId: store.id,
+      createdAt: { gte: startOfMonth },
+    },
+  });
+
+  // Tỷ lệ chuyển đổi
+  const conversionRate =
+    totalOrders > 0 ? (completedOrders / totalOrders) * 100 : 0;
+
+  return {
+    completedOrders,
+    totalOrders,
+    conversionRate: Math.round(conversionRate * 100) / 100,
+  };
+};
+
+// Thống kê theo tháng cụ thể được chọn
+export const getStoreStatsByMonth = async (
+  storeUrl: string,
+  year: number,
+  month: number
+) => {
+  const user = await currentUser();
+  if (!user) throw new Error("Unauthenticated.");
+
+  const store = await db.store.findUnique({
+    where: { url: storeUrl, userId: user.id },
+  });
+  if (!store) throw new Error("Store not found.");
+
+  if (!year || !month || month < 1 || month > 12) {
+    throw new Error("Please provide valid year and month (1-12).");
+  }
+
+  const startOfMonth = new Date(year, month - 1, 1);
+  const endOfMonth = new Date(year, month, 1);
+
+  // Doanh thu theo tháng
+  const monthlyRevenue = await db.orderGroup.aggregate({
+    where: {
+      storeId: store.id,
+      createdAt: {
+        gte: startOfMonth,
+        lt: endOfMonth,
+      },
+      order: { paymentStatus: "Paid" },
+    },
+    _sum: { total: true },
+  });
+
+  // Số đơn hàng theo tháng
+  const monthlyOrders = await db.orderGroup.count({
+    where: {
+      storeId: store.id,
+      createdAt: {
+        gte: startOfMonth,
+        lt: endOfMonth,
+      },
+    },
+  });
+
+  // Số sản phẩm đã bán theo tháng
+  const monthlyProductsSold = await db.orderItem.aggregate({
+    where: {
+      orderGroup: {
+        storeId: store.id,
+        createdAt: {
+          gte: startOfMonth,
+          lt: endOfMonth,
+        },
+      },
+    },
+    _sum: { quantity: true },
+  });
+
+  // Số khách hàng mới theo tháng
+  const monthlyNewCustomers = await db.orderGroup.groupBy({
+    by: ["orderId"],
+    where: {
+      storeId: store.id,
+      createdAt: {
+        gte: startOfMonth,
+        lt: endOfMonth,
+      },
+    },
+  });
+
+  const monthlyUniqueCustomers = new Set(
+    monthlyNewCustomers.map((item) => item.orderId)
+  ).size;
+
+  // Thống kê trạng thái đơn hàng theo tháng
+  const orderStatusStats = await db.orderGroup.groupBy({
+    by: ["status"],
+    where: {
+      storeId: store.id,
+      createdAt: {
+        gte: startOfMonth,
+        lt: endOfMonth,
+      },
+    },
+    _count: true,
+  });
+
+  const statusResult = {
+    pending: 0,
+    processing: 0,
+    shipped: 0,
+    delivered: 0,
+    cancelled: 0,
+  };
+
+  orderStatusStats.forEach((stat) => {
+    if (stat.status === "Pending") statusResult.pending = stat._count;
+    else if (stat.status === "Processing")
+      statusResult.processing = stat._count;
+    else if (stat.status === "Shipped") statusResult.shipped = stat._count;
+    else if (stat.status === "Delivered") statusResult.delivered = stat._count;
+    else if (stat.status === "Cancelled") statusResult.cancelled = stat._count;
+  });
+
+  // Top sản phẩm bán chạy theo tháng
+  const topProducts = await db.orderItem.groupBy({
+    by: ["productId"],
+    where: {
+      orderGroup: {
+        storeId: store.id,
+        createdAt: {
+          gte: startOfMonth,
+          lt: endOfMonth,
+        },
+      },
+    },
+    _sum: {
+      quantity: true,
+      totalPrice: true,
+    },
+    orderBy: { _sum: { quantity: "desc" } },
+    take: 5,
+  });
+
+  // Lấy thông tin sản phẩm
+  const products = await db.product.findMany({
+    where: { id: { in: topProducts.map((s) => s.productId) } },
+  });
+
+  const topProductsWithInfo = topProducts.map((stat) => ({
+    product: products.find((p) => p.id === stat.productId),
+    sold: stat._sum.quantity || 0,
+    revenue: stat._sum.totalPrice || 0,
+  }));
+
+  // Tỷ lệ chuyển đổi theo tháng
+  const completedOrders = await db.orderGroup.count({
+    where: {
+      storeId: store.id,
+      createdAt: {
+        gte: startOfMonth,
+        lt: endOfMonth,
+      },
+      status: "Delivered",
+    },
+  });
+
+  const conversionRate =
+    monthlyOrders > 0 ? (completedOrders / monthlyOrders) * 100 : 0;
+
+  // Doanh thu theo ngày trong tháng
+  const dailyRevenue = await db.orderGroup.groupBy({
+    by: ["createdAt"],
+    where: {
+      storeId: store.id,
+      createdAt: {
+        gte: startOfMonth,
+        lt: endOfMonth,
+      },
+      order: { paymentStatus: "Paid" },
+    },
+    _sum: { total: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const dailyData = dailyRevenue.map((item) => ({
+    day: item.createdAt.getDate(),
+    revenue: item._sum.total || 0,
+  }));
+
+  return {
+    period: {
+      year,
+      month,
+      monthName: new Date(year, month - 1, 1).toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      }),
+    },
+    overview: {
+      revenue: monthlyRevenue._sum.total || 0,
+      orders: monthlyOrders,
+      productsSold: monthlyProductsSold._sum.quantity || 0,
+      newCustomers: monthlyUniqueCustomers,
+    },
+    orderStatus: statusResult,
+    topProducts: topProductsWithInfo,
+    conversionRate: {
+      completedOrders,
+      totalOrders: monthlyOrders,
+      conversionRate: Math.round(conversionRate * 100) / 100,
+    },
+    dailyRevenue: dailyData,
+  };
+};
+
+// Cập nhật function getStoreDashboardStats để hỗ trợ chọn tháng
+export const getStoreDashboardStatsByPeriod = async (
+  storeUrl: string,
+  year?: number,
+  month?: number
+) => {
+  const user = await currentUser();
+  if (!user) throw new Error("Unauthenticated.");
+
+  const store = await db.store.findUnique({
+    where: { url: storeUrl, userId: user.id },
+  });
+  if (!store) throw new Error("Store not found.");
+
+  const now = new Date();
+  let startOfPeriod: Date;
+  let endOfPeriod: Date;
+
+  if (year && month) {
+    // Thống kê theo tháng cụ thể
+    startOfPeriod = new Date(year, month - 1, 1);
+    endOfPeriod = new Date(year, month, 1);
+  } else if (year) {
+    // Thống kê theo năm
+    startOfPeriod = new Date(year, 0, 1);
+    endOfPeriod = new Date(year + 1, 0, 1);
+  } else {
+    // Thống kê theo tháng hiện tại
+    startOfPeriod = new Date(now.getFullYear(), now.getMonth(), 1);
+    endOfPeriod = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  }
+
+  // Doanh thu theo kỳ
+  const periodRevenue = await db.orderGroup.aggregate({
+    where: {
+      storeId: store.id,
+      createdAt: {
+        gte: startOfPeriod,
+        lt: endOfPeriod,
+      },
+      order: { paymentStatus: "Paid" },
+    },
+    _sum: { total: true },
+  });
+
+  // Số đơn hàng theo kỳ
+  const periodOrders = await db.orderGroup.count({
+    where: {
+      storeId: store.id,
+      createdAt: {
+        gte: startOfPeriod,
+        lt: endOfPeriod,
+      },
+    },
+  });
+
+  // Số sản phẩm đã bán theo kỳ
+  const periodProductsSold = await db.orderItem.aggregate({
+    where: {
+      orderGroup: {
+        storeId: store.id,
+        createdAt: {
+          gte: startOfPeriod,
+          lt: endOfPeriod,
+        },
+      },
+    },
+    _sum: { quantity: true },
+  });
+
+  // Số khách hàng mới theo kỳ
+  const periodNewCustomers = await db.orderGroup.groupBy({
+    by: ["orderId"],
+    where: {
+      storeId: store.id,
+      createdAt: {
+        gte: startOfPeriod,
+        lt: endOfPeriod,
+      },
+    },
+  });
+
+  const periodUniqueCustomers = new Set(
+    periodNewCustomers.map((item) => item.orderId)
+  ).size;
+
+  return {
+    period: {
+      start: startOfPeriod,
+      end: endOfPeriod,
+      year: year || now.getFullYear(),
+      month: month || now.getMonth() + 1,
+    },
+    stats: {
+      revenue: periodRevenue._sum.total || 0,
+      orders: periodOrders,
+      productsSold: periodProductsSold._sum.quantity || 0,
+      newCustomers: periodUniqueCustomers,
+    },
+  };
+};
+
+/**
+ * 
+ * // Get overview statistics
+const dashboardStats = await getStoreDashboardStats(storeUrl);
+
+// Get order status statistics
+const orderStatusStats = await getStoreOrderStatusStats(storeUrl);
+
+// Get weekly revenue
+const weeklyRevenue = await getStoreWeeklyRevenue(storeUrl);
+
+// Get top selling products
+const topProducts = await getStoreTopRevenueProducts(storeUrl);
+
+// Get conversion rate
+const conversionRate = await getStoreConversionRate(storeUrl);
+
+// Get statistics for specific month (e.g., August 2025)
+const monthlyStats = await getStoreStatsByMonth(storeUrl, 2025, 8);
+
+// Get statistics by period (month or year)
+const periodStats = await getStoreDashboardStatsByPeriod(storeUrl, 2025, 8); // August 2025
+const yearStats = await getStoreDashboardStatsByPeriod(storeUrl, 2024); // Year 2024
+ */

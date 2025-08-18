@@ -21,11 +21,9 @@ export async function GET(req: Request) {
   try {
     const response = await client.search<{ _source: Product }>({
       index: "products",
-      body: {
-        query: {
-          match: {
-            name: q,
-          },
+      query: {
+        match: {
+          name: q,
         },
       },
     });
@@ -34,6 +32,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json(results);
   } catch (error: any) {
+    console.log("🚀 ~ GET ~ error:", error);
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }

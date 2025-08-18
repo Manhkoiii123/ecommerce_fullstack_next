@@ -12,6 +12,7 @@ export default async function HomeUserCard({
   products: SimpleProduct[];
 }) {
   const user = await currentUser();
+  console.log("🚀 ~ HomeUserCard ~ user:", user);
   const role = user?.privateMetadata.role;
   return (
     <div className="h-full hidden min-[1170px]:block relative bg-white rounded-md shadow-sm overflow-hidden">
@@ -34,7 +35,9 @@ export default async function HomeUserCard({
             />
           </div>
           <div className="absolute top-16 w-full h-5 font-bold text-black text-center cursor-pointer capitalize">
-            {user ? user.fullName?.toLowerCase() : "Welcome to GoShop"}
+            {user
+              ? user.fullName?.toLowerCase() || user.username
+              : "Welcome to GoShop"}
           </div>
         </div>
         {/* User links */}

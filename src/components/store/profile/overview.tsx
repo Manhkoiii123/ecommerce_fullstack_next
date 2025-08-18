@@ -18,7 +18,7 @@ export default async function ProfileOverview() {
             className="w-14 h-14 rounded-full object-cover"
           />
           <div className="flex-1 ml-4 text-main-primary text-xl font-bold capitalize ">
-            {user.fullName?.toLowerCase()}
+            {user.fullName?.toLowerCase() || user.username?.toLowerCase()}
           </div>
         </div>
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4 p-4">

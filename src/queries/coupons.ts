@@ -21,6 +21,9 @@ export const upsertCoupon = async (coupon: Coupon, storeUrl: string) => {
 
     const store = await db.store.findUnique({
       where: { url: storeUrl },
+      include: {
+        followers: true,
+      },
     });
 
     if (!store) throw new Error("Store not found.");
@@ -52,6 +55,25 @@ export const upsertCoupon = async (coupon: Coupon, storeUrl: string) => {
       update: { ...coupon, storeId: store.id },
       create: { ...coupon, storeId: store.id },
     });
+    // if (!coupon.id) {
+    const followerIds = store.followers.map((f) => f.id);
+
+    if (followerIds.length > 0) {
+      // Update each follower user individually to add the new coupon
+      for (const followerId of followerIds) {
+        await db.user.update({
+          where: {
+            id: followerId,
+          },
+          data: {
+            coupons: {
+              connect: { id: couponDetails.id },
+            },
+          },
+        });
+      }
+      // }
+    }
 
     return couponDetails;
   } catch (error) {
@@ -169,7 +191,6 @@ export const applyCoupon = async (
       throw new Error("Invalid coupon code.");
     }
 
-    // Step 2: Validate the coupon's date range
     const currentDate = new Date();
     const startDate = new Date(coupon.startDate);
     const endDate = new Date(coupon.endDate);
@@ -178,7 +199,6 @@ export const applyCoupon = async (
       throw new Error("Coupon is expired or not yet active.");
     }
 
-    // Step 3: Fetch the cart and validate its existence
     const cart = await db.cart.findUnique({
       where: {
         id: cartId,

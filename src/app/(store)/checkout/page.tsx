@@ -11,6 +11,12 @@ import React from "react";
 const CheckoutPage = async () => {
   const user = await currentUser();
   if (!user) redirect("/cart");
+  const userData = await db.user.findUnique({
+    where: {
+      id: user.id,
+    },
+  });
+  console.log("🚀 ~ CheckoutPage ~ userData:", userData);
 
   const cart = await db.cart.findFirst({
     where: {

@@ -512,3 +512,24 @@
 .order-area-payment {
   grid-area: payment;
 }
+
+.select-panel {
+  background-color: white !important;
+}
+div.search > input[type="text"] {
+  background-color: white !important;
+}
+.select-panel .rmsc .dropdown-container {
+  background-color: white !important;
+}
+
+.select-panel .rmsc .dropdown-container .select-item {
+  background-color: white !important;
+}
+
+.select-item:hover {
+  background-color: white !important;
+}
+.select-item.selected {
+  background-color: white !important;
+}

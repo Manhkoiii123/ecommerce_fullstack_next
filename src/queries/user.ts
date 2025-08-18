@@ -924,3 +924,52 @@ export const updateCheckoutProductstWithLatest = async (
 
   return cart;
 };
+
+export const cancelOrder = async (orderId: string): Promise<boolean> => {
+  const user = await currentUser();
+  if (!user) throw new Error("Unauthenticated.");
+
+  const order = await db.order.findUnique({
+    where: { id: orderId },
+  });
+  if (!order) throw new Error("Order not found.");
+  if (order.userId !== user.id) throw new Error("Permission denied.");
+
+  if (order.orderStatus === "Cancelled") return true;
+
+  const orderGroups = await db.orderGroup.findMany({
+    where: { orderId },
+    include: { items: true },
+  });
+
+  await db.$transaction(async (tx) => {
+    // Cập nhật trạng thái đơn hàng
+    await tx.order.update({
+      where: { id: orderId },
+      data: { orderStatus: "Cancelled" },
+    });
+
+    for (const group of orderGroups) {
+      for (const item of group.items) {
+        await tx.size.update({
+          where: { id: item.sizeId },
+          data: {
+            quantity: {
+              increment: item.quantity,
+            },
+          },
+        });
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            sales: {
+              decrement: item.quantity,
+            },
+          },
+        });
+      }
+    }
+  });
+
+  return true;
+};
