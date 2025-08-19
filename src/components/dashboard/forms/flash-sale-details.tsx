@@ -6,7 +6,13 @@ import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FlashSaleFormSchema } from "@/lib/schemas";
-import { AlertDialog } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Card,
   CardContent,
@@ -314,70 +320,33 @@ const FlashSaleDetails: FC<FlashSaleDetailsProps> = ({ data, storeUrl }) => {
   };
 
   return (
-    <AlertDialog>
-      <Card className="w-full max-w-4xl mx-auto">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Flame className="h-5 w-5 text-red-500" />
-            {data?.id ? "Edit Flash Sale" : "Create New Flash Sale"}
-          </CardTitle>
-          <CardDescription>
-            Set up a time-limited sale to boost your product sales with urgency
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(handleSubmit)}
-              className="space-y-6"
-            >
-              {/* Basic Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Flash Sale Name *</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g., Black Friday Blitz"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="storeId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Store *</FormLabel>
-                      <div className="flex items-center gap-2 p-3 border rounded-md bg-gray-50">
-                        <Store className="h-4 w-4 text-gray-500" />
-                        <span className="font-medium">
-                          {store?.name || "Loading store..."}
-                        </span>
-                      </div>
-                      <input type="hidden" {...field} />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
+    <DialogContent className="max-w-6xl h-[95vh] overflow-y-auto">
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2">
+          <Flame className="h-5 w-5 text-red-500" />
+          {data?.id ? "Edit Flash Sale" : "Create New Flash Sale"}
+        </DialogTitle>
+        <DialogDescription>
+          Set up a time-limited sale to boost your product sales with urgency
+        </DialogDescription>
+      </DialogHeader>
+      <div className="p-6">
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-6"
+          >
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="description"
+                name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>Flash Sale Name *</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Describe your flash sale to attract customers..."
-                        className="min-h-[80px]"
+                      <Input
+                        placeholder="e.g., Black Friday Blitz"
                         {...field}
                       />
                     </FormControl>
@@ -386,43 +355,156 @@ const FlashSaleDetails: FC<FlashSaleDetailsProps> = ({ data, storeUrl }) => {
                 )}
               />
 
-              {/* Date & Time Settings */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="storeId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Store *</FormLabel>
+                    <div className="flex items-center gap-2 p-3 border rounded-md bg-gray-50">
+                      <Store className="h-4 w-4 text-gray-500" />
+                      <span className="font-medium text-sm">
+                        {store?.name || "Loading store..."}
+                      </span>
+                    </div>
+                    <input type="hidden" {...field} />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Describe your flash sale to attract customers..."
+                      className="min-h-[80px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Date & Time Settings */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="startDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Start Date & Time *</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP 'at' HH:mm")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) => date < new Date()}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="endDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>End Date & Time *</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP 'at' HH:mm")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) =>
+                            date <= (form.getValues("startDate") || new Date())
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Discount Settings */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Discount Configuration</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
-                  name="startDate"
+                  name="discountType"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Start Date & Time *</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP 'at' HH:mm")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) => date < new Date()}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                    <FormItem>
+                      <FormLabel>Discount Type *</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="PERCENTAGE">
+                            Percentage (%)
+                          </SelectItem>
+                          <SelectItem value="FIXED_AMOUNT">
+                            Fixed Amount ($)
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -430,105 +512,49 @@ const FlashSaleDetails: FC<FlashSaleDetailsProps> = ({ data, storeUrl }) => {
 
                 <FormField
                   control={form.control}
-                  name="endDate"
+                  name="discountValue"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>End Date & Time *</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP 'at' HH:mm")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) =>
-                              date <=
-                              (form.getValues("startDate") || new Date())
-                            }
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                    <FormItem>
+                      <FormLabel>
+                        {form.watch("discountType") === "PERCENTAGE"
+                          ? "Discount % *"
+                          : "Discount Amount *"}
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder={
+                            form.watch("discountType") === "PERCENTAGE"
+                              ? "25"
+                              : "10.00"
+                          }
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(parseFloat(e.target.value) || 0)
+                          }
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </div>
 
-              {/* Discount Settings */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">
-                  Discount Configuration
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {form.watch("discountType") === "FIXED_AMOUNT" && (
                   <FormField
                     control={form.control}
-                    name="discountType"
+                    name="maxDiscount"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Discount Type *</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="PERCENTAGE">
-                              Percentage (%)
-                            </SelectItem>
-                            <SelectItem value="FIXED_AMOUNT">
-                              Fixed Amount ($)
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="discountValue"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          {form.watch("discountType") === "PERCENTAGE"
-                            ? "Discount % *"
-                            : "Discount Amount *"}
-                        </FormLabel>
+                        <FormLabel>Max Discount</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
-                            placeholder={
-                              form.watch("discountType") === "PERCENTAGE"
-                                ? "25"
-                                : "10.00"
-                            }
+                            placeholder="50.00"
                             {...field}
                             onChange={(e) =>
-                              field.onChange(parseFloat(e.target.value) || 0)
+                              field.onChange(
+                                parseFloat(e.target.value) || undefined
+                              )
                             }
                           />
                         </FormControl>
@@ -536,197 +562,169 @@ const FlashSaleDetails: FC<FlashSaleDetailsProps> = ({ data, storeUrl }) => {
                       </FormItem>
                     )}
                   />
+                )}
+              </div>
+            </div>
 
-                  {form.watch("discountType") === "FIXED_AMOUNT" && (
-                    <FormField
-                      control={form.control}
-                      name="maxDiscount"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Max Discount</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="50.00"
-                              {...field}
-                              onChange={(e) =>
-                                field.onChange(
-                                  parseFloat(e.target.value) || undefined
-                                )
-                              }
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+            {/* Status Settings */}
+            <div className="flex items-center space-x-6">
+              <FormField
+                control={form.control}
+                name="isActive"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Active</FormLabel>
+                      <p className="text-sm text-muted-foreground">
+                        Enable this flash sale immediately
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="featured"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Featured</FormLabel>
+                      <p className="text-sm text-muted-foreground">
+                        Highlight this sale prominently
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Product Selection */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Select Products</h3>
+                <span className="text-sm text-muted-foreground">
+                  {selectedProducts.length} products selected
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto border rounded-lg p-4">
+                {memoizedProducts.map((product) => {
+                  const isSelected = selectedProducts.includes(product.id);
+                  const customDiscount = customDiscounts.find(
+                    (d) => d.productId === product.id
+                  );
+
+                  return (
+                    <div
+                      key={product.id}
+                      className={cn(
+                        "border rounded-lg p-3 transition-all",
+                        isSelected
+                          ? "border-red-500 bg-red-50"
+                          : "border-gray-200"
                       )}
-                    />
-                  )}
-                </div>
-              </div>
-
-              {/* Status Settings */}
-              <div className="flex items-center space-x-6">
-                <FormField
-                  control={form.control}
-                  name="isActive"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
+                    >
+                      <div className="flex items-start gap-3">
                         <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
+                          checked={isSelected}
+                          onCheckedChange={(checked) => {
+                            handleProductToggle(product.id);
+                          }}
+                          className="cursor-pointer z-10 relative"
                         />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Active</FormLabel>
-                        <p className="text-sm text-muted-foreground">
-                          Enable this flash sale immediately
-                        </p>
-                      </div>
-                    </FormItem>
-                  )}
-                />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm truncate">
+                            {product.name}
+                          </h4>
+                          <p className="text-xs text-muted-foreground">
+                            {product.variants.length} variants
+                          </p>
 
-                <FormField
-                  control={form.control}
-                  name="featured"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Featured</FormLabel>
-                        <p className="text-sm text-muted-foreground">
-                          Highlight this sale prominently
-                        </p>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Product Selection */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Select Products</h3>
-                  <span className="text-sm text-muted-foreground">
-                    {selectedProducts.length} products selected
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto border rounded-lg p-4">
-                  {memoizedProducts.map((product) => {
-                    const isSelected = selectedProducts.includes(product.id);
-                    const customDiscount = customDiscounts.find(
-                      (d) => d.productId === product.id
-                    );
-
-                    return (
-                      <div
-                        key={product.id}
-                        className={cn(
-                          "border rounded-lg p-3 transition-all",
-                          isSelected
-                            ? "border-red-500 bg-red-50"
-                            : "border-gray-200"
-                        )}
-                      >
-                        <div className="flex items-start gap-3">
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={(checked) => {
-                              handleProductToggle(product.id);
-                            }}
-                            className="cursor-pointer z-10 relative"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-sm truncate">
-                              {product.name}
-                            </h4>
-                            <p className="text-xs text-muted-foreground">
-                              {product.variants.length} variants
-                            </p>
-
-                            {isSelected && (
-                              <div className="mt-2 space-y-2">
-                                <Separator />
-                                <div className="text-xs">
-                                  <p className="font-medium text-red-600">
-                                    Custom Discount (Optional):
-                                  </p>
-                                  <div className="grid grid-cols-2 gap-2 mt-1">
+                          {isSelected && (
+                            <div className="mt-2 space-y-2">
+                              <Separator />
+                              <div className="text-xs">
+                                <p className="font-medium text-red-600">
+                                  Custom Discount (Optional):
+                                </p>
+                                <div className="grid grid-cols-2 gap-2 mt-1">
+                                  <Input
+                                    type="number"
+                                    placeholder="Override %"
+                                    size={1}
+                                    value={
+                                      customDiscount?.customDiscountValue || ""
+                                    }
+                                    onChange={(e) =>
+                                      handleCustomDiscountChange(
+                                        product.id,
+                                        "customDiscountValue",
+                                        parseFloat(e.target.value) || undefined
+                                      )
+                                    }
+                                  />
+                                  {form.watch("discountType") ===
+                                    "FIXED_AMOUNT" && (
                                     <Input
                                       type="number"
-                                      placeholder="Override %"
+                                      placeholder="Max $"
                                       size={1}
                                       value={
-                                        customDiscount?.customDiscountValue ||
-                                        ""
+                                        customDiscount?.customMaxDiscount || ""
                                       }
                                       onChange={(e) =>
                                         handleCustomDiscountChange(
                                           product.id,
-                                          "customDiscountValue",
+                                          "customMaxDiscount",
                                           parseFloat(e.target.value) ||
                                             undefined
                                         )
                                       }
                                     />
-                                    {form.watch("discountType") ===
-                                      "FIXED_AMOUNT" && (
-                                      <Input
-                                        type="number"
-                                        placeholder="Max $"
-                                        size={1}
-                                        value={
-                                          customDiscount?.customMaxDiscount ||
-                                          ""
-                                        }
-                                        onChange={(e) =>
-                                          handleCustomDiscountChange(
-                                            product.id,
-                                            "customMaxDiscount",
-                                            parseFloat(e.target.value) ||
-                                              undefined
-                                          )
-                                        }
-                                      />
-                                    )}
-                                  </div>
+                                  )}
                                 </div>
                               </div>
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  );
+                })}
               </div>
+            </div>
 
-              {/* Submit Button */}
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="min-w-[120px]"
-                >
-                  {isLoading
-                    ? "Saving..."
-                    : data?.id
-                    ? "Update Flash Sale"
-                    : "Create Flash Sale"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-    </AlertDialog>
+            {/* Submit Button */}
+            <div className="flex justify-end gap-2">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="min-w-[120px]"
+              >
+                {isLoading
+                  ? "Saving..."
+                  : data?.id
+                  ? "Update Flash Sale"
+                  : "Create Flash Sale"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </div>
+    </DialogContent>
   );
 };
 
