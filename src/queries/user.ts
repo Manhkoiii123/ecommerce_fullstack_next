@@ -15,6 +15,7 @@ import {
 import { getCookie } from "cookies-next";
 import { cookies } from "next/headers";
 import { getProductFlashSaleDiscount } from "@/queries/flash-sale";
+import { notificationService } from "@/lib/notification-service";
 export const followStore = async (storeId: string): Promise<boolean> => {
   try {
     //  lấy ng hiện tại
@@ -605,6 +606,30 @@ export const placeOrder = async (
       },
     });
   }
+
+  // Send notifications for all stores in the order
+  for (const [storeId, items] of Object.entries(groupedItems)) {
+    const storeTotal = items.reduce((acc, item) => acc + item.totalPrice, 0);
+    const storeShippingFees = items.reduce(
+      (acc, item) => acc + item.shippingFee,
+      0
+    );
+    const totalAfterDiscount =
+      storeTotal - (storeTotal * (cartCoupon?.discount || 0)) / 100;
+
+    // Get user info for notification
+    const userData = await db.user.findUnique({
+      where: { id: userId },
+    });
+
+    // Send notification for this store
+    await notificationService.notifyOrderPlaced(order.id, userId, storeId, {
+      total: totalAfterDiscount,
+      itemsCount: items.length,
+      customerName: userData?.name || "Customer",
+    });
+  }
+
   return {
     orderId: order.id,
   };
@@ -1006,6 +1031,13 @@ export const cancelOrder = async (orderId: string): Promise<boolean> => {
 
   const order = await db.order.findUnique({
     where: { id: orderId },
+    include: {
+      groups: {
+        include: {
+          store: true,
+        },
+      },
+    },
   });
   if (!order) throw new Error("Order not found.");
   if (order.userId !== user.id) throw new Error("Permission denied.");
@@ -1045,6 +1077,25 @@ export const cancelOrder = async (orderId: string): Promise<boolean> => {
       }
     }
   });
+
+  // Send notification about order cancellation
+  try {
+    if (order.groups.length > 0) {
+      const firstStore = order.groups[0].store;
+      await notificationService.notifyOrderCancelled(
+        orderId,
+        user.id,
+        firstStore.id,
+        {
+          total: order.total,
+          customerName: user.firstName + " " + user.lastName,
+        }
+      );
+    }
+  } catch (error) {
+    console.error("Error sending cancellation notification:", error);
+    // Don't throw error, continue with order cancellation
+  }
 
   return true;
 };

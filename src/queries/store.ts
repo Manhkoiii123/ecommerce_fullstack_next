@@ -5,6 +5,7 @@ import { StoreDefaultShippingType, StoreStatus, StoreType } from "@/lib/types";
 import { checkIfUserFollowingStore } from "@/queries/product";
 import { clerkClient, currentUser } from "@clerk/nextjs/server";
 import { ShippingRate, Store } from "@prisma/client";
+import { notificationService } from "@/lib/notification-service";
 
 export const upsertStore = async (store: Partial<Store>) => {
   try {
@@ -1435,6 +1436,27 @@ export const autoCancelUnpaidOrders = async () => {
           },
         });
 
+        // Send notification about auto-cancellation
+        try {
+          if (order.groups.length > 0) {
+            const firstStore = order.groups[0];
+            await notificationService.notifyOrderCancelled(
+              order.id,
+              order.userId,
+              firstStore.storeId,
+              {
+                total: order.total,
+                customerName: order.user?.name || "Customer",
+                autoCancelled: true,
+                reason: "Tự động hủy sau 3 ngày không thanh toán",
+              }
+            );
+          }
+        } catch (error) {
+          console.error("Error sending auto-cancellation notification:", error);
+          // Don't throw error, continue with order cancellation
+        }
+
         // Note: Inventory restoration would need to be implemented based on your specific inventory management system
         // This is a placeholder for the inventory restoration logic
 
@@ -1592,6 +1614,27 @@ export const manuallyCancelOrder = async (orderId: string, reason?: string) => {
         updatedAt: new Date(),
       },
     });
+
+    // Send notification about order cancellation
+    try {
+      if (order.groups.length > 0) {
+        const firstStore = order.groups[0];
+        await notificationService.notifyOrderCancelled(
+          orderId,
+          order.userId,
+          firstStore.storeId,
+          {
+            total: order.total,
+            customerName: order.user?.name || "Customer",
+            cancelledBy: user.emailAddresses[0].emailAddress,
+            reason,
+          }
+        );
+      }
+    } catch (error) {
+      console.error("Error sending cancellation notification:", error);
+      // Don't throw error, continue with order cancellation
+    }
 
     // Note: Inventory restoration would need to be implemented based on your specific inventory management system
     // This is a placeholder for the inventory restoration logic

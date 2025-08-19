@@ -37,6 +37,7 @@ model User {
   wishlist          Wishlist[]        @relation("WishlistToUser")
   payments          PaymentDetails[]  @relation("PaymentDetailsToUser")
   coupons           Coupon[]          @relation("CouponToUser")
+  notifications     Notification[]    @relation("UserNotifications")
 }
 
 model Category {
@@ -107,6 +108,7 @@ model Store {
   orderGroups   OrderGroup[]   @relation("OrderGroupToStore")
   coupons       Coupon[]       @relation("CouponToStore")
   flashSales    FlashSale[]    @relation("StoreFlashSales")
+  notifications Notification[] @relation("StoreNotifications")
 
   @@index([userId])
 }
@@ -551,6 +553,7 @@ model Order {
   user              User            @relation("UserOrders", fields: [userId], references: [id])
   shippingAddressId String
   shippingAddress   ShippingAddress @relation("ShippingAddressToOrder", fields: [shippingAddressId], references: [id])
+  notifications     Notification[]  @relation("OrderNotifications")
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 
@@ -712,4 +715,57 @@ model PaymentDetails {
 
   @@index([orderId])
   @@index([userId])
+}
+
+enum NotificationType {
+  ORDER_PLACED
+  ORDER_STATUS_CHANGED
+  PAYMENT_STATUS_CHANGED
+  ORDER_SHIPPED
+  ORDER_DELIVERED
+  ORDER_CANCELLED
+  PAYMENT_FAILED
+  PAYMENT_SUCCESS
+  REFUND_PROCESSED
+  COUPON_APPLIED
+  FLASH_SALE_STARTED
+  FLASH_SALE_ENDING
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
+
+model Notification {
+  id        String             @id @default(uuid())
+  type      NotificationType
+  title     String
+  message   String             @db.Text
+  status    NotificationStatus @default(UNREAD)
+  
+  // Metadata for different notification types
+  metadata  Json?              // Store additional data like orderId, amount, etc.
+  
+  // Recipients
+  userId    String?            // For user notifications
+  user      User?              @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  
+  storeId   String?            // For store owner notifications
+  store     Store?             @relation("StoreNotifications", fields: [storeId], references: [id], onDelete: Cascade)
+  
+  // Related entities
+  orderId   String?            // Related order if applicable
+  order     Order?             @relation("OrderNotifications", fields: [orderId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([storeId])
+  @@index([orderId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
 }

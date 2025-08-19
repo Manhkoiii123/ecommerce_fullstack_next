@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { OrderStatus, ProductStatus } from "@/lib/types";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { notificationService } from "@/lib/notification-service";
 
 export const getOrder = async (orderId: string) => {
   const user = await currentUser();
@@ -62,13 +63,26 @@ export const updateOrderGroupStatus = async (
   if (!store) {
     throw new Error("Unauthorized Access !");
   }
-  const order = await db.orderGroup.findUnique({
+
+  // Get order group with order details
+  const orderGroup = await db.orderGroup.findUnique({
     where: {
       id: groupId,
       storeId: storeId,
     },
+    include: {
+      order: {
+        include: {
+          user: true,
+        },
+      },
+    },
   });
-  if (!order) throw new Error("Order not found.");
+
+  if (!orderGroup) throw new Error("Order not found.");
+
+  const oldStatus = orderGroup.status;
+
   const updatedOrder = await db.orderGroup.update({
     where: {
       id: groupId,
@@ -77,6 +91,27 @@ export const updateOrderGroupStatus = async (
       status,
     },
   });
+
+  // Send notification about status change
+  if (oldStatus !== status) {
+    try {
+      await notificationService.notifyOrderStatusChanged(
+        orderGroup.orderId,
+        orderGroup.order.userId,
+        storeId,
+        oldStatus,
+        status,
+        {
+          total: orderGroup.total,
+          customerName: orderGroup.order.user.name,
+        }
+      );
+    } catch (error) {
+      console.error("Error sending notification:", error);
+      // Don't throw error, continue with order update
+    }
+  }
+
   return updatedOrder.status;
 };
 
@@ -202,6 +237,38 @@ export const cancelOrder = async (orderId: string) => {
       }
     }
   });
+
+  // Send notification about order cancellation
+  try {
+    // Get store information for notification
+    const orderWithStore = await db.order.findUnique({
+      where: { id: orderId },
+      include: {
+        groups: {
+          include: {
+            store: true,
+          },
+        },
+        user: true,
+      },
+    });
+
+    if (orderWithStore && orderWithStore.groups.length > 0) {
+      const firstStore = orderWithStore.groups[0].store;
+      await notificationService.notifyOrderCancelled(
+        orderId,
+        user.id,
+        firstStore.id,
+        {
+          total: orderWithStore.total,
+          customerName: orderWithStore.user.name,
+        }
+      );
+    }
+  } catch (error) {
+    console.error("Error sending cancellation notification:", error);
+    // Don't throw error, continue with order cancellation
+  }
 
   // Revalidate trang order để cập nhật UI
   revalidatePath(`/order/${orderId}`);

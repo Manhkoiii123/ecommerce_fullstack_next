@@ -6,6 +6,7 @@ import DownloadApp from "@/components/store/layout/header/download-app";
 import Search from "@/components/store/layout/header/search/search";
 import { Country } from "@/lib/types";
 import CountryLanguageCurrencySelector from "@/components/store/layout/header/country-lang-curr-selector";
+import { NotificationBell } from "@/components/store/layout/header/notification-bell";
 
 export default function Header() {
   const cookieStore = cookies();
@@ -29,6 +30,7 @@ export default function Header() {
               <h1 className="font-extrabold text-3xl font-mono">GoShop</h1>
             </Link>
             <div className="flex lg:hidden">
+              <NotificationBell />
               <UserMenu />
               <Cart />
             </div>
@@ -40,6 +42,7 @@ export default function Header() {
             <DownloadApp />
           </div>
           <CountryLanguageCurrencySelector userCountry={userCountry} />
+          <NotificationBell />
           <UserMenu />
           <Cart />
         </div>

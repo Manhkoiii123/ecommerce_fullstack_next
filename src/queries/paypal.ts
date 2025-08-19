@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db";
 import { currentUser } from "@clerk/nextjs/server";
+import { notificationService } from "@/lib/notification-service";
 
 export const createPayPalPayment = async (orderId: string) => {
   try {
@@ -112,12 +113,15 @@ export const capturePayPalPayment = async (
     },
   });
 
+  const oldStatus = order.paymentStatus;
+  const newStatus = captureData.status === "COMPLETED" ? "Paid" : "Failed";
+
   const updatedOrder = await db.order.update({
     where: {
       id: orderId,
     },
     data: {
-      paymentStatus: captureData.status === "COMPLETED" ? "Paid" : "Failed",
+      paymentStatus: newStatus,
       paymentMethod: "Paypal",
       paymentDetails: {
         connect: {
@@ -127,8 +131,36 @@ export const capturePayPalPayment = async (
     },
     include: {
       paymentDetails: true,
+      groups: {
+        include: {
+          store: true,
+        },
+      },
     },
   });
+
+  // Send notification about payment status change
+  if (oldStatus !== newStatus) {
+    try {
+      // Get the first store from order groups for notification
+      const firstStore = updatedOrder.groups[0]?.store;
+      if (firstStore) {
+        await notificationService.notifyPaymentStatusChanged(
+          orderId,
+          user.id,
+          firstStore.id,
+          oldStatus,
+          newStatus,
+          {
+            amount: updatedOrder.total,
+          }
+        );
+      }
+    } catch (error) {
+      console.error("Error sending payment notification:", error);
+      // Don't throw error, continue with payment update
+    }
+  }
 
   return updatedOrder;
 };

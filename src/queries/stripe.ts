@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { currentUser } from "@clerk/nextjs/server";
 import { PaymentIntent } from "@stripe/stripe-js";
 import Stripe from "stripe";
+import { notificationService } from "@/lib/notification-service";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
   apiVersion: "2025-03-31.basil",
@@ -84,12 +85,15 @@ export const createStripePayment = async (
       },
     });
 
+    const oldStatus = order.paymentStatus;
+    const newStatus = paymentIntent.status === "succeeded" ? "Paid" : "Failed";
+
     const updatedOrder = await db.order.update({
       where: {
         id: orderId,
       },
       data: {
-        paymentStatus: paymentIntent.status === "succeeded" ? "Paid" : "Failed",
+        paymentStatus: newStatus,
         paymentMethod: "Stripe",
         paymentDetails: {
           connect: {
@@ -99,8 +103,36 @@ export const createStripePayment = async (
       },
       include: {
         paymentDetails: true,
+        groups: {
+          include: {
+            store: true,
+          },
+        },
       },
     });
+
+    // Send notification about payment status change
+    if (oldStatus !== newStatus) {
+      try {
+        // Get the first store from order groups for notification
+        const firstStore = updatedOrder.groups[0]?.store;
+        if (firstStore) {
+          await notificationService.notifyPaymentStatusChanged(
+            orderId,
+            user.id,
+            firstStore.id,
+            oldStatus,
+            newStatus,
+            {
+              amount: updatedOrder.total,
+            }
+          );
+        }
+      } catch (error) {
+        console.error("Error sending payment notification:", error);
+        // Don't throw error, continue with payment update
+      }
+    }
 
     return updatedOrder;
   } catch (error) {
