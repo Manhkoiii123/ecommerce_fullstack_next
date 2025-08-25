@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/sonner";
 import ModalProvider from "@/providers/modal-provider";
+import { SocketProvider } from "../providers/socket-provider";
 const interFont = Inter({ subsets: ["latin"] });
 const barlowFont = Barlow({
   subsets: ["latin"],
@@ -66,8 +67,10 @@ export default function RootLayout({
                 __html: JSON.stringify(organizationJsonLd),
               }}
             />
-            <ModalProvider>{children}</ModalProvider>
-            <Toaster />
+            <SocketProvider>
+              <ModalProvider>{children}</ModalProvider>
+              <Toaster />
+            </SocketProvider>
           </ThemeProvider>
         </body>
       </html>
