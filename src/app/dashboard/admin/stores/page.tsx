@@ -9,7 +9,7 @@ export default async function AdminStoresPage() {
   return (
     <DataTable
       filterValue="name"
-      data={stores}
+      data={stores || []}
       searchPlaceholder="Search store name..."
       columns={columns}
     />

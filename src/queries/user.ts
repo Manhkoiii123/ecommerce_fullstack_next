@@ -15,6 +15,7 @@ import {
 import { getCookie } from "cookies-next";
 import { cookies } from "next/headers";
 import { getProductFlashSaleDiscount } from "@/queries/flash-sale";
+import { createNewOrderNotification } from "@/lib/notifications";
 export const followStore = async (storeId: string): Promise<boolean> => {
   try {
     //  lấy ng hiện tại
@@ -587,6 +588,12 @@ export const placeOrder = async (
           },
         },
       });
+    }
+
+    try {
+      await createNewOrderNotification(order.id, storeId, userId);
+    } catch (error) {
+      console.error("Error creating order notification:", error);
     }
 
     // tinhs tienef

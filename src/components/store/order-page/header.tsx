@@ -39,7 +39,7 @@ const OrderHeader = ({ order }: { order: OrderFulltType }) => {
         <div className="w-full flex flex-col md:flex-row md:items-center md:justify-between gap-4 ">
           <div className="w-full flex items-center gap-x-4">
             <PaymentStatusTag status={order.paymentStatus as PaymentStatus} />
-            <OrderStatusTag status={order.orderStatus as OrderStatus} />
+            {/* <OrderStatusTag status={order.orderStatus as OrderStatus} /> */}
           </div>
           <div className="flex items-center gap-x-4">
             <Button variant="outline" onClick={() => handleDownload()}>

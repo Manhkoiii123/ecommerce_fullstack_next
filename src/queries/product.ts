@@ -1496,3 +1496,16 @@ const incrementProductViews = async (productId: string) => {
     });
   }
 };
+
+export const getStoreByUrl = async (storeUrl: string) => {
+  const store = await db.store.findUnique({
+    where: { url: storeUrl },
+  });
+  return store;
+};
+export const getListNotificationsByStoreId = async (storeId: string) => {
+  const notifications = await db.notification.findMany({
+    where: { storeId },
+  });
+  return notifications;
+};

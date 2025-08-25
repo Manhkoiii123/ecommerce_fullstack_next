@@ -11,7 +11,6 @@ export default function SizeLink({ size }: { size: string }) {
   const { replace } = useRouter();
 
   const sizeQueryArray = searchParams.getAll("size");
-  console.log("🚀 ~ SizeLink ~ sizeQueryArray:", sizeQueryArray);
 
   const existed_size = sizeQueryArray.find((s) => s === size);
 

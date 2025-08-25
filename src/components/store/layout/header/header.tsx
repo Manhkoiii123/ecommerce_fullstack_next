@@ -6,8 +6,11 @@ import DownloadApp from "@/components/store/layout/header/download-app";
 import Search from "@/components/store/layout/header/search/search";
 import { Country } from "@/lib/types";
 import CountryLanguageCurrencySelector from "@/components/store/layout/header/country-lang-curr-selector";
+import { NotificationBell } from "@/components/dashboard/shared/notification-bell";
+import { currentUser } from "@clerk/nextjs/server";
 
-export default function Header() {
+export default async function Header() {
+  const user = await currentUser();
   const cookieStore = cookies();
   const userCountryCookie = cookieStore.get("userCountry");
   let userCountry: Country = {
@@ -42,6 +45,7 @@ export default function Header() {
           <CountryLanguageCurrencySelector userCountry={userCountry} />
           <UserMenu />
           <Cart />
+          <NotificationBell userId={user?.id} />
         </div>
       </div>
     </div>

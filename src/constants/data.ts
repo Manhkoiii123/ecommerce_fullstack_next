@@ -56,7 +56,7 @@ export const SellerDashboardSidebarOptions: DashboardSidebarMenuInterface[] = [
   },
   {
     label: "Flash Sales",
-    icon: "fire",
+    icon: "flame",
     link: "flash-sales",
   },
   {

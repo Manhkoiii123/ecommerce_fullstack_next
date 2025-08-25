@@ -43,108 +43,20 @@ const ProductVariantPage = async ({
   );
 
   // JSON-LD: Product + BreadcrumbList
-  const selectedSize = sizeId
-    ? productData.sizes.find((s) => s.id === sizeId)
-    : undefined;
-  const computeDiscounted = (price: number, discount: number) =>
-    Math.round(price * (1 - (discount || 0) / 100) * 100) / 100;
-  const prices = productData.sizes.map((s) =>
-    computeDiscounted(s.price, s.discount)
-  );
-  const price = selectedSize
-    ? computeDiscounted(selectedSize.price, selectedSize.discount)
-    : prices.length > 0
-    ? Math.min(...prices)
-    : undefined;
-  const currency = "USD";
-  const availability = selectedSize
-    ? selectedSize.quantity > 0
-      ? "https://schema.org/InStock"
-      : "https://schema.org/OutOfStock"
-    : productData.sizes.some((s) => s.quantity > 0)
-    ? "https://schema.org/InStock"
-    : "https://schema.org/OutOfStock";
-  const productImages = productData.images?.map((img) => img.url) || [];
-  const productUrl = `/product/${productData.productSlug}/${productData.variantSlug}`;
-  const aggregateRating =
-    typeof productData.rating === "number" && productData.rating > 0
-      ? {
-          "@type": "AggregateRating",
-          ratingValue: productData.rating,
-          reviewCount: productData.reviewsStatistics?.totalReviews || 0,
-        }
-      : undefined;
-  const productJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: `${productData.name} - ${productData.variantName}`,
-    description:
-      productData.variantDescription || productData.description || undefined,
-    image: productImages,
-    sku: productData.sku,
-    brand: productData.brand
-      ? { "@type": "Brand", name: productData.brand }
-      : undefined,
-    url: productUrl,
-    offers:
-      typeof price === "number"
-        ? {
-            "@type": "Offer",
-            priceCurrency: currency,
-            price,
-            availability,
-            url: productUrl,
-          }
-        : undefined,
-    aggregateRating,
-  } as any;
-
-  const breadcrumbJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: "/",
-      },
-      category?.name && category?.url
-        ? {
-            "@type": "ListItem",
-            position: 2,
-            name: category.name,
-            item: `/browse?category=${category.url}`,
-          }
-        : undefined,
-      {
-        "@type": "ListItem",
-        position: 3,
-        name: productData.name,
-        item: `/product/${productData.productSlug}`,
-      },
-      {
-        "@type": "ListItem",
-        position: 4,
-        name: productData.variantName,
-        item: productUrl,
-      },
-    ].filter(Boolean),
-  } as any;
 
   return (
     <div>
       <Header />
       <CategoriesHeader />
       {/* Structured Data */}
-      <script
+      {/* <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
       />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
+      /> */}
       <div className="max-w-[1650px] mx-auto p-4 overflow-x-hidden">
         <ProductPageContainer productData={productData} sizeId={sizeId}>
           {relatedProducts.products && (
