@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useQueryClient } from "@tanstack/react-query";
+import { useNotificationQuery } from "@/hooks/use-notification-query";
+import { useNotificationScroll } from "@/hooks/use-notification-scroll";
 
 interface Notification {
   id: string;
@@ -20,70 +22,56 @@ interface Notification {
 interface NotificationBellProps {
   storeId?: string;
   userId?: string;
-  initialUnreadCount?: number;
 }
 
-export function NotificationBell({
-  storeId,
-  userId,
-  initialUnreadCount = 0,
-}: NotificationBellProps) {
-  const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+export function NotificationBell({ storeId, userId }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const chatRef = useRef<HTMLDivElement>(null);
+  const filterKey = userId ? "userId" : "storeUrl";
+  const filterValue = userId || storeId || "";
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchNotifications();
-    }
-  }, [isOpen]);
+  const queryClient = useQueryClient();
 
-  const fetchNotifications = async () => {
-    try {
-      setLoading(true);
-      let url = "";
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
+    useNotificationQuery({
+      queryKey: "notifications",
+      apiUrl: "/api/notifications",
+      filterKey,
+      filterValue,
+    });
 
-      if (storeId) {
-        url = `/api/notifications/store/${storeId}`;
-      } else if (userId) {
-        url = "/api/notifications/user";
-      } else {
-        return;
-      }
+  const notifications = data?.pages.flatMap((page) => page.items) || [];
+  const unreadCount = notifications.filter((n) => n.status === "UNREAD").length;
 
-      const response = await fetch(url);
-      if (response.ok) {
-        const data = await response.json();
-        setNotifications(data.notifications || []);
-        setUnreadCount(data.unreadCount || 0);
-      }
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Hook infinite scroll: chỉ load thêm khi scroll xuống cuối
+  useNotificationScroll({
+    chatRef,
+    loadMore: fetchNextPage,
+    shouldLoadMore: !isFetchingNextPage && !!hasNextPage,
+    isOpen,
+  });
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
-      const response = await fetch(
-        `/api/notifications/${notificationId}/mark-read`,
-        {
-          method: "PATCH",
+      await fetch(`/api/notifications/${notificationId}/mark-read`, {
+        method: "PATCH",
+      });
+
+      queryClient.setQueryData(
+        ["notifications", filterKey, filterValue],
+        (oldData: any) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: any) => ({
+              ...page,
+              items: page.items.map((n: any) =>
+                n.id === notificationId ? { ...n, status: "READ" } : n
+              ),
+            })),
+          };
         }
       );
-
-      if (response.ok) {
-        setNotifications((prev) =>
-          prev.map((notif) =>
-            notif.id === notificationId
-              ? { ...notif, status: "READ" as const }
-              : notif
-          )
-        );
-        setUnreadCount((prev) => Math.max(0, prev - 1));
-      }
     } catch (error) {
       console.error("Error marking notification as read:", error);
     }
@@ -94,12 +82,7 @@ export function NotificationBell({
       const unreadNotifications = notifications.filter(
         (n) => n.status === "UNREAD"
       );
-
-      await Promise.all(
-        unreadNotifications.map((notif) => handleMarkAsRead(notif.id))
-      );
-
-      setUnreadCount(0);
+      await Promise.all(unreadNotifications.map((n) => handleMarkAsRead(n.id)));
     } catch (error) {
       console.error("Error marking all notifications as read:", error);
     }
@@ -169,86 +152,85 @@ export function NotificationBell({
       {isOpen && (
         <Card className="absolute right-0 top-12 w-[400px] shadow-lg z-50">
           <CardContent className="p-0">
-            <div className="p-4 border-b">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold">Thông báo</h3>
-                {unreadCount > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleMarkAllAsRead}
-                    className="text-xs"
-                  >
-                    Đánh dấu tất cả đã đọc
-                  </Button>
-                )}
-              </div>
+            <div className="p-4 border-b flex items-center justify-between">
+              <h3 className="font-semibold">Thông báo</h3>
+              {unreadCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleMarkAllAsRead}
+                  className="text-xs"
+                >
+                  Đánh dấu tất cả đã đọc
+                </Button>
+              )}
             </div>
 
-            <ScrollArea className="h-96">
-              <div className="p-2">
-                {loading ? (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto"></div>
-                  </div>
-                ) : notifications.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>Chưa có thông báo nào</p>
-                  </div>
-                ) : (
-                  notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className={`p-3 border-b last:border-b-0 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        notification.status === "UNREAD" ? "bg-blue-50" : ""
-                      }`}
-                      onClick={() => handleMarkAsRead(notification.id)}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="text-lg">
-                          {getNotificationIcon(notification.type)}
-                        </div>
+            {/* Scrollable container */}
+            <div
+              className="p-2 h-96 overflow-y-auto flex flex-col"
+              ref={chatRef}
+            >
+              {status === "loading" ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto"></div>
+                </div>
+              ) : notifications.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>Chưa có thông báo nào</p>
+                </div>
+              ) : (
+                notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={`p-3 border-b last:border-b-0 cursor-pointer hover:bg-gray-50 transition-colors ${
+                      notification.status === "UNREAD" ? "bg-blue-50" : ""
+                    }`}
+                    onClick={() => handleMarkAsRead(notification.id)}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="text-lg">
+                        {getNotificationIcon(notification.type)}
+                      </div>
 
-                        <div className="flex-1 space-y-2">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-medium text-sm">
-                              {notification.title}
-                            </h4>
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium text-sm">
+                            {notification.title}
+                          </h4>
+                          <Badge
+                            variant="secondary"
+                            className={`text-xs ${getNotificationColor(
+                              notification.type
+                            )}`}
+                          >
+                            {notification.type.replace("_", " ")}
+                          </Badge>
+                          {notification.status === "UNREAD" && (
                             <Badge
-                              variant="secondary"
-                              className={`text-xs ${getNotificationColor(
-                                notification.type
-                              )}`}
+                              variant="default"
+                              className="bg-blue-500 text-xs"
                             >
-                              {notification.type.replace("_", " ")}
+                              Mới
                             </Badge>
-                            {notification.status === "UNREAD" && (
-                              <Badge
-                                variant="default"
-                                className="bg-blue-500 text-xs"
-                              >
-                                Mới
-                              </Badge>
-                            )}
-                          </div>
-
-                          <p className="text-sm text-gray-600">
-                            {notification.message}
-                          </p>
-
-                          <p className="text-xs text-gray-400">
-                            {new Date(notification.createdAt).toLocaleString(
-                              "vi-VN"
-                            )}
-                          </p>
+                          )}
                         </div>
+
+                        <p className="text-sm text-gray-600">
+                          {notification.message}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {new Date(notification.createdAt).toLocaleString(
+                            "vi-VN"
+                          )}
+                        </p>
                       </div>
                     </div>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
+                  </div>
+                ))
+              )}
+            </div>
           </CardContent>
         </Card>
       )}
