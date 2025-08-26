@@ -88,10 +88,29 @@ export function NotificationBell({ storeId, userId }: NotificationBellProps) {
 
   const handleMarkAllAsRead = async () => {
     try {
-      const unreadNotifications = notifications.filter(
-        (n) => n.status === "UNREAD"
+      await fetch("/api/notifications/mark-all-read", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, storeId }),
+      });
+      const queryKey = `notifications:${filterKey}:${filterValue}`;
+      queryClient.setQueryData(
+        [queryKey, filterKey, filterValue],
+        (oldData: any) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: any) => ({
+              ...page,
+              items: page.items.map((n: any) => ({
+                ...n,
+                status: "READ",
+              })),
+              unreadCount: 0,
+            })),
+          };
+        }
       );
-      await Promise.all(unreadNotifications.map((n) => handleMarkAsRead(n.id)));
     } catch (error) {
       console.error("Error marking all notifications as read:", error);
     }
