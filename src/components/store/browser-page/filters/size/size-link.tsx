@@ -4,13 +4,13 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export default function SizeLink({ size }: { size: string }) {
   const searchParams = useSearchParams();
-  const params = new URLSearchParams(searchParams);
+  const params = new URLSearchParams(searchParams!);
 
   const pathname = usePathname();
 
   const { replace } = useRouter();
 
-  const sizeQueryArray = searchParams.getAll("size");
+  const sizeQueryArray = searchParams!.getAll("size");
 
   const existed_size = sizeQueryArray.find((s) => s === size);
 

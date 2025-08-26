@@ -18,6 +18,7 @@ export interface CreateNotificationData {
   userId?: string;
   orderId?: string;
   data?: any;
+  createdAt?: Date;
 }
 
 export async function createNotification(
@@ -46,7 +47,6 @@ export async function createNotification(
 // Notification khi đặt hàng mới
 export async function createNewOrderNotification(
   orderId: string,
-  storeId: string,
   userId: string
 ) {
   try {
@@ -56,7 +56,6 @@ export async function createNewOrderNotification(
       include: {
         user: true,
         groups: {
-          where: { storeId },
           include: {
             items: true,
           },
@@ -68,58 +67,73 @@ export async function createNewOrderNotification(
       throw new Error("Order not found");
     }
 
-    const orderGroup = order.groups[0];
-    if (!orderGroup) {
-      throw new Error("Order group not found");
+    const customerName =
+      order.user.name !== "null null" ? order.user.name : order.user.email;
+
+    // Tạo notification cho từng store
+    const storeNotifications: CreateNotificationData[] = [];
+    for (const orderGroup of order.groups) {
+      const storeId = orderGroup.storeId;
+      const orderTotal = orderGroup.total;
+      const itemCount = orderGroup.items.length;
+      const firstProduct = orderGroup.items[0];
+
+      const storeNotificationData: CreateNotificationData = {
+        type: "NEW_ORDER",
+        title: "Đơn hàng mới! 🎉",
+        message: `${customerName} đã đặt đơn hàng mới với ${itemCount} sản phẩm trị giá $${orderTotal.toFixed(
+          2
+        )}.`,
+        storeId,
+        orderId,
+        createdAt: new Date(),
+        data: {
+          orderId,
+          customerName,
+          orderTotal,
+          itemCount,
+          productName: firstProduct?.name || "Nhiều sản phẩm",
+          customerEmail: order.user.email,
+        },
+      };
+
+      storeNotifications.push(storeNotificationData);
     }
 
-    const customerName = order.user.name;
-    const orderTotal = orderGroup.total;
-    const itemCount = orderGroup.items.length;
-    const firstProduct = orderGroup.items[0];
+    // Notification cho khách hàng (chung, 1 bản)
+    const totalItemCount = order.groups.reduce(
+      (sum, g) => sum + g.items.length,
+      0
+    );
+    const totalOrderAmount = order.groups.reduce((sum, g) => sum + g.total, 0);
 
-    // Notification cho chủ shop
-    const storeNotificationData: CreateNotificationData = {
-      type: "NEW_ORDER",
-      title: "Đơn hàng mới! 🎉",
-      message: `${customerName} đã đặt đơn hàng mới với ${itemCount} sản phẩm trị giá $${orderTotal.toFixed(
-        2
-      )}.`,
-      storeId,
-      orderId,
-      data: {
-        orderId,
-        customerName,
-        orderTotal,
-        itemCount,
-        productName: firstProduct?.name || "Nhiều sản phẩm",
-        customerEmail: order.user.email,
-      },
-    };
-
-    // Notification cho khách hàng
     const customerNotificationData: CreateNotificationData = {
       type: "NEW_ORDER",
       title: "Đặt hàng thành công! ✅",
       message: `Đơn hàng của bạn đã được đặt thành công. Mã đơn hàng: ${orderId}`,
       userId,
       orderId,
+      createdAt: new Date(),
       data: {
         orderId,
-        orderTotal,
-        itemCount,
-        estimatedDelivery: `${orderGroup.shippingDeliveryMin}-${orderGroup.shippingDeliveryMax} ngày`,
+        orderTotal: totalOrderAmount,
+        itemCount: totalItemCount,
+        estimatedDelivery: `${Math.min(
+          ...order.groups.map((g) => g.shippingDeliveryMin)
+        )}-${Math.max(...order.groups.map((g) => g.shippingDeliveryMax))} ngày`,
       },
     };
 
-    // Tạo cả hai notification
+    // Tạo notification trong DB
     await Promise.all([
-      createNotification(storeNotificationData),
+      ...storeNotifications.map((storeNotification) =>
+        createNotification(storeNotification)
+      ),
       createNotification(customerNotificationData),
     ]);
 
     return {
-      storeNotification: storeNotificationData,
+      storeNotifications,
       customerNotification: customerNotificationData,
     };
   } catch (error) {
@@ -128,10 +142,8 @@ export async function createNewOrderNotification(
   }
 }
 
-// Notification khi thay đổi trạng thái đơn hàng
 export async function createOrderStatusChangeNotification(
   orderId: string,
-  storeId: string,
   userId: string,
   newStatus: string,
   oldStatus?: string
@@ -142,7 +154,6 @@ export async function createOrderStatusChangeNotification(
       include: {
         user: true,
         groups: {
-          where: { storeId },
           include: {
             items: true,
           },
@@ -154,15 +165,9 @@ export async function createOrderStatusChangeNotification(
       throw new Error("Order not found");
     }
 
-    const orderGroup = order.groups[0];
-    if (!orderGroup) {
-      throw new Error("Order group not found");
-    }
+    const customerName =
+      order.user.name !== "null null" ? order.user.name : order.user.email;
 
-    const customerName = order.user.name;
-    const orderTotal = orderGroup.total;
-
-    // Tạo message dựa trên trạng thái mới
     let title = "";
     let message = "";
     let notificationType: CreateNotificationData["type"] =
@@ -170,78 +175,79 @@ export async function createOrderStatusChangeNotification(
 
     switch (newStatus) {
       case "Confirmed":
-        title = "Đơn hàng đã được xác nhận! ✅";
-        message = `Đơn hàng #${orderId} đã được xác nhận và đang được xử lý.`;
+        title = "Order confirmed ✅";
+        message = `Order #${orderId} has been confirmed and is being processed.`;
         break;
       case "Processing":
-        title = "Đơn hàng đang được xử lý! 🔄";
-        message = `Đơn hàng #${orderId} đang được chuẩn bị để giao hàng.`;
+        title = "Order processing 🔄";
+        message = `Order #${orderId} is being prepared for shipment.`;
         break;
       case "Shipped":
-        title = "Đơn hàng đã được gửi! 📦";
-        message = `Đơn hàng #${orderId} đã được gửi và đang trên đường đến bạn.`;
+        title = "Order shipped 📦";
+        message = `Order #${orderId} has been shipped and is on the way.`;
         notificationType = "ORDER_SHIPPED";
         break;
       case "OutforDelivery":
-        title = "Đơn hàng đang giao! 🚚";
-        message = `Đơn hàng #${orderId} đang được giao đến địa chỉ của bạn.`;
+        title = "Out for delivery 🚚";
+        message = `Order #${orderId} is out for delivery to your address.`;
         break;
       case "Delivered":
-        title = "Đơn hàng đã được giao! 🎉";
-        message = `Đơn hàng #${orderId} đã được giao thành công. Cảm ơn bạn đã mua hàng!`;
+        title = "Order delivered 🎉";
+        message = `Order #${orderId} has been delivered successfully. Thank you for your purchase!`;
         notificationType = "ORDER_DELIVERED";
         break;
       case "Cancelled":
-        title = "Đơn hàng đã bị hủy! ❌";
-        message = `Đơn hàng #${orderId} đã bị hủy. Liên hệ với chúng tôi nếu bạn có thắc mắc.`;
+        title = "Order cancelled ❌";
+        message = `Order #${orderId} has been cancelled. Please contact us if you have any questions.`;
         notificationType = "ORDER_CANCELLED";
         break;
       default:
-        title = "Trạng thái đơn hàng đã thay đổi! 📝";
-        message = `Trạng thái đơn hàng #${orderId} đã thay đổi từ ${oldStatus} thành ${newStatus}.`;
+        title = "Order status updated 📝";
+        message = `The status of order #${orderId} has changed from ${oldStatus} to ${newStatus}.`;
     }
 
-    // Notification cho chủ shop
-    const storeNotificationData: CreateNotificationData = {
-      type: notificationType,
-      title: `Trạng thái đơn hàng thay đổi - ${newStatus}`,
-      message: `Đơn hàng #${orderId} của ${customerName} ($${orderTotal.toFixed(
-        2
-      )}) đã thay đổi trạng thái thành ${newStatus}.`,
-      storeId,
-      orderId,
-      data: {
+    const storeNotifications: CreateNotificationData[] = order.groups.map(
+      (group) => ({
+        type: notificationType,
+        title: `Order status changed - ${newStatus}`,
+        message: `Order #${orderId} from ${customerName} ($${group.total.toFixed(
+          2
+        )}) is now ${newStatus}.`,
+        storeId: group.storeId,
         orderId,
-        customerName,
-        orderTotal,
-        oldStatus,
-        newStatus,
-      },
-    };
+        createdAt: new Date(),
+        data: {
+          orderId,
+          customerName,
+          orderTotal: group.total,
+          oldStatus,
+          newStatus,
+        },
+      })
+    );
 
-    // Notification cho khách hàng
     const customerNotificationData: CreateNotificationData = {
       type: notificationType,
       title,
       message,
       userId,
       orderId,
+      createdAt: new Date(),
       data: {
         orderId,
         oldStatus,
         newStatus,
-        orderTotal: orderGroup.total,
+        orderTotal: order.groups.reduce((sum, g) => sum + g.total, 0),
       },
     };
 
-    // Tạo cả hai notification
     await Promise.all([
-      createNotification(storeNotificationData),
+      ...storeNotifications.map((sn) => createNotification(sn)),
       createNotification(customerNotificationData),
     ]);
 
     return {
-      storeNotification: storeNotificationData,
+      storeNotifications,
       customerNotification: customerNotificationData,
     };
   } catch (error) {
@@ -274,7 +280,8 @@ export async function createPaymentNotification(
       throw new Error("Order not found");
     }
 
-    const customerName = order.user.name;
+    const customerName =
+      order.user.name !== "null null" ? order.user.name : order.user.email;
 
     let title = "";
     let message = "";
@@ -301,6 +308,7 @@ export async function createPaymentNotification(
       )}) - ${paymentStatus} qua ${paymentMethod}.`,
       storeId,
       orderId,
+      createdAt: new Date(),
       data: {
         orderId,
         customerName,
@@ -317,6 +325,7 @@ export async function createPaymentNotification(
       message,
       userId,
       orderId,
+      createdAt: new Date(),
       data: {
         orderId,
         amount,

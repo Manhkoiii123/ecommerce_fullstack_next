@@ -9,14 +9,14 @@ export default function CategoryLink({
   category: CatgegoryWithSubsType;
 }) {
   const searchParams = useSearchParams();
-  const params = new URLSearchParams(searchParams);
+  const params = new URLSearchParams(searchParams!);
 
   const pathname = usePathname();
 
   const { replace } = useRouter();
 
-  const categoryQuery = searchParams.get("category");
-  const subCategoryQuery = searchParams.get("subCategory");
+  const categoryQuery = searchParams!.get("category");
+  const subCategoryQuery = searchParams!.get("subCategory");
 
   const [expand, setExpand] = useState<boolean>(false);
 

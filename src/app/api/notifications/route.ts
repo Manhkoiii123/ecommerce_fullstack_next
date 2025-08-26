@@ -4,7 +4,7 @@ import { Notification } from "@prisma/client";
 import { db } from "@/lib/db";
 import { currentUser } from "@clerk/nextjs/server";
 
-const NOTIFICATIONS_BATCH = 3;
+const NOTIFICATIONS_BATCH = 4;
 
 export async function GET(req: Request) {
   try {
@@ -13,7 +13,7 @@ export async function GET(req: Request) {
 
     const cursor = searchParams.get("cursor");
     const userId = searchParams.get("userId");
-    const storeUrl = searchParams.get("storeUrl");
+    const storeId = searchParams.get("storeId");
 
     if (!profile) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -23,9 +23,9 @@ export async function GET(req: Request) {
 
     if (userId) {
       where.userId = userId;
-    } else if (storeUrl) {
+    } else if (storeId) {
       const store = await db.store.findUnique({
-        where: { url: storeUrl },
+        where: { id: storeId },
       });
 
       if (!store) {
@@ -34,7 +34,7 @@ export async function GET(req: Request) {
 
       where.storeId = store.id;
     } else {
-      return new NextResponse("Missing userId or storeUrl", { status: 400 });
+      return new NextResponse("Missing userId or storeId", { status: 400 });
     }
 
     let notifications: Notification[] = [];
@@ -60,6 +60,12 @@ export async function GET(req: Request) {
         },
       });
     }
+    const unreadCount = await db.notification.count({
+      where: {
+        ...where,
+        status: "UNREAD",
+      },
+    });
 
     let nextCursor = null;
 
@@ -70,6 +76,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
       items: notifications,
       nextCursor,
+      unreadCount,
     });
   } catch (error) {
     console.log("[NOTIFICATIONS_GET]", error);

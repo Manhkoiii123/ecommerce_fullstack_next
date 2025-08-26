@@ -39,7 +39,7 @@ const StoreSwitcher: FC<StoreSwitcherProps> = ({ stores, className }) => {
   const [open, setOpen] = useState(false);
 
   const activeStore = formattedItems.find(
-    (store) => store.value === params.storeUrl
+    (store) => params && store.value === params.storeUrl
   );
 
   const onStoreSelect = (store: { label: string; value: string }) => {

@@ -30,7 +30,7 @@ export default function SidebarNavSeller({
   menuLinks: DashboardSidebarMenuInterface[];
 }) {
   const pathname = usePathname();
-  const storeUrlStart = pathname.split("/stores/")[1];
+  const storeUrlStart = (pathname as string).split("/stores/")[1];
   const activeStore = storeUrlStart ? storeUrlStart.split("/")[0] : "";
 
   return (

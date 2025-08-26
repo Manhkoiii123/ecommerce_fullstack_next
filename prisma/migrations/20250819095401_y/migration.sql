@@ -456,7 +456,7 @@ CREATE TABLE `OrderItem` (
     `price` DOUBLE NOT NULL,
     `totalPrice` DOUBLE NOT NULL,
     `orderGroupId` VARCHAR(191) NOT NULL,
-    `status` ENUM('Pending', 'Processing', 'ReadyForShipment', 'Shipped', 'Delivered', 'Canceled', 'Returned', 'Refunded', 'FailedDelivery', 'OnHold', 'Backordered', 'PartiallyShipped', 'ExchangeRequested', 'AwaitingPickup') NOT NULL DEFAULT 'Pending',
+    `status` ENUM('Pending', 'Processing', 'ReadyForShipment', 'Shipped', 'Delivered', 'Cancelled', 'Returned', 'Refunded', 'FailedDelivery', 'OnHold', 'Backordered', 'PartiallyShipped', 'ExchangeRequested', 'AwaitingPickup') NOT NULL DEFAULT 'Pending',
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 

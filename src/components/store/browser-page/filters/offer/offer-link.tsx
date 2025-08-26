@@ -4,13 +4,13 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export default function OfferLink({ offer }: { offer: OfferTag }) {
   const searchParams = useSearchParams();
-  const params = new URLSearchParams(searchParams);
+  const params = new URLSearchParams(searchParams!);
 
   const pathname = usePathname();
 
   const { replace } = useRouter();
 
-  const offerQuery = searchParams.get("offer");
+  const offerQuery = searchParams!.get("offer");
 
   const handleOfferChange = (offer: string) => {
     if (offer === offerQuery) return;

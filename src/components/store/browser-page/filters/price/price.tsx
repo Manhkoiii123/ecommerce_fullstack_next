@@ -16,7 +16,7 @@ const PriceFilter: FC = () => {
 
   // Update URL params
   const updateUrlParams = () => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams!);
     if (minPrice) {
       params.set("minPrice", String(minPrice));
     } else {

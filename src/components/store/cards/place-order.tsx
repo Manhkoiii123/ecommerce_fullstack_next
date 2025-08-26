@@ -115,6 +115,16 @@ const PlaceOrderCard: React.FC<Props> = ({
     } else {
       const order = await placeOrder(shippingAddress, cardId);
       if (order) {
+        await fetch("/api/socket/notifications", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "NEW_ORDER",
+            orderId: order.orderId,
+            userId: order.userId,
+          }),
+        });
+
         emptyCart();
         await emptyUserCart();
         push(`/order/${order.orderId}`);

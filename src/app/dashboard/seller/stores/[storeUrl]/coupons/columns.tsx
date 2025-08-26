@@ -116,7 +116,7 @@ const CellActions: React.FC<CellActionsProps> = ({ coupon }) => {
   const router = useRouter();
 
   const params = useParams<{ storeUrl: string }>();
-
+  if (!params) return null;
   if (!coupon) return null;
 
   return (

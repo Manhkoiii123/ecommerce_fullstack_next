@@ -4,13 +4,13 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export default function ColorCircle({ color }: { color: string }) {
   const searchParams = useSearchParams();
-  const params = new URLSearchParams(searchParams);
+  const params = new URLSearchParams(searchParams!);
 
   const pathname = usePathname();
 
   const { replace } = useRouter();
 
-  const colorQueryArray = searchParams.getAll("color");
+  const colorQueryArray = searchParams!.getAll("color");
 
   const existed_color = colorQueryArray.includes(color);
 

@@ -320,16 +320,17 @@ const FlashSaleDetails: FC<FlashSaleDetailsProps> = ({ data, storeUrl }) => {
   };
 
   return (
-    <DialogContent className="max-w-6xl h-[95vh] overflow-y-auto">
-      <DialogHeader>
-        <DialogTitle className="flex items-center gap-2">
+    <Card className="max-w-6xl mx-auto ">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
           <Flame className="h-5 w-5 text-red-500" />
           {data?.id ? "Edit Flash Sale" : "Create New Flash Sale"}
-        </DialogTitle>
-        <DialogDescription>
+        </CardTitle>
+        <CardDescription>
           Set up a time-limited sale to boost your product sales with urgency
-        </DialogDescription>
-      </DialogHeader>
+        </CardDescription>
+      </CardHeader>
+
       <div className="p-6">
         <Form {...form}>
           <form
@@ -724,7 +725,7 @@ const FlashSaleDetails: FC<FlashSaleDetailsProps> = ({ data, storeUrl }) => {
           </form>
         </Form>
       </div>
-    </DialogContent>
+    </Card>
   );
 };
 

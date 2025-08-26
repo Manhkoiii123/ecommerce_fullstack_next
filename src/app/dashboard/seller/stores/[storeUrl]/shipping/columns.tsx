@@ -143,7 +143,7 @@ interface CellActionsProps {
 const CellActions: React.FC<CellActionsProps> = ({ rowData }) => {
   const { setOpen } = useModal();
   const params = useParams<{ storeUrl: string }>();
-
+  if (!params) return null;
   if (!rowData) return null;
 
   return (

@@ -5,7 +5,7 @@ import { useSocket } from "@/providers/socket-provider";
 interface NotificationQueryProps {
   queryKey: string;
   apiUrl: string;
-  filterKey: "userId" | "storeUrl";
+  filterKey: "userId" | "storeId";
   filterValue: string;
 }
 

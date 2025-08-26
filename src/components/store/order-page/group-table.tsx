@@ -50,6 +50,16 @@ export default function OrderGroupTable({
     try {
       setIsCancelling(true);
       const result = await cancelOrder(group.orderId);
+      await fetch("/api/socket/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "ORDER_STATUS_CHANGE",
+          orderId: result.orderId,
+          userId: result.userId,
+          newStatus: OrderStatus.Cancelled,
+        }),
+      });
 
       if (result.success) {
         toast.success(result.message);

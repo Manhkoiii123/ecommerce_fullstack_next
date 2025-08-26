@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNotificationQuery } from "@/hooks/use-notification-query";
 import { useNotificationScroll } from "@/hooks/use-notification-scroll";
+import { useNotificationSocket } from "../../../hooks/use-notification-socket";
 
 interface Notification {
   id: string;
@@ -27,21 +28,27 @@ interface NotificationBellProps {
 export function NotificationBell({ storeId, userId }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
   const chatRef = useRef<HTMLDivElement>(null);
-  const filterKey = userId ? "userId" : "storeUrl";
+  const filterKey = userId ? "userId" : "storeId";
   const filterValue = userId || storeId || "";
-
+  let channelKey: string = "";
+  const queryKey = `notifications:${filterKey}:${filterValue}`;
+  if (userId) {
+    channelKey = `notifications:user:${userId}`;
+  } else if (storeId) {
+    channelKey = `notifications:store:${storeId}`;
+  }
   const queryClient = useQueryClient();
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
     useNotificationQuery({
-      queryKey: "notifications",
+      queryKey,
       apiUrl: "/api/notifications",
       filterKey,
       filterValue,
     });
 
   const notifications = data?.pages.flatMap((page) => page.items) || [];
-  const unreadCount = notifications.filter((n) => n.status === "UNREAD").length;
+  const unreadCount = data?.pages[0]?.unreadCount || 0;
 
   // Hook infinite scroll: chỉ load thêm khi scroll xuống cuối
   useNotificationScroll({
@@ -50,6 +57,8 @@ export function NotificationBell({ storeId, userId }: NotificationBellProps) {
     shouldLoadMore: !isFetchingNextPage && !!hasNextPage,
     isOpen,
   });
+
+  useNotificationSocket({ queryKey, addKey: channelKey });
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
@@ -150,7 +159,7 @@ export function NotificationBell({ storeId, userId }: NotificationBellProps) {
       </Button>
 
       {isOpen && (
-        <Card className="absolute right-0 top-12 w-[400px] shadow-lg z-50">
+        <Card className="absolute right-0 top-12 w-[400px] shadow-lg z-[101]">
           <CardContent className="p-0">
             <div className="p-4 border-b flex items-center justify-between">
               <h3 className="font-semibold">Thông báo</h3>

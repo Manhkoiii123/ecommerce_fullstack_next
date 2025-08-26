@@ -14,11 +14,11 @@ export default function FiltersHeader({
   const { replace } = useRouter();
 
   const [currentParams, setCurrentParams] = useState<string>(
-    searchParams.toString()
+    searchParams!.toString()
   );
 
   useEffect(() => {
-    setCurrentParams(searchParams.toString());
+    setCurrentParams(searchParams!.toString());
   }, [searchParams]);
 
   const queriesArray = Object.entries(queries);
@@ -29,13 +29,13 @@ export default function FiltersHeader({
   }, 0);
 
   const handleClearQueries = () => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams!);
 
     params.forEach((_, key) => {
       params.delete(key);
     });
 
-    replace(pathname);
+    replace(pathname!);
   };
 
   const handleRemoveQuery = (
@@ -44,7 +44,7 @@ export default function FiltersHeader({
     specificValue?: string
   ) => {
     // specificValue là cái xóa đi
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams!);
 
     if (specificValue && array) {
       const updatedArray = array.filter((value) => value !== specificValue);

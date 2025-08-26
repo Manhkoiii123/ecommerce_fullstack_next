@@ -7,7 +7,7 @@ import { ChangeEvent, useState } from "react";
 export default function Search() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const params = new URLSearchParams(searchParams);
+  const params = new URLSearchParams(searchParams!);
   const { push, replace } = useRouter();
 
   const search_query_url = params.get("search");

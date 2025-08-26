@@ -177,6 +177,18 @@ export const cancelOrder = async (orderId: string) => {
       },
     });
 
+    await tx.orderItem.updateMany({
+      where: {
+        orderGroupId: {
+          in: order.groups.map((group) => group.id),
+        },
+      },
+      data: {
+        status: "Cancelled",
+        updatedAt: new Date(),
+      },
+    });
+
     // Chỉ khôi phục inventory nếu order chưa bị hủy trước đó
     if (order.orderStatus !== "Cancelled") {
       for (const group of order.groups) {
@@ -211,5 +223,6 @@ export const cancelOrder = async (orderId: string) => {
     message: `Order ${orderId} cancelled successfully`,
     orderId,
     cancelledAt: new Date(),
+    userId: user.id,
   };
 };

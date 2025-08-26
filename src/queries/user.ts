@@ -315,7 +315,7 @@ export const upsertShippingAddress = async (address: ShippingAddress) => {
 export const placeOrder = async (
   shippingAddress: ShippingAddress,
   cartId: string
-): Promise<{ orderId: string }> => {
+): Promise<{ orderId: string; userId: string }> => {
   const user = await currentUser();
   if (!user) throw new Error("Unauthenticated.");
 
@@ -590,11 +590,11 @@ export const placeOrder = async (
       });
     }
 
-    try {
-      await createNewOrderNotification(order.id, storeId, userId);
-    } catch (error) {
-      console.error("Error creating order notification:", error);
-    }
+    // try {
+    //   await createNewOrderNotification(order.id, userId);
+    // } catch (error) {
+    //   console.error("Error creating order notification:", error);
+    // }
 
     // tinhs tienef
     orderTotalPrice += totalAfterDiscount;
@@ -614,6 +614,7 @@ export const placeOrder = async (
   }
   return {
     orderId: order.id,
+    userId: userId,
   };
 };
 

@@ -33,10 +33,10 @@ const productStatusStyles: {
     textColor: "text-green-800 dark:text-green-500",
     label: "Delivered",
   },
-  [ProductStatus.Canceled]: {
+  [ProductStatus.Cancelled]: {
     bgColor: "bg-red-100 dark:bg-red-500/10",
     textColor: "text-red-800 dark:text-red-500",
-    label: "Canceled",
+    label: "Cancelled",
   },
   [ProductStatus.Returned]: {
     bgColor: "bg-pink-100 dark:bg-pink-500/10",

@@ -12,11 +12,11 @@ const SizeSelector = ({ sizeId, sizes, handleChange }: Props) => {
   const pathname = usePathname();
   const { replace, refresh } = useRouter();
   const searchParams = useSearchParams();
-  const params = new URLSearchParams(searchParams);
-   const handleCartProductToBeAddedChange = (size: Size) => {
-     handleChange("sizeId", size.id);
-     handleChange("size", size.size);
-   };
+  const params = new URLSearchParams(searchParams!);
+  const handleCartProductToBeAddedChange = (size: Size) => {
+    handleChange("sizeId", size.id);
+    handleChange("size", size.size);
+  };
   useEffect(() => {
     if (sizeId) {
       const search_size = sizes.find((s) => s.id === sizeId);

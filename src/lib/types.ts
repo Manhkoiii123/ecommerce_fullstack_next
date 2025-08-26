@@ -275,7 +275,7 @@ export enum ProductStatus {
   ReadyForShipment = "ReadyForShipment",
   Shipped = "Shipped",
   Delivered = "Delivered",
-  Canceled = "Canceled",
+  Cancelled = "Cancelled",
   Returned = "Returned",
   Refunded = "Refunded",
   FailedDelivery = "FailedDelivery",
