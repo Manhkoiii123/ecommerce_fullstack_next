@@ -28,14 +28,14 @@ interface Props {
   product: CartProductType;
   selectedItems: CartProductType[];
   setSelectedItems: Dispatch<SetStateAction<CartProductType[]>>;
-  setTotalShipping: Dispatch<SetStateAction<number>>;
+  onSelectionChange: () => void;
   userCountry: Country;
 }
 const CartProduct: FC<Props> = ({
   product,
   selectedItems,
   setSelectedItems,
-  setTotalShipping,
+  onSelectionChange,
   userCountry,
 }) => {
   const {
@@ -94,7 +94,7 @@ const CartProduct: FC<Props> = ({
       totalFee = shippingFee;
     }
     if (stock > 0) {
-      setTotalShipping((prev) => prev - shippingInfo.totalFee + totalFee);
+      // Không cần gọi onSelectionChange ở đây nữa
     }
 
     setShippingInfo({
@@ -108,8 +108,6 @@ const CartProduct: FC<Props> = ({
   };
 
   const handleRemoveProduct = (product: CartProductType) => {
-    setTotalShipping((prev) => prev - shippingInfo.totalFee);
-
     removeFromCart(product);
   };
 
@@ -127,13 +125,19 @@ const CartProduct: FC<Props> = ({
       calculateShipping();
     }
   }, [
-    quantity,
     shippingFee,
     extraShippingFee,
     shippingInfo.totalFee,
     userCountry,
     stock,
   ]);
+
+  // Trigger tính toán lại phí ship khi quantity thay đổi và sản phẩm đang được chọn
+  useEffect(() => {
+    if (selected) {
+      onSelectionChange();
+    }
+  }, [quantity, selected, onSelectionChange]);
 
   const handleSelectProduct = () => {
     setSelectedItems((prev) => {
@@ -143,9 +147,11 @@ const CartProduct: FC<Props> = ({
           item.variantId === product.variantId &&
           item.sizeId === product.sizeId
       );
-      return exists
+      const newSelectedItems = exists
         ? prev.filter((item) => item !== product)
         : [...prev, product];
+
+      return newSelectedItems;
     });
   };
 

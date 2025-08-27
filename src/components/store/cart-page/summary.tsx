@@ -7,11 +7,11 @@ import { PulseLoader } from "react-spinners";
 import { saveUserCart } from "@/queries/user";
 
 interface Props {
-  cartItems: CartProductType[];
+  selectedItems: CartProductType[];
   shippingFees: number;
 }
 
-const CartSummary: FC<Props> = ({ cartItems, shippingFees }) => {
+const CartSummary: FC<Props> = ({ selectedItems, shippingFees }) => {
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(false);
   const [flashSaleSubtotal, setFlashSaleSubtotal] = useState<number>(0);
@@ -21,7 +21,7 @@ const CartSummary: FC<Props> = ({ cartItems, shippingFees }) => {
   useEffect(() => {
     const calculateFlashSaleSubtotal = async () => {
       try {
-        const productIds = cartItems.map((item) => item.productId);
+        const productIds = selectedItems.map((item) => item.productId);
 
         if (productIds.length === 0) {
           setFlashSaleSubtotal(0);
@@ -43,7 +43,7 @@ const CartSummary: FC<Props> = ({ cartItems, shippingFees }) => {
           let total = 0;
           let originalTotal = 0;
 
-          for (const item of cartItems) {
+          for (const item of selectedItems) {
             const flashSaleData = flashSalePrices.find(
               (fp: any) => fp.productId === item.productId
             );
@@ -82,7 +82,7 @@ const CartSummary: FC<Props> = ({ cartItems, shippingFees }) => {
           setOriginalSubtotal(originalTotal);
         } else {
           // Fallback to original prices if API fails
-          const total = cartItems.reduce(
+          const total = selectedItems.reduce(
             (sum, item) => sum + item.price * item.quantity,
             0
           );
@@ -92,7 +92,7 @@ const CartSummary: FC<Props> = ({ cartItems, shippingFees }) => {
       } catch (error) {
         console.error("Error calculating flash sale subtotal:", error);
         // Fallback to original prices if API fails
-        const total = cartItems.reduce(
+        const total = selectedItems.reduce(
           (sum, item) => sum + item.price * item.quantity,
           0
         );
@@ -102,7 +102,7 @@ const CartSummary: FC<Props> = ({ cartItems, shippingFees }) => {
     };
 
     calculateFlashSaleSubtotal();
-  }, [cartItems]);
+  }, [selectedItems]);
 
   // Calculate total price including shipping fees
   const total = flashSaleSubtotal + shippingFees;
@@ -110,13 +110,28 @@ const CartSummary: FC<Props> = ({ cartItems, shippingFees }) => {
   const handleSaveCart = async () => {
     try {
       setLoading(true);
-      const res = await saveUserCart(cartItems);
+      const res = await saveUserCart(selectedItems);
       if (res) router.push("/checkout");
       setLoading(false);
     } catch (error: any) {
       toast.error(error.toString());
     }
   };
+  // Nếu không có sản phẩm nào được chọn, hiển thị thông báo
+  if (selectedItems.length === 0) {
+    return (
+      <div className="relative py-4 px-6 bg-white">
+        <h1 className="text-gray-900 text-2xl font-bold mb-4">Summary</h1>
+        <div className="text-center text-gray-500 py-8">
+          <p>No items selected</p>
+          <p className="text-sm mt-2">
+            Select items from your cart to see summary
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative py-4 px-6 bg-white">
       <h1 className="text-gray-900 text-2xl font-bold mb-4">Summary</h1>
@@ -178,7 +193,7 @@ const CartSummary: FC<Props> = ({ cartItems, shippingFees }) => {
           {loading ? (
             <PulseLoader size={5} color="#fff" />
           ) : (
-            <span>Checkout ({cartItems.length})</span>
+            <span>Checkout ({selectedItems.length})</span>
           )}
         </Button>
       </div>

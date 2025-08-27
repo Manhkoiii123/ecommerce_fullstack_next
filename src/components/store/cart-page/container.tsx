@@ -19,6 +19,30 @@ const CartContainer = ({ userCountry }: { userCountry: Country }) => {
   const cartItems = useFromStore(useCartStore, (state) => state.cart);
   const [selectedItems, setSelectedItems] = useState<CartProductType[]>([]);
   const [totalShipping, setTotalShipping] = useState<number>(0);
+
+  // Tính toán tổng phí ship chỉ cho những sản phẩm đã chọn
+  const calculateSelectedItemsShipping = () => {
+    let total = 0;
+
+    selectedItems.forEach((item) => {
+      let itemShippingFee = 0;
+
+      if (item.shippingMethod === "ITEM") {
+        const initialFee = item.shippingFee;
+        const extraFee =
+          item.quantity > 1 ? item.extraShippingFee * (item.quantity - 1) : 0;
+        itemShippingFee = initialFee + extraFee;
+      } else if (item.shippingMethod === "WEIGHT") {
+        itemShippingFee = item.shippingFee * item.weight * item.quantity;
+      } else if (item.shippingMethod === "FIXED") {
+        itemShippingFee = item.shippingFee;
+      }
+
+      total += itemShippingFee;
+    });
+
+    setTotalShipping(total);
+  };
   const setCart = useCartStore((state) => state.setCart);
   useEffect(() => {
     if (cartItems !== undefined) {
@@ -40,6 +64,17 @@ const CartContainer = ({ userCountry }: { userCountry: Country }) => {
     };
     loadAndSyncCart();
   }, [isCartLoaded, userCountry]);
+
+  // Tính toán lại phí ship mỗi khi selectedItems thay đổi
+  useEffect(() => {
+    calculateSelectedItemsShipping();
+  }, [
+    JSON.stringify(
+      selectedItems.map(
+        (item) => `${item.productId}-${item.variantId}-${item.sizeId}`
+      )
+    ),
+  ]);
   return (
     <div>
       {cartItems && cartItems.length > 0 ? (
@@ -68,7 +103,7 @@ const CartContainer = ({ userCountry }: { userCountry: Country }) => {
                           product={product}
                           selectedItems={selectedItems}
                           setSelectedItems={setSelectedItems}
-                          setTotalShipping={setTotalShipping}
+                          onSelectionChange={calculateSelectedItemsShipping}
                           userCountry={userCountry}
                         />
                       ))}
@@ -76,17 +111,25 @@ const CartContainer = ({ userCountry }: { userCountry: Country }) => {
                   </div>
                   {/* card side */}
                   <div className="sticky top-4 ml-5 w-[380px] max-h-max">
-                    {/* cart summary */}
-                    <CartSummary
-                      cartItems={cartItems}
-                      shippingFees={totalShipping}
-                    />
-                    <div className="mt-2 bg-white p-4 px-6">
-                      <FastDelivery />
-                    </div>
-                    <div className="mt-2 bg-white p-4 px-6">
-                      <SecurityPrivacyCard />
-                    </div>
+                    {/* cart summary - chỉ hiển thị khi có sản phẩm được chọn */}
+                    {selectedItems.length > 0 ? (
+                      <>
+                        <CartSummary
+                          selectedItems={selectedItems}
+                          shippingFees={totalShipping}
+                        />
+                        <div className="mt-2 bg-white p-4 px-6">
+                          <FastDelivery />
+                        </div>
+                        <div className="mt-2 bg-white p-4 px-6">
+                          <SecurityPrivacyCard />
+                        </div>
+                      </>
+                    ) : (
+                      <div className="bg-white p-4 px-6 text-center text-gray-500">
+                        <p>Select items to see summary</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
