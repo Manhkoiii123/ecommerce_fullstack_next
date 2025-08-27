@@ -73,21 +73,21 @@ export const columns: ColumnDef<FlashSaleWithRelations>[] = [
       );
     },
   },
-  {
-    accessorKey: "store",
-    header: "Store",
-    cell: ({ row }) => {
-      const store = row.original.store;
-      return (
-        <div className="flex items-center gap-2">
-          <span className="font-medium">{store?.name}</span>
-          <Badge variant="outline" className="text-xs">
-            {store?.url}
-          </Badge>
-        </div>
-      );
-    },
-  },
+  // {
+  //   accessorKey: "store",
+  //   header: "Store",
+  //   cell: ({ row }) => {
+  //     const store = row.original.store;
+  //     return (
+  //       <div className="flex items-center gap-2">
+  //         <span className="font-medium">{store?.name}</span>
+  //         <Badge variant="outline" className="text-xs">
+  //           {store?.url}
+  //         </Badge>
+  //       </div>
+  //     );
+  //   },
+  // },
   {
     accessorKey: "discount",
     header: "Discount",

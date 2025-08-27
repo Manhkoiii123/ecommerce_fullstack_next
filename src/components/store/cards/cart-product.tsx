@@ -107,7 +107,12 @@ const CartProduct: FC<Props> = ({
     });
   };
 
-  // calc Lại phí khi đổi country
+  const handleRemoveProduct = (product: CartProductType) => {
+    setTotalShipping((prev) => prev - shippingInfo.totalFee);
+
+    removeFromCart(product);
+  };
+
   useEffect(() => {
     if (
       shippingFee !== prevShippingFeeRef.current ||
@@ -232,7 +237,7 @@ const CartProduct: FC<Props> = ({
                 </span>
                 <span
                   className="cursor-pointer inline-block"
-                  onClick={() => removeFromCart(product)}
+                  onClick={() => handleRemoveProduct(product)}
                 >
                   <Trash className="w-4 hover:stroke-orange-seconadry" />
                 </span>
