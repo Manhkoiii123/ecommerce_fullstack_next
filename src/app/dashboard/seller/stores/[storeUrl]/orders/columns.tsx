@@ -66,6 +66,8 @@ export const columns: ColumnDef<StoreOrderType>[] = [
             groupId={row.original.id}
             status={row.original.status as OrderStatus}
             storeId={row.original.storeId}
+            orderId={row.original.orderId}
+            userId={row.original.order.shippingAddress.userId}
           />
         </div>
       );

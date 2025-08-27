@@ -7,10 +7,18 @@ import { FC, useState } from "react";
 interface Props {
   storeId: string;
   orderItemId: string;
+  userId: string;
+  orderId: string;
   status: ProductStatus;
 }
 
-const ProductStatusSelect: FC<Props> = ({ orderItemId, status, storeId }) => {
+const ProductStatusSelect: FC<Props> = ({
+  orderItemId,
+  status,
+  storeId,
+  userId,
+  orderId,
+}) => {
   const [newStatus, setNewStatus] = useState<ProductStatus>(status);
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
@@ -25,6 +33,17 @@ const ProductStatusSelect: FC<Props> = ({ orderItemId, status, storeId }) => {
         orderItemId,
         selectedStatus
       );
+
+      await fetch("/api/socket/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "ORDER_STATUS_CHANGE",
+          orderId: orderId,
+          userId: userId,
+          newStatus: selectedStatus,
+        }),
+      });
       if (response) {
         setNewStatus(response as ProductStatus);
         setIsOpen(false);

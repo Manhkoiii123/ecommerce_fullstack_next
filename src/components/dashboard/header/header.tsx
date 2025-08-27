@@ -19,7 +19,7 @@ export default async function Header({ storeUrl }: { storeUrl?: string }) {
         <UserButton afterSignOutUrl="/" />
         <ThemeToggle />
         {storeByUrl && user.privateMetadata.role === "SELLER" && (
-          <NotificationBell storeId={storeByUrl.id} />
+          <NotificationBell storeId={storeByUrl.id} storeUrl={storeUrl} />
         )}
       </div>
     </div>

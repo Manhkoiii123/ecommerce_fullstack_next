@@ -8,21 +8,22 @@ import { FC } from "react";
 
 interface Props {
   orderId: string;
+  userId: string;
   amount: number;
 }
 
-const OrderPayment: FC<Props> = ({ amount, orderId }) => {
+const OrderPayment: FC<Props> = ({ amount, orderId, userId }) => {
   return (
     <div className="w-full h-full  space-y-5">
       {/* Paypal */}
       <div className="mt-6">
         <PaypalWrapper>
-          <PaypalPayment orderId={orderId} />
+          <PaypalPayment orderId={orderId} amount={amount} userId={userId} />
         </PaypalWrapper>
       </div>
       {/* Stripe */}
       <StripeWrapper amount={amount}>
-        <StripePayment orderId={orderId} />
+        <StripePayment orderId={orderId} amount={amount} userId={userId} />
       </StripeWrapper>
     </div>
   );

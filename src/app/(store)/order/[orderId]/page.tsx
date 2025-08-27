@@ -92,7 +92,11 @@ const OrderPage = async ({ params }: { params: { orderId: string } }) => {
                 }}
               />
               <Separator />
-              <OrderPayment orderId={order.id} amount={order.total} />
+              <OrderPayment
+                orderId={order.id}
+                amount={order.total}
+                userId={order.userId}
+              />
             </div>
           )}
         </div>

@@ -3,6 +3,7 @@ import { NextApiResponseServerIo } from "@/types";
 import {
   createNewOrderNotification,
   createOrderStatusChangeNotification,
+  createPaymentNotification,
 } from "../../../../lib/notifications";
 
 export default async function handler(
@@ -14,7 +15,15 @@ export default async function handler(
   }
 
   try {
-    const { type, orderId, userId, newStatus } = req.body;
+    const {
+      type,
+      orderId,
+      userId,
+      newStatus,
+      paymentStatus,
+      amount,
+      paymentMethod,
+    } = req.body;
 
     if (!type) {
       return res.status(400).json({ error: "Notification type missing" });
@@ -43,6 +52,21 @@ export default async function handler(
         orderId,
         userId,
         newStatus
+      );
+    }
+    if (type === "PAYMENT_RECEIVED" || type === "PAYMENT_FAILED") {
+      if (!orderId || !userId) {
+        return res.status(400).json({
+          error: "Missing orderId, userId or newStatus",
+        });
+      }
+
+      notificationResult = await createPaymentNotification(
+        orderId,
+        userId,
+        paymentStatus,
+        amount,
+        paymentMethod
       );
     }
 

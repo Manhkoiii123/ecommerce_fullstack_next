@@ -259,7 +259,6 @@ export async function createOrderStatusChangeNotification(
 // Notification khi thanh toán
 export async function createPaymentNotification(
   orderId: string,
-  storeId: string,
   userId: string,
   paymentStatus: string,
   amount: number,
@@ -271,7 +270,9 @@ export async function createPaymentNotification(
       include: {
         user: true,
         groups: {
-          where: { storeId },
+          include: {
+            store: true, // lấy thông tin store
+          },
         },
       },
     });
@@ -299,27 +300,31 @@ export async function createPaymentNotification(
       message = `Đơn hàng #${orderId} đã được hoàn tiền thành công.`;
     }
 
-    // Notification cho chủ shop
-    const storeNotificationData: CreateNotificationData = {
-      type: notificationType,
-      title: `Thanh toán - ${paymentStatus}`,
-      message: `Đơn hàng #${orderId} của ${customerName} ($${amount.toFixed(
-        2
-      )}) - ${paymentStatus} qua ${paymentMethod}.`,
-      storeId,
-      orderId,
-      createdAt: new Date(),
-      data: {
-        orderId,
-        customerName,
-        amount,
-        paymentStatus,
-        paymentMethod,
-      },
-    };
+    // 🔹 Notifications cho tất cả các store trong order
+    const storeNotifications = order.groups.map((group) => {
+      const storeId = group.storeId;
 
-    // Notification cho khách hàng
-    const customerNotificationData: CreateNotificationData = {
+      return {
+        type: notificationType,
+        title: `Thanh toán - ${paymentStatus}`,
+        message: `Đơn hàng #${orderId} của ${customerName} ($${amount.toFixed(
+          2
+        )}) - ${paymentStatus} qua ${paymentMethod}.`,
+        storeId,
+        orderId,
+        createdAt: new Date(),
+        data: {
+          orderId,
+          customerName,
+          amount,
+          paymentStatus,
+          paymentMethod,
+        },
+      } satisfies CreateNotificationData;
+    });
+
+    // 🔹 Notification cho khách hàng
+    const customerNotification: CreateNotificationData = {
       type: notificationType,
       title,
       message,
@@ -334,15 +339,15 @@ export async function createPaymentNotification(
       },
     };
 
-    // Tạo cả hai notification
+    // Tạo tất cả notifications
     await Promise.all([
-      createNotification(storeNotificationData),
-      createNotification(customerNotificationData),
+      ...storeNotifications.map((n) => createNotification(n)),
+      createNotification(customerNotification),
     ]);
 
     return {
-      storeNotification: storeNotificationData,
-      customerNotification: customerNotificationData,
+      storeNotifications,
+      customerNotification,
     };
   } catch (error) {
     console.error("Error creating payment notification:", error);

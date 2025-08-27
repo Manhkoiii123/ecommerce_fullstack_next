@@ -41,6 +41,7 @@ const StoreOrderSummary: FC<Props> = ({ group }) => {
     state,
     zip_code,
     user,
+    userId,
   } = shippingAddress;
 
   const { coupon, couponId, subTotal, total, shippingFees } = group;
@@ -63,6 +64,8 @@ const StoreOrderSummary: FC<Props> = ({ group }) => {
               storeId={group.storeId}
               groupId={group.id}
               status={group.status as OrderStatus}
+              orderId={group.orderId}
+              userId={userId}
             />
           </div>
         </div>
@@ -175,6 +178,8 @@ const StoreOrderSummary: FC<Props> = ({ group }) => {
                 orderItemId={product.id}
                 storeId={group.storeId}
                 status={product.status as ProductStatus}
+                userId={userId}
+                orderId={group.orderId}
               />
               <div className="grid place-items-center">
                 <h5 className="font-semibold text-3xl leading-10 mt-3">

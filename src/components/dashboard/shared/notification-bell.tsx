@@ -9,6 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNotificationQuery } from "@/hooks/use-notification-query";
 import { useNotificationScroll } from "@/hooks/use-notification-scroll";
 import { useNotificationSocket } from "../../../hooks/use-notification-socket";
+import { useRouter } from "next/navigation";
 
 interface Notification {
   id: string;
@@ -23,10 +24,16 @@ interface Notification {
 interface NotificationBellProps {
   storeId?: string;
   userId?: string;
+  storeUrl?: string;
 }
 
-export function NotificationBell({ storeId, userId }: NotificationBellProps) {
+export function NotificationBell({
+  storeId,
+  userId,
+  storeUrl,
+}: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
   const chatRef = useRef<HTMLDivElement>(null);
   const filterKey = userId ? "userId" : "storeId";
   const filterValue = userId || storeId || "";
@@ -215,7 +222,17 @@ export function NotificationBell({ storeId, userId }: NotificationBellProps) {
                     className={`p-3 border-b last:border-b-0 cursor-pointer hover:bg-gray-50 transition-colors ${
                       notification.status === "UNREAD" ? "bg-blue-50" : ""
                     }`}
-                    onClick={() => handleMarkAsRead(notification.id)}
+                    onClick={() => {
+                      handleMarkAsRead(notification.id);
+                      if (notification.data?.orderId && userId) {
+                        router.push(`/order/${notification.data.orderId}`);
+                      } else if (storeId) {
+                        router.push(
+                          `/dashboard/seller/stores/${storeUrl}/orders`
+                        );
+                      }
+                      setIsOpen(false);
+                    }}
                   >
                     <div className="flex items-start gap-3">
                       <div className="text-lg">

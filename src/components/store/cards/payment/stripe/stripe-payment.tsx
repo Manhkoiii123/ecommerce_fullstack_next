@@ -10,7 +10,15 @@ import {
   createStripePayment,
   createStripePaymentIntent,
 } from "@/queries/stripe";
-export default function StripePayment({ orderId }: { orderId: string }) {
+export default function StripePayment({
+  orderId,
+  amount,
+  userId,
+}: {
+  orderId: string;
+  amount: number;
+  userId: string;
+}) {
   const router = useRouter();
   const stripe = useStripe();
   const elements = useElements();
@@ -37,6 +45,18 @@ export default function StripePayment({ orderId }: { orderId: string }) {
 
     const { error: submitError } = await elements.submit();
     if (submitError) {
+      await fetch("/api/socket/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "PAYMENT_FAILED",
+          orderId,
+          userId,
+          amount,
+          paymentMethod: "Stripe",
+          paymentStatus: "Failed",
+        }),
+      });
       setErrorMessage(submitError.message);
       setLoading(false);
       return;
@@ -55,6 +75,18 @@ export default function StripePayment({ orderId }: { orderId: string }) {
       if (!error && paymentIntent) {
         try {
           const res = await createStripePayment(orderId, paymentIntent);
+          await fetch("/api/socket/notifications", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "PAYMENT_RECEIVED",
+              orderId: orderId,
+              userId,
+              amount,
+              paymentMethod: "Stripe",
+              paymentStatus: "Paid",
+            }),
+          });
           if (!res.paymentDetails?.paymentInetntId) throw new Error("Failed");
           router.refresh();
         } catch (error: any) {

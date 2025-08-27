@@ -9,9 +9,17 @@ interface Props {
   storeId: string;
   groupId: string;
   status: OrderStatus;
+  orderId?: string;
+  userId?: string;
 }
 
-const OrderStatusSelect: FC<Props> = ({ groupId, status, storeId }) => {
+const OrderStatusSelect: FC<Props> = ({
+  groupId,
+  status,
+  storeId,
+  orderId,
+  userId,
+}) => {
   const [newStatus, setNewStatus] = useState<OrderStatus>(status);
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
@@ -26,6 +34,16 @@ const OrderStatusSelect: FC<Props> = ({ groupId, status, storeId }) => {
         groupId,
         selectedStatus
       );
+      await fetch("/api/socket/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "ORDER_STATUS_CHANGE",
+          orderId: orderId,
+          userId: userId,
+          newStatus: selectedStatus,
+        }),
+      });
       if (response) {
         setNewStatus(response as OrderStatus);
         setIsOpen(false);
