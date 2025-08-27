@@ -78,7 +78,7 @@ function FlashSaleProductCard({
           <h4 className="text-xs font-medium text-gray-800 truncate">
             {product.product.name}
           </h4>
-          <div className="flex items-center justify-center gap-1 mt-1">
+          <div className="flex flex-col items-center justify-center gap-1 mt-1">
             <span className="text-sm font-bold text-red-600">
               ${discountedPrice.toFixed(2)}
             </span>

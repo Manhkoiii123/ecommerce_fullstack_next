@@ -23,13 +23,13 @@ export default async function Home() {
   const { products } = productsData;
 
   const {
-    products_offer_tag_1,
-    products_offer_tag_1: products_offer_tag_1_full,
+    products_mens_fashion: products_laptop,
+    products_manh_dev: products_manh_dev,
     products_offer_tag_3,
     products_offer_tag_4,
   } = await getHomeDataDynamic([
-    { property: "offer", value: "offer_tag_1", type: "simple" },
-    { property: "offer", value: "offer_tag_1", type: "full" },
+    { property: "category", value: "mens-fashion", type: "simple" },
+    { property: "offer", value: "manh_dev", type: "full" },
     { property: "offer", value: "offer_tag_3", type: "simple" },
     { property: "offer", value: "offer_tag_4", type: "simple" },
   ]);
@@ -58,7 +58,7 @@ export default async function Home() {
               <div className="space-y-2 h-fit">
                 <HomeMainSwiper />
                 <Featured
-                  products={products_offer_tag_1.filter(
+                  products={products_laptop.filter(
                     (product): product is SimpleProduct =>
                       "variantSlug" in product
                   )}
@@ -66,7 +66,7 @@ export default async function Home() {
               </div>
               <div className="h-full">
                 <HomeUserCard
-                  products={products_offer_tag_1.filter(
+                  products={products_laptop.filter(
                     (product): product is SimpleProduct =>
                       "variantSlug" in product
                   )}
@@ -76,7 +76,7 @@ export default async function Home() {
             {/* Animated deals */}
             <div className="mt-2 hidden min-[915px]:block">
               <AnimatedDeals
-                products={products_offer_tag_1.filter(
+                products={products_laptop.filter(
                   (product): product is SimpleProduct =>
                     "variantSlug" in product
                 )}
@@ -90,7 +90,7 @@ export default async function Home() {
 
             <div className="mt-10 space-y-10">
               <div className="bg-white rounded-md">
-                <MainSwiper products={products_offer_tag_1_full} type="curved">
+                <MainSwiper products={products_manh_dev} type="curved">
                   <div className="mb-4 pl-4 flex items-center justify-between">
                     <Image
                       src={SuperDealsImg}

@@ -208,7 +208,7 @@ const FlashSalePrice = ({
               "text-lg": isCard,
             })}
           >
-            {priceDisplay}
+            ${priceDisplay}
           </span>
         </div>
 
