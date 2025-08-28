@@ -25,11 +25,14 @@ export const useCartStore = create(
       cart: INITIAL_STATE.cart,
       totalItems: INITIAL_STATE.totalItems,
       totalPrice: INITIAL_STATE.totalPrice,
-      
+
       // Getter for flash sale total price
       getFlashSaleTotalPrice: () => {
         const cart = get().cart;
-        return cart.reduce((total, item) => total + item.price * item.quantity, 0);
+        return cart.reduce(
+          (total, item) => total + item.price * item.quantity,
+          0
+        );
       },
       addToCart: (product: CartProductType) => {
         if (!product) return;

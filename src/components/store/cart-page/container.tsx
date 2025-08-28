@@ -65,13 +65,46 @@ const CartContainer = ({ userCountry }: { userCountry: Country }) => {
     loadAndSyncCart();
   }, [isCartLoaded, userCountry]);
 
-  // Tính toán lại phí ship mỗi khi selectedItems thay đổi
+  // Đồng bộ selectedItems với cart store khi cart thay đổi
   useEffect(() => {
-    calculateSelectedItemsShipping();
+    if (cartItems && selectedItems.length > 0) {
+      // Cập nhật selectedItems với thông tin mới nhất từ cart store
+      const updatedSelectedItems = selectedItems.map((selectedItem) => {
+        const cartItem = cartItems.find(
+          (item) =>
+            item.productId === selectedItem.productId &&
+            item.variantId === selectedItem.variantId &&
+            item.sizeId === selectedItem.sizeId
+        );
+        return cartItem || selectedItem; // Sử dụng thông tin mới nhất từ cart store
+      });
+
+      // Cập nhật selectedItems nếu có thay đổi thực sự
+      const hasChanges = updatedSelectedItems.some((updatedItem, index) => {
+        const originalItem = selectedItems[index];
+        return (
+          updatedItem.quantity !== originalItem.quantity ||
+          updatedItem.price !== originalItem.price ||
+          updatedItem.shippingFee !== originalItem.shippingFee
+        );
+      });
+
+      if (hasChanges) {
+        setSelectedItems(updatedSelectedItems);
+      }
+    }
+  }, [cartItems]); // Chỉ phụ thuộc vào cartItems, không phụ thuộc vào selectedItems
+
+  // Tính toán lại phí ship mỗi khi selectedItems thay đổi hoặc quantity thay đổi
+  useEffect(() => {
+    if (selectedItems.length > 0) {
+      calculateSelectedItemsShipping();
+    }
   }, [
     JSON.stringify(
       selectedItems.map(
-        (item) => `${item.productId}-${item.variantId}-${item.sizeId}`
+        (item) =>
+          `${item.productId}-${item.variantId}-${item.sizeId}-${item.quantity}`
       )
     ),
   ]);

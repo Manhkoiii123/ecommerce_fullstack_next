@@ -108,7 +108,23 @@ const CartProduct: FC<Props> = ({
   };
 
   const handleRemoveProduct = (product: CartProductType) => {
+    // Loại bỏ sản phẩm khỏi selectedItems trước
+    setSelectedItems((prev) =>
+      prev.filter(
+        (item) =>
+          !(
+            item.productId === product.productId &&
+            item.variantId === product.variantId &&
+            item.sizeId === product.sizeId
+          )
+      )
+    );
+
+    // Sau đó xóa khỏi cart
     removeFromCart(product);
+
+    // Gọi onSelectionChange để cập nhật summary sau khi xóa sản phẩm
+    onSelectionChange();
   };
 
   useEffect(() => {
@@ -135,6 +151,8 @@ const CartProduct: FC<Props> = ({
   // Trigger tính toán lại phí ship khi quantity thay đổi và sản phẩm đang được chọn
   useEffect(() => {
     if (selected) {
+      calculateShipping();
+      // Gọi onSelectionChange để cập nhật phí ship và summary
       onSelectionChange();
     }
   }, [quantity, selected, onSelectionChange]);
@@ -157,11 +175,17 @@ const CartProduct: FC<Props> = ({
 
   const updateProductQuantityHandler = (type: "add" | "remove") => {
     if (type === "add" && quantity < stock) {
-      updateProductQuantity(product, quantity + 1);
-      calculateShipping(quantity + 1);
+      const newQuantity = quantity + 1;
+      updateProductQuantity(product, newQuantity);
+      calculateShipping(newQuantity);
+      // Gọi onSelectionChange để cập nhật phí ship và summary
+      onSelectionChange();
     } else if (type === "remove" && quantity > 1) {
-      updateProductQuantity(product, quantity - 1);
-      calculateShipping(quantity - 1);
+      const newQuantity = quantity - 1;
+      updateProductQuantity(product, newQuantity);
+      calculateShipping(newQuantity);
+      // Gọi onSelectionChange để cập nhật phí ship và summary
+      onSelectionChange();
     }
   };
 

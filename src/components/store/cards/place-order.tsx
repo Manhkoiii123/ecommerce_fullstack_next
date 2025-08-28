@@ -33,7 +33,7 @@ const PlaceOrderCard: React.FC<Props> = ({
   const [flashSaleSubtotal, setFlashSaleSubtotal] = useState<number>(subTotal);
   const [originalSubtotal, setOriginalSubtotal] = useState<number>(subTotal);
   const { push } = useRouter();
-  const emptyCart = useCartStore((state) => state.emptyCart);
+  const removeFromCart = useCartStore((state) => state.removeFromCart);
 
   // Since updateCheckoutProductstWithLatest already applies flash sale to item.price,
   // we need to calculate original prices (without flash sale) for comparison
@@ -125,7 +125,22 @@ const PlaceOrderCard: React.FC<Props> = ({
           }),
         });
 
-        emptyCart();
+        // Xóa những sản phẩm đã đặt hàng khỏi localStorage cart
+        // Sử dụng removeFromCart cho từng item dựa trên productId, variantId, sizeId
+        cartData.cartItems.forEach((item) => {
+          // Tìm item tương ứng trong localStorage cart và xóa
+          const cartStore = useCartStore.getState();
+          const itemToRemove = cartStore.cart.find(
+            (cartItem) =>
+              cartItem.productId === item.productId &&
+              cartItem.variantId === item.variantId &&
+              cartItem.sizeId === item.sizeId
+          );
+          if (itemToRemove) {
+            removeFromCart(itemToRemove);
+          }
+        });
+        // Xóa cart trong database (vì database chỉ lưu những sản phẩm đã chọn)
         await emptyUserCart();
         push(`/order/${order.orderId}`);
       }
@@ -340,3 +355,5 @@ const Info = ({
     </div>
   );
 };
+
+//  khi check => change quantity => lỗi => tính summary
