@@ -23,7 +23,7 @@ export default function ProductPageReviewsSkeletonLoader({
       {/* Title */}
       <div className="h-12">
         <h2 className="text-main-primary text-2xl font-bold">
-          Custom Reviews ({numReviews})
+          Reviews ({numReviews})
         </h2>
       </div>
       {/* Statistics */}
