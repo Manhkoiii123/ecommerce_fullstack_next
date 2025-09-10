@@ -109,8 +109,32 @@ model Store {
   coupons       Coupon[]       @relation("CouponToStore")
   flashSales    FlashSale[]    @relation("StoreFlashSales")
   notifications Notification[] @relation("StoreNotifications")
+  stream Stream?
+
 
   @@index([userId])
+}
+
+model Stream {
+  id       String   @id @default(uuid())
+  name String @db.Text
+  thumbnailUrl String? @db.Text
+  ingressId String? @unique
+  serverUrl String? @db.Text
+  streamKey String? @db.Text
+  isLive Boolean @default(false)
+  isChatEnabled Boolean @default(true)
+  isChatDelayed Boolean @default(false)
+  isChatFollowersOnly Boolean @default(false)
+  storeId String @unique
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([storeId])
+  @@index([ingressId])
+  @@fulltext([name])
+
 }
 
 enum ShippingFeeMethod {
