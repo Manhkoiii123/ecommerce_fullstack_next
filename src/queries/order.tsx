@@ -226,3 +226,111 @@ export const cancelOrder = async (orderId: string) => {
     userId: user.id,
   };
 };
+
+export const updateOrderShippingAddress = async (
+  orderId: string,
+  shippingAddressData: {
+    countryId: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    address1: string;
+    address2?: string;
+    state: string;
+    city: string;
+    zip_code: string;
+  }
+) => {
+  const user = await currentUser();
+  if (!user) throw new Error("Unauthenticated.");
+
+  // Validate input data
+  const { ShippingAddressSchema } = await import("@/lib/schemas");
+  const validatedData = ShippingAddressSchema.parse(shippingAddressData);
+
+  // Get the order with current status
+  const order = await db.order.findUnique({
+    where: {
+      id: orderId,
+      userId: user.id, // Ensure user can only update their own orders
+    },
+    include: {
+      groups: {
+        include: {
+          items: true,
+        },
+      },
+    },
+  });
+
+  if (!order) {
+    throw new Error(
+      "Order not found or you don't have permission to update this order."
+    );
+  }
+
+  // Check if order status allows address update
+  const allowedStatuses: string[] = [
+    "Pending",
+    "Confirmed",
+    "Processing",
+    "OnHold",
+  ];
+
+  if (!allowedStatuses.includes(order.orderStatus)) {
+    throw new Error(
+      `Cannot update shipping address. Order status must be one of: ${allowedStatuses.join(
+        ", "
+      )}. Current status: ${order.orderStatus}`
+    );
+  }
+
+  // Check if any order group has items that are already shipped
+  const hasShippedItems = order.groups.some((group) =>
+    group.items.some((item) =>
+      ["Shipped", "Delivered", "ReadyForShipment"].includes(item.status)
+    )
+  );
+
+  if (hasShippedItems) {
+    throw new Error(
+      "Cannot update shipping address. Some items in this order are already shipped or ready for shipment."
+    );
+  }
+
+  // Create new shipping address
+  const newShippingAddress = await db.shippingAddress.create({
+    data: {
+      ...validatedData,
+      userId: user.id,
+      default: false, // Don't set as default when updating order address
+    },
+  });
+
+  // Update the order with new shipping address
+  const updatedOrder = await db.order.update({
+    where: { id: orderId },
+    data: {
+      shippingAddressId: newShippingAddress.id,
+      updatedAt: new Date(),
+    },
+    include: {
+      shippingAddress: {
+        include: {
+          country: true,
+        },
+      },
+    },
+  });
+
+  // Revalidate the order page to update UI
+  revalidatePath(`/order/${orderId}`);
+
+  return {
+    success: true,
+    message: "Shipping address updated successfully",
+    orderId,
+    updatedAt: new Date(),
+    newShippingAddress: updatedOrder.shippingAddress,
+  };
+};
