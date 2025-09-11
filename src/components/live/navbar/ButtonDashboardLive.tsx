@@ -9,6 +9,7 @@ import React from "react";
 const ButtonDashboardLive = ({ user }: { user: any }) => {
   const searchParams = useSearchParams();
   const storeUrl = searchParams?.get("storeUrl");
+  console.log("🚀 ~ ButtonDashboardLive ~ storeUrl:", storeUrl);
 
   return (
     <Button
@@ -17,7 +18,7 @@ const ButtonDashboardLive = ({ user }: { user: any }) => {
       className="text-muted-foreground hover:text-primary "
       asChild
     >
-      {user.privateMetadata.role === "SELLER" && (
+      {user.privateMetadata.role === "SELLER" && storeUrl && (
         <Link href={`/u/${storeUrl}`}>
           <Clapperboard className="h-5 w-5 lg:mr-2" />
           <span className="hidden lg:block">Dashboard</span>

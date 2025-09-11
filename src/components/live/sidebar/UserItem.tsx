@@ -37,7 +37,7 @@ const UserItem = ({ imageUrl, username, isLive }: UserItemProps) => {
           )}
         >
           <UserAvatar imageUrl={imageUrl} username={username} isLive={isLive} />
-          {!collapsed && <p className="truncate">{username}</p>}
+          {!collapsed && <p className="truncate text-black">{username}</p>}
           {!collapsed && isLive && <LiveBadge className="ml-auto" />}
         </div>
       </Link>

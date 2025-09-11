@@ -16,6 +16,7 @@ import { getCookie } from "cookies-next";
 import { cookies } from "next/headers";
 import { getProductFlashSaleDiscount } from "@/queries/flash-sale";
 import { createNewOrderNotification } from "@/lib/notifications";
+import { revalidatePath } from "next/cache";
 export const followStore = async (storeId: string): Promise<boolean> => {
   try {
     //  lấy ng hiện tại
@@ -58,6 +59,9 @@ export const followStore = async (storeId: string): Promise<boolean> => {
           },
         },
       });
+      revalidatePath(`/u/${store.url}`);
+      revalidatePath(`/store/${store.url}`);
+
       return false;
     } else {
       await db.store.update({
@@ -72,6 +76,9 @@ export const followStore = async (storeId: string): Promise<boolean> => {
           },
         },
       });
+      revalidatePath(`/u/${store.url}`);
+      revalidatePath(`/store/${store.url}`);
+
       return true;
     }
   } catch (error) {

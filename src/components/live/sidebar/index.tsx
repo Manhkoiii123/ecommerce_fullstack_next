@@ -6,18 +6,20 @@ import Recommended, {
 } from "@/components/live/sidebar/Recommended";
 import Toggle, { ToggleSkeleton } from "@/components/live/sidebar/Toggle";
 import Wrapper from "@/components/live/sidebar/wrapper";
+import { getFollowedStores } from "@/lib/follow-service";
+import { getRecommended } from "@/lib/recommented-service";
 import React from "react";
 
 const Sidebar = async () => {
-  // const recommended = await getRecommended();
-  // const follows = await getFollowedUsers();
+  const recommended = await getRecommended();
+  const follows = await getFollowedStores();
 
   return (
     <Wrapper>
       <Toggle />
       <div className=" space-y-4 pt-4 lg:pt-0">
-        <Following data={[]} />
-        <Recommended data={[]} />
+        <Following data={follows} />
+        <Recommended data={recommended} />
       </div>
     </Wrapper>
   );

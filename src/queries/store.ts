@@ -54,6 +54,16 @@ export const upsertStore = async (store: Partial<Store>) => {
         user: {
           connect: { id: user.id },
         },
+        stream: {
+          create: {
+            name: `${store.name}'s stream`,
+            thumbnailUrl: store.logo,
+            isLive: false,
+            isChatEnabled: true,
+            isChatDelayed: false,
+            isChatFollowersOnly: false,
+          },
+        },
       },
     });
 
@@ -351,6 +361,16 @@ export const applySeller = async (store: StoreType) => {
           store.defaultShippingService || "International Delivery",
         returnPolicy: store.returnPolicy || "Return in 30 days.",
         userId: user.id,
+        stream: {
+          create: {
+            name: `${store.name}'s stream`,
+            thumbnailUrl: store.logo, // Sử dụng logo của store làm thumbnail
+            isLive: false,
+            isChatEnabled: true,
+            isChatDelayed: false,
+            isChatFollowersOnly: false,
+          },
+        },
       },
     });
     const client = await clerkClient();
@@ -1606,6 +1626,266 @@ export const manuallyCancelOrder = async (orderId: string, reason?: string) => {
     };
   } catch (error) {
     console.error("Error manually cancelling order:", error);
+    throw error;
+  }
+};
+
+export const checkIfCurrentUserFollowingStore = async (storeUrl: string) => {
+  try {
+    const user = await currentUser();
+
+    if (!user) {
+      return false;
+    }
+
+    if (!storeUrl) {
+      throw new Error("Store URL is required.");
+    }
+
+    const store = await db.store.findUnique({
+      where: {
+        url: storeUrl,
+      },
+      select: {
+        id: true,
+        followers: {
+          where: {
+            id: user.id,
+          },
+          select: { id: true },
+        },
+      },
+    });
+
+    if (!store) {
+      throw new Error("Store not found.");
+    }
+
+    return store.followers.length > 0;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getStoreByUrl = async (storeUrl: string) => {
+  try {
+    if (!storeUrl) {
+      throw new Error("Store URL is required.");
+    }
+
+    const store = await db.store.findUnique({
+      where: {
+        url: storeUrl,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            picture: true,
+          },
+        },
+        stream: {
+          select: {
+            id: true,
+            name: true,
+            thumbnailUrl: true,
+            ingressId: true,
+            serverUrl: true,
+            streamKey: true,
+            isLive: true,
+            isChatEnabled: true,
+            isChatDelayed: true,
+            isChatFollowersOnly: true,
+            storeId: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+        _count: {
+          select: {
+            followers: true,
+            products: true,
+          },
+        },
+      },
+    });
+
+    if (!store) {
+      throw new Error(`Store with URL "${storeUrl}" not found.`);
+    }
+
+    return store;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getStoreBasicInfo = async (storeUrl: string) => {
+  try {
+    if (!storeUrl) {
+      throw new Error("Store URL is required.");
+    }
+
+    const store = await db.store.findUnique({
+      where: {
+        url: storeUrl,
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        logo: true,
+        cover: true,
+        averageRating: true,
+        numReviews: true,
+        status: true,
+        featured: true,
+        createdAt: true,
+        stream: {
+          select: {
+            id: true,
+            name: true,
+            thumbnailUrl: true,
+            isLive: true,
+            isChatEnabled: true,
+            createdAt: true,
+          },
+        },
+        _count: {
+          select: {
+            followers: true,
+            products: true,
+          },
+        },
+      },
+    });
+
+    if (!store) {
+      throw new Error(`Store with URL "${storeUrl}" not found.`);
+    }
+
+    return store;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getStoreWithFollowers = async (storeUrl: string) => {
+  try {
+    if (!storeUrl) {
+      throw new Error("Store URL is required.");
+    }
+
+    const store = await db.store.findUnique({
+      where: {
+        url: storeUrl,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            picture: true,
+          },
+        },
+        stream: {
+          select: {
+            id: true,
+            name: true,
+            thumbnailUrl: true,
+            ingressId: true,
+            serverUrl: true,
+            streamKey: true,
+            isLive: true,
+            isChatEnabled: true,
+            isChatDelayed: true,
+            isChatFollowersOnly: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+        followers: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            picture: true,
+          },
+        },
+        _count: {
+          select: {
+            followers: true,
+            products: true,
+          },
+        },
+      },
+    });
+
+    if (!store) {
+      throw new Error(`Store with URL "${storeUrl}" not found.`);
+    }
+
+    return store;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Thêm hàm chuyên biệt để lấy store với stream live
+export const getStoreWithLiveStream = async (storeUrl: string) => {
+  try {
+    if (!storeUrl) {
+      throw new Error("Store URL is required.");
+    }
+
+    const store = await db.store.findUnique({
+      where: {
+        url: storeUrl,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            picture: true,
+          },
+        },
+        stream: {
+          where: {
+            isLive: true,
+          },
+          select: {
+            id: true,
+            name: true,
+            thumbnailUrl: true,
+            serverUrl: true,
+            streamKey: true,
+            isLive: true,
+            isChatEnabled: true,
+            isChatDelayed: true,
+            isChatFollowersOnly: true,
+            createdAt: true,
+          },
+        },
+        _count: {
+          select: {
+            followers: true,
+            products: true,
+          },
+        },
+      },
+    });
+
+    if (!store) {
+      throw new Error(`Store with URL "${storeUrl}" not found.`);
+    }
+
+    return store;
+  } catch (error) {
     throw error;
   }
 };

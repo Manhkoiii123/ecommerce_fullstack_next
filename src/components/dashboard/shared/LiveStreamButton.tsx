@@ -13,7 +13,7 @@ const LiveStreamButton = ({ storeUrl }: { storeUrl?: string }) => {
         size={"icon"}
         className="rounded-full"
         onClick={() => {
-          router.push(`/live?storeUrl=${storeUrl}`);
+          router.push(`/u/${storeUrl}`);
         }}
       >
         <TvMinimalPlay className="w-5 h-5" />
