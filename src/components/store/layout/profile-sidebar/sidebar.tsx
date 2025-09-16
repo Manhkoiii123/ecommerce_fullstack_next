@@ -90,4 +90,8 @@ const menu = [
     title: "Following",
     link: "/profile/following/1",
   },
+  {
+    title: "Chat",
+    link: "/profile/chat",
+  },
 ];

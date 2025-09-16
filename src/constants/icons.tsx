@@ -13,6 +13,7 @@ import {
   ShippingIcon,
   OfferIcon,
   FlameIcon,
+  ChatIcon,
 } from "@/components/dashboard/icons";
 
 export const icons = [
@@ -85,5 +86,10 @@ export const icons = [
     label: "Flash Sales",
     value: "flame",
     path: FlameIcon,
+  },
+  {
+    label: "Chat",
+    value: "chat",
+    path: ChatIcon,
   },
 ];

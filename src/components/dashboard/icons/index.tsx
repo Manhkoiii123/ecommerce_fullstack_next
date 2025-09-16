@@ -12,6 +12,7 @@ import CouponIcon from "./coupon";
 import ShippingIcon from "./shipping";
 import OfferIcon from "./offer";
 import FlameIcon from "./flame";
+import ChatIcon from "./chat";
 export {
   DashboardIcon,
   StoreIcon,
@@ -27,4 +28,5 @@ export {
   ShippingIcon,
   OfferIcon,
   FlameIcon,
+  ChatIcon,
 };

@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import ModalProvider from "@/providers/modal-provider";
 import { SocketProvider } from "../providers/socket-provider";
 import { QueryProvider } from "../providers/query-provider";
+import { OnlineStatusProvider } from "../providers/online-status-provider";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 const interFont = Inter({ subsets: ["latin"] });
 const barlowFont = Barlow({
@@ -71,10 +72,12 @@ export default function RootLayout({
             />
             <SocketProvider>
               <QueryProvider>
-                <ModalProvider>
-                  {children}
-                  <ReactQueryDevtools initialIsOpen={false} />
-                </ModalProvider>
+                <OnlineStatusProvider>
+                  <ModalProvider>
+                    {children}
+                    <ReactQueryDevtools initialIsOpen={false} />
+                  </ModalProvider>
+                </OnlineStatusProvider>
                 <Toaster />
               </QueryProvider>
             </SocketProvider>

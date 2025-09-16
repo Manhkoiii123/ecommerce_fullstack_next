@@ -75,6 +75,11 @@ export const SellerDashboardSidebarOptions: DashboardSidebarMenuInterface[] = [
     link: "shipping",
   },
   {
+    label: "Chat",
+    icon: "chat",
+    link: "chat",
+  },
+  {
     label: "Settings",
     icon: "settings",
     link: "settings",
