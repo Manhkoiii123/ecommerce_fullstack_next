@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Fragment } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useChatQuery } from "@/hooks/use-chat-query";
 import { useChatSocket } from "@/hooks/use-chat-socket";
@@ -10,6 +10,7 @@ import { Send, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import axios from "axios";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ChatWindowProps {
   conversationId: string | null;
@@ -39,11 +40,10 @@ export default function ChatWindow({
     string | null
   >(conversationId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
 
-  // If we have storeId but no conversationId, we need to create/find the conversation
   useEffect(() => {
     if (storeId && !conversationId) {
-      // We'll handle this in the first message send
       setActualConversationId(null);
     } else if (conversationId) {
       setActualConversationId(conversationId);
@@ -78,7 +78,6 @@ export default function ChatWindow({
     scrollToBottom();
   }, [chatQuery.data]);
 
-  // Mark messages as read when conversation is opened
   useEffect(() => {
     if (!actualConversationId) return;
 
@@ -107,14 +106,16 @@ export default function ChatWindow({
         storeId: storeId,
       });
 
-      // If we created a new conversation, update the actualConversationId
       if (!actualConversationId && response.data) {
-        // The response should contain the conversation info
-        // We might need to fetch the conversation ID from the response
         setActualConversationId(response.data.conversationId);
       }
 
       setMessage("");
+
+      // Ensure conversations list updates in real time for the sender
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: ["conversations", user.id] });
+      }
     } catch (error) {
       console.error("Failed to send message:", error);
     } finally {
@@ -126,6 +127,25 @@ export default function ChatWindow({
     return new Date(dateString).toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
+    });
+  };
+
+  const getDateLabel = (date: Date) => {
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    const isSameDay = (a: Date, b: Date) =>
+      a.toDateString() === b.toDateString();
+
+    if (isSameDay(date, today)) return "Today";
+    if (isSameDay(date, yesterday)) return "Yesterday";
+
+    return date.toLocaleDateString(undefined, {
+      weekday: undefined,
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -174,56 +194,76 @@ export default function ChatWindow({
               </div>
             )}
 
-            {messages.map((msg: MessageWithSender) => (
-              <div
-                key={msg.id}
-                className={cn(
-                  "flex items-start space-x-3",
-                  msg.senderId === user?.id ? "justify-end" : "justify-start"
-                )}
-              >
-                {msg.senderId !== user?.id && (
-                  <Image
-                    src={msg.sender.picture}
-                    alt={msg.sender.name}
-                    width={32}
-                    height={32}
-                    className="rounded-full"
-                  />
-                )}
+            {messages.map((msg: MessageWithSender, index: number) => {
+              const currentDate = new Date(msg.createdAt);
+              const prevMsg = index > 0 ? messages[index - 1] : null;
+              const prevDate = prevMsg ? new Date(prevMsg.createdAt) : null;
+              const isNewDay =
+                !prevDate ||
+                currentDate.toDateString() !== prevDate.toDateString();
 
-                <div
-                  className={cn(
-                    "max-w-xs lg:max-w-md px-4 py-2 rounded-lg",
-                    msg.senderId === user?.id
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-100 text-gray-900"
+              return (
+                <Fragment key={msg.id}>
+                  {isNewDay && (
+                    <div className="flex justify-center my-2">
+                      <span className="text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-700">
+                        {getDateLabel(currentDate)}
+                      </span>
+                    </div>
                   )}
-                >
-                  <p className="text-sm">{msg.content}</p>
-                  <p
+
+                  <div
                     className={cn(
-                      "text-xs mt-1",
+                      "flex items-start space-x-3",
                       msg.senderId === user?.id
-                        ? "text-blue-100"
-                        : "text-gray-500"
+                        ? "justify-end"
+                        : "justify-start"
                     )}
                   >
-                    {formatTime(msg.createdAt)}
-                  </p>
-                </div>
+                    {msg.senderId !== user?.id && (
+                      <Image
+                        src={msg.sender.picture}
+                        alt={msg.sender.name}
+                        width={32}
+                        height={32}
+                        className="rounded-full"
+                      />
+                    )}
 
-                {msg.senderId === user?.id && (
-                  <Image
-                    src={msg.sender.picture}
-                    alt={msg.sender.name}
-                    width={32}
-                    height={32}
-                    className="rounded-full"
-                  />
-                )}
-              </div>
-            ))}
+                    <div
+                      className={cn(
+                        "max-w-xs lg:max-w-md px-4 py-2 rounded-lg",
+                        msg.senderId === user?.id
+                          ? "bg-blue-500 text-white"
+                          : "bg-gray-100 text-gray-900"
+                      )}
+                    >
+                      <p className="text-sm">{msg.content}</p>
+                      <p
+                        className={cn(
+                          "text-xs mt-1",
+                          msg.senderId === user?.id
+                            ? "text-blue-100"
+                            : "text-gray-500"
+                        )}
+                      >
+                        {formatTime(msg.createdAt)}
+                      </p>
+                    </div>
+
+                    {msg.senderId === user?.id && (
+                      <Image
+                        src={msg.sender.picture}
+                        alt={msg.sender.name}
+                        width={32}
+                        height={32}
+                        className="rounded-full"
+                      />
+                    )}
+                  </div>
+                </Fragment>
+              );
+            })}
             <div ref={messagesEndRef} />
           </>
         )}

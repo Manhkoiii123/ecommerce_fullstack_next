@@ -52,101 +52,112 @@ export async function GET(req: NextRequest) {
         },
         orderBy: { lastMessageAt: "desc" },
       });
-    } else {
-      // Get conversations for user
-      conversations = await db.conversation.findMany({
-        where: { userId: user.id },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              picture: true,
-            },
+      return NextResponse.json(conversations);
+    }
+
+    // Get conversations for user
+    const userConversations = await db.conversation.findMany({
+      where: { userId: user.id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            picture: true,
           },
-          store: {
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  onlineStatus: true,
-                },
-              },
-            },
-          },
-          messages: {
-            orderBy: { createdAt: "desc" },
-            take: 1,
-            include: {
-              sender: {
-                select: {
-                  id: true,
-                  name: true,
-                  picture: true,
-                },
-              },
-            },
-          },
-          _count: {
-            select: {
-              messages: {
-                where: {
-                  isRead: false,
-                  senderId: { not: user.id },
-                },
+        },
+        store: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                onlineStatus: true,
               },
             },
           },
         },
-        orderBy: { lastMessageAt: "desc" },
-      });
-
-      // If no conversations, get followed stores
-      if (conversations.length === 0) {
-        const followedStores = await db.user.findUnique({
-          where: { id: user.id },
-          select: {
-            following: {
-              include: {
-                user: {
-                  select: {
-                    id: true,
-                    onlineStatus: true,
-                  },
-                },
+        messages: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          include: {
+            sender: {
+              select: {
+                id: true,
+                name: true,
+                picture: true,
               },
             },
           },
-        });
+        },
+        _count: {
+          select: {
+            messages: {
+              where: {
+                isRead: false,
+                senderId: { not: user.id },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { lastMessageAt: "desc" },
+    });
 
-        const storesWithConversations =
-          followedStores?.following.map((store) => ({
-            id: `temp-${store.id}`,
-            userId: user.id,
-            storeId: store.id,
-            lastMessageAt: new Date(),
-            createdAt: new Date(),
-            updatedAt: new Date(),
+    // Fetch all followed stores
+    const followedStores = await db.user.findUnique({
+      where: { id: user.id },
+      select: {
+        following: {
+          include: {
             user: {
-              id: user.id,
-              name: user.emailAddresses[0].emailAddress || "",
-              picture: user.imageUrl || "",
+              select: {
+                id: true,
+                onlineStatus: true,
+              },
             },
-            store: {
-              ...store,
-              user: store.user,
-            },
-            messages: [],
-            _count: {
-              messages: 0,
-            },
-          })) || [];
+          },
+        },
+      },
+    });
 
-        return NextResponse.json(storesWithConversations);
-      }
-    }
+    // Build a set of storeIds that already have conversations
+    const conversationStoreIds = new Set<string>(
+      userConversations.map((c) => c.storeId)
+    );
 
-    return NextResponse.json(conversations);
+    // Create temp entries for followed stores without conversations
+    const tempFollowedStoreItems = (followedStores?.following || [])
+      .filter((store) => !conversationStoreIds.has(store.id))
+      .map((store) => ({
+        id: `temp-${store.id}`,
+        userId: user.id,
+        storeId: store.id,
+        lastMessageAt: new Date(0), // ensure these sort to the bottom
+        createdAt: new Date(0),
+        updatedAt: new Date(0),
+        user: {
+          id: user.id,
+          name: user.emailAddresses[0].emailAddress || "",
+          picture: user.imageUrl || "",
+        },
+        store: {
+          ...store,
+          user: store.user,
+        },
+        messages: [],
+        _count: {
+          messages: 0,
+        },
+      }));
+
+    // Merge and sort: conversations first by lastMessageAt desc, then followed stores without conversations
+    const merged = [...userConversations, ...tempFollowedStoreItems].sort(
+      (a: any, b: any) =>
+        new Date(b.lastMessageAt).getTime() -
+        new Date(a.lastMessageAt).getTime()
+    );
+
+    return NextResponse.json(merged);
   } catch (error) {
     console.log("[CONVERSATIONS_GET]", error);
     return new NextResponse("Internal Error", { status: 500 });

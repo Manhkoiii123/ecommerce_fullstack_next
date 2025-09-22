@@ -41,6 +41,9 @@ const StoreCard: FC<StoreCardProps> = ({ store }) => {
       toast.error("Something happend, Try again later !");
     }
   };
+  const handleMessageClick = () => {
+    router.push(`/profile/chat?storeId=${id}`);
+  };
   return (
     <div className="w-full">
       <div className="bg-[#f5f5f5] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 rounded-xl py-3 px-4">
@@ -90,7 +93,10 @@ const StoreCard: FC<StoreCardProps> = ({ store }) => {
             )}
             <span>{following ? "Following" : "Follow"}</span>
           </div>
-          <div className="flex items-center border border-black rounded-full cursor-pointer text-base font-bold h-9 mx-2 px-4 bg-black text-white">
+          <div
+            className="flex items-center border border-black rounded-full cursor-pointer text-base font-bold h-9 mx-2 px-4 bg-black text-white"
+            onClick={handleMessageClick}
+          >
             <MessageSquareMore className="w-4 me-2" />
             <span>Message</span>
           </div>

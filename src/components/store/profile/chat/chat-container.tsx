@@ -5,6 +5,7 @@ import { useUser } from "@clerk/nextjs";
 import ConversationsList from "./conversations-list";
 import ChatWindow from "./chat-window";
 import { useOnlineStatus } from "@/hooks/use-online-status";
+import { useSearchParams } from "next/navigation";
 
 export default function ChatContainer() {
   const { user } = useUser();
@@ -13,6 +14,23 @@ export default function ChatContainer() {
   >(null);
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
   const { isOnline } = useOnlineStatus();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const storeId = searchParams?.get("storeId");
+    const conversationId = searchParams?.get("conversationId");
+
+    if (conversationId) {
+      setSelectedConversation(conversationId);
+      setSelectedStoreId(null);
+      return;
+    }
+
+    if (storeId) {
+      setSelectedStoreId(storeId);
+      setSelectedConversation(null);
+    }
+  }, [searchParams]);
 
   if (!user) {
     return (

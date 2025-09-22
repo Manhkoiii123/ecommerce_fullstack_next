@@ -78,14 +78,17 @@ export default function ConversationsList({
   useEffect(() => {
     if (!socket || !user) return;
 
-    // Listen for new messages to update unread counts
+    // Listen for new messages to update unread counts and refresh list for lastMessageAt
     const handleUnreadUpdate = (data: any) => {
+      // Always refresh conversations so last message and ordering are up-to-date
+      refetch();
+
+      // Only bump unread counter if sender is not current user
       if (data.senderId !== user.id) {
         setUnreadCounts((prev) => ({
           ...prev,
           [data.conversationId]: (prev[data.conversationId] || 0) + 1,
         }));
-        refetch(); // Refresh conversations list
       }
     };
 
@@ -107,7 +110,7 @@ export default function ConversationsList({
     }
   }, [conversations]);
 
-  const handleConversationClick = (conversationId: string) => {
+  const handleConversationClick = async (conversationId: string) => {
     // If it's a temp conversation (from followed stores), we need to handle it differently
     if (conversationId.startsWith("temp-")) {
       const storeId = conversationId.replace("temp-", "");
@@ -115,6 +118,20 @@ export default function ConversationsList({
       onSelectConversation(`store:${storeId}`);
     } else {
       onSelectConversation(conversationId);
+
+      // Mark messages as read for this conversation
+      try {
+        await fetch("/api/chat/messages", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ conversationId }),
+        });
+      } catch (e) {
+        // ignore network errors for marking read, UI still navigates
+      }
+
       // Reset unread count for this conversation
       setUnreadCounts((prev) => ({
         ...prev,
