@@ -9,6 +9,7 @@ import {
 import { UserIcon } from "lucide-react";
 import UserAvatar, { UserAvatarSkeleton } from "@/components/live/UserAvatar";
 import { VerifiedMark } from "@/components/live/verified-mark";
+import HostProductSelector from "@/components/stream-player/HostProductSelector";
 
 interface HeaderProps {
   imageUrl: string;
@@ -17,6 +18,7 @@ interface HeaderProps {
   viewerIdentity: string;
   name: string;
   isFollowing: boolean;
+  storeUrl: string;
 }
 const Header = ({
   hostIdentity,
@@ -25,6 +27,7 @@ const Header = ({
   isFollowing,
   name,
   viewerIdentity,
+  storeUrl,
 }: HeaderProps) => {
   const participants = useParticipants();
   const participant = useRemoteParticipant(hostIdentity);
@@ -64,11 +67,16 @@ const Header = ({
           )}
         </div>
       </div>
-      <Actions
-        isFollowing={isFollowing}
-        hostIdentity={hostIdentity}
-        isHost={isHost}
-      />
+      <div className="flex flex-col gap-2 w-full lg:w-auto">
+        <Actions
+          isFollowing={isFollowing}
+          hostIdentity={hostIdentity}
+          isHost={isHost}
+        />
+        {isHost && isLive && (
+          <HostProductSelector storeUrl={storeUrl} storeId={hostIdentity} />
+        )}
+      </div>
     </div>
   );
 };

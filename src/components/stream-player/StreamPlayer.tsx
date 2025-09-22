@@ -1,7 +1,7 @@
 "use client";
 
 import { useViewerToken } from "@/hooks/use-viewer-token";
-import { Store, Stream, User } from "@prisma/client";
+import { Store, Stream } from "@prisma/client";
 import { LiveKitRoom } from "@livekit/components-react";
 import Video from "@/components/stream-player/Video";
 import { useChatSidebar } from "@/store/use-chat-sidebar";
@@ -9,7 +9,8 @@ import { cn } from "@/lib/utils";
 import Chat from "@/components/stream-player/Chat";
 import ChatToggle from "@/components/stream-player/ChatToggle";
 import Header from "@/components/stream-player/Header";
-import InfoCard from "@/components/stream-player/InfoCard";
+import SelectedProducts from "@/components/stream-player/SelectedProducts";
+
 interface StreamPlayerProps {
   stream: Stream;
   isFollowing: boolean;
@@ -46,13 +47,9 @@ const StreamPlayer = ({ isFollowing, stream, store }: StreamPlayerProps) => {
             imageUrl={store.logo}
             isFollowing={isFollowing}
             name={stream.name}
+            storeUrl={store.url}
           />
-          {/* <InfoCard
-            hostIdentity={store.id}
-            viewerIdentity={identity}
-            name={stream.name}
-            thumbnailUrl={stream.thumbnailUrl}
-          /> */}
+          <SelectedProducts storeId={store.id} />
         </div>
         <div className={cn("col-span-1 2xl:col-span-1", collapsed && "hidden")}>
           <Chat
