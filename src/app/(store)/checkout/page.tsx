@@ -10,7 +10,7 @@ import React from "react";
 
 const CheckoutPage = async () => {
   const user = await currentUser();
-  if (!user) redirect("/cart");
+  if (!user) redirect("/sign-in");
   const userData = await db.user.findUnique({
     where: {
       id: user.id,

@@ -20,6 +20,7 @@ import { setCookie } from "cookies-next";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 
 interface ProductPageContainerProps {
   productData: ProductPageDataType;
@@ -131,15 +132,26 @@ const ProductPageContainer = ({
             : productToBeAddedToCart.stock;
         })()
       : productToBeAddedToCart.stock;
+
+  const router = useRouter();
+  const { userId } = useAuth();
+  const requireLogin = () => {
+    if (!userId) {
+      router.push("/sign-in");
+      return false;
+    }
+    return true;
+  };
+
   const handleAddToCart = () => {
+    if (!requireLogin()) return;
     if (maxQty <= 0) return;
     addToCart(productToBeAddedToCart);
     toast.success("Product added to cart successfully");
   };
 
-  const router = useRouter();
-
   const handleBuyNow = () => {
+    if (!requireLogin()) return;
     if (!isProductValid || maxQty <= 0) return;
     addToCart(productToBeAddedToCart);
     toast.success("Product added. Redirecting to checkout");
