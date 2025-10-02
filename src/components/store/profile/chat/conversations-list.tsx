@@ -92,12 +92,26 @@ export default function ConversationsList({
       }
     };
 
+    // Listen for ALL messages in conversations where user is involved
+    const handleNewMessage = (message: any) => {
+      // Refetch immediately when any new message arrives
+      refetch();
+    };
+
     socket.on(`chat:user:${user.id}:unread`, handleUnreadUpdate);
+    
+    // Listen to all conversations this user is part of
+    conversations?.forEach(conv => {
+      socket.on(`chat:${conv.id}:messages`, handleNewMessage);
+    });
 
     return () => {
       socket.off(`chat:user:${user.id}:unread`, handleUnreadUpdate);
+      conversations?.forEach(conv => {
+        socket.off(`chat:${conv.id}:messages`, handleNewMessage);
+      });
     };
-  }, [socket, user, refetch]);
+  }, [socket, user, refetch, conversations]);
 
   // Initialize unread counts from conversations data
   useEffect(() => {

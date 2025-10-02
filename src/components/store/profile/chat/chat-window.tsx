@@ -6,11 +6,12 @@ import { useChatQuery } from "@/hooks/use-chat-query";
 import { useChatSocket } from "@/hooks/use-chat-socket";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, Image as ImageIcon } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import axios from "axios";
 import { useQueryClient } from "@tanstack/react-query";
+import { CldUploadWidget } from "next-cloudinary";
 
 interface ChatWindowProps {
   conversationId: string | null;
@@ -22,6 +23,7 @@ interface MessageWithSender {
   content: string;
   senderId: string;
   createdAt: string;
+  imageUrl?: string | null;
   sender: {
     id: string;
     name: string;
@@ -36,6 +38,7 @@ export default function ChatWindow({
   const { user } = useUser();
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [actualConversationId, setActualConversationId] = useState<
     string | null
   >(conversationId);
@@ -94,14 +97,18 @@ export default function ChatWindow({
     markAsRead();
   }, [actualConversationId]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!message.trim() || isLoading) return;
-
+  const sendMessage = async ({
+    content,
+    imageUrl,
+  }: {
+    content?: string;
+    imageUrl?: string;
+  }) => {
     setIsLoading(true);
     try {
       const response = await axios.post("/api/socket/messages", {
-        content: message,
+        content,
+        imageUrl,
         conversationId: actualConversationId,
         storeId: storeId,
       });
@@ -112,7 +119,6 @@ export default function ChatWindow({
 
       setMessage("");
 
-      // Ensure conversations list updates in real time for the sender
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: ["conversations", user.id] });
       }
@@ -120,6 +126,23 @@ export default function ChatWindow({
       console.error("Failed to send message:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!message.trim() || isLoading) return;
+    await sendMessage({ content: message });
+  };
+
+  const handleUploadSuccess = async (result: any) => {
+    try {
+      setIsUploading(true);
+      const url = result?.info?.secure_url as string | undefined;
+      if (!url) return;
+      await sendMessage({ imageUrl: url });
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -238,7 +261,22 @@ export default function ChatWindow({
                           : "bg-gray-100 text-gray-900"
                       )}
                     >
-                      <p className="text-sm">{msg.content}</p>
+                      {msg.imageUrl ? (
+                        <div className="mb-1">
+                          <Image
+                            src={msg.imageUrl}
+                            alt="attachment"
+                            width={320}
+                            height={320}
+                            className="rounded-md object-cover max-h-72 w-auto"
+                          />
+                          {msg.content && (
+                            <p className="text-sm mt-2">{msg.content}</p>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-sm">{msg.content}</p>
+                      )}
                       <p
                         className={cn(
                           "text-xs mt-1",
@@ -271,7 +309,26 @@ export default function ChatWindow({
 
       {/* Message Input */}
       <div className="border-t p-4">
-        <form onSubmit={handleSubmit} className="flex space-x-2">
+        <form onSubmit={handleSubmit} className="flex items-center space-x-2">
+          <CldUploadWidget
+            onSuccess={handleUploadSuccess}
+            uploadPreset={"hg6ynq9x"}
+          >
+            {({ open }) => (
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={isLoading || isUploading}
+                onClick={() => open()}
+              >
+                {isUploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ImageIcon className="h-4 w-4" />
+                )}
+              </Button>
+            )}
+          </CldUploadWidget>
           <Input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -279,7 +336,10 @@ export default function ChatWindow({
             disabled={isLoading}
             className="flex-1"
           />
-          <Button type="submit" disabled={isLoading || !message.trim()}>
+          <Button
+            type="submit"
+            disabled={isLoading || (!message.trim() && !isUploading)}
+          >
             {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (

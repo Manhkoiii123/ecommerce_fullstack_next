@@ -17,11 +17,16 @@ export default async function handler(
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const { content, conversationId, storeId } = req.body;
+    const { content, conversationId, storeId, imageUrl } = req.body;
 
-    if (!content || (!conversationId && !storeId)) {
+    if ((!content || content.trim() === "") && !imageUrl) {
       return res.status(400).json({
-        error: "Content and conversation ID or store ID are required",
+        error: "Either content or imageUrl is required",
+      });
+    }
+    if (!conversationId && !storeId) {
+      return res.status(400).json({
+        error: "Conversation ID or store ID is required",
       });
     }
 
@@ -72,9 +77,10 @@ export default async function handler(
     // Create message
     const message = await db.message.create({
       data: {
-        content,
+        content: content ?? "",
         senderId: userId,
         conversationId: conversation.id,
+        imageUrl: imageUrl ?? null,
       },
       include: {
         sender: {

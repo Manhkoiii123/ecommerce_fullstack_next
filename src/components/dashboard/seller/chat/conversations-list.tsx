@@ -86,16 +86,31 @@ export default function SellerConversationsList({
           ...prev,
           [data.conversationId]: (prev[data.conversationId] || 0) + 1,
         }));
-        refetch(); // Refresh conversations list
       }
+      // Always refetch to update last message
+      refetch();
+    };
+
+    // Listen for ALL messages in store conversations
+    const handleNewMessage = (message: any) => {
+      // Refetch immediately when any new message arrives
+      refetch();
     };
 
     socket.on(`chat:store:${storeId}:unread`, handleUnreadUpdate);
+    
+    // Listen to all conversations for this store
+    conversations?.forEach(conv => {
+      socket.on(`chat:${conv.id}:messages`, handleNewMessage);
+    });
 
     return () => {
       socket.off(`chat:store:${storeId}:unread`, handleUnreadUpdate);
+      conversations?.forEach(conv => {
+        socket.off(`chat:${conv.id}:messages`, handleNewMessage);
+      });
     };
-  }, [socket, user, storeId, refetch]);
+  }, [socket, user, storeId, refetch, conversations]);
 
   // Initialize unread counts from conversations data
   useEffect(() => {
