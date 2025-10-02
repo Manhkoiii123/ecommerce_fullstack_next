@@ -7,6 +7,8 @@ import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Loader2, Search as SearchIcon } from "lucide-react";
 
 interface ConversationsListProps {
   onSelectConversation: (conversationId: string) => void;
@@ -51,6 +53,20 @@ interface Conversation {
   };
 }
 
+type StoreSearchItem = {
+  id: string;
+  name: string;
+  logo: string;
+  url: string;
+  user?: {
+    id: string;
+    onlineStatus?: {
+      isOnline: boolean;
+      lastSeenAt: string;
+    } | null;
+  } | null;
+};
+
 export default function ConversationsList({
   onSelectConversation,
   selectedConversation,
@@ -58,6 +74,9 @@ export default function ConversationsList({
   const { user } = useUser();
   const { socket } = useSocket();
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  const [search, setSearch] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<StoreSearchItem[]>([]);
 
   const {
     data: conversations,
@@ -74,6 +93,37 @@ export default function ConversationsList({
     },
     enabled: !!user,
   });
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const doSearch = async () => {
+      const q = search.trim();
+      if (q.length < 2) {
+        setSearchResults([]);
+        return;
+      }
+      setIsSearching(true);
+      try {
+        const res = await fetch(
+          `/api/stores/search?q=${encodeURIComponent(q)}`,
+          {
+            signal: controller.signal,
+          }
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        setSearchResults(data);
+      } catch (_) {
+      } finally {
+        setIsSearching(false);
+      }
+    };
+    const t = setTimeout(doSearch, 300);
+    return () => {
+      controller.abort();
+      clearTimeout(t);
+    };
+  }, [search]);
 
   useEffect(() => {
     if (!socket || !user) return;
@@ -99,15 +149,15 @@ export default function ConversationsList({
     };
 
     socket.on(`chat:user:${user.id}:unread`, handleUnreadUpdate);
-    
+
     // Listen to all conversations this user is part of
-    conversations?.forEach(conv => {
+    conversations?.forEach((conv) => {
       socket.on(`chat:${conv.id}:messages`, handleNewMessage);
     });
 
     return () => {
       socket.off(`chat:user:${user.id}:unread`, handleUnreadUpdate);
-      conversations?.forEach(conv => {
+      conversations?.forEach((conv) => {
         socket.off(`chat:${conv.id}:messages`, handleNewMessage);
       });
     };
@@ -152,6 +202,12 @@ export default function ConversationsList({
         [conversationId]: 0,
       }));
     }
+  };
+
+  const handleStoreResultClick = (storeId: string) => {
+    onSelectConversation(`store:${storeId}`);
+    setSearch("");
+    setSearchResults([]);
   };
 
   const formatLastMessage = (conversation: Conversation) => {
@@ -204,6 +260,53 @@ export default function ConversationsList({
     <div className="h-full flex flex-col">
       <div className="p-4 border-b">
         <h2 className="text-lg font-semibold">Messages</h2>
+        <div className="mt-3 relative">
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm cửa hàng theo tên..."
+          />
+          {search && (
+            <div className="absolute z-10 left-0 right-0 mt-1 bg-white border rounded-md shadow-sm max-h-72 overflow-y-auto">
+              {isSearching ? (
+                <div className="p-3 flex items-center text-sm text-gray-500">
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" /> Đang tìm...
+                </div>
+              ) : searchResults.length === 0 ? (
+                <div className="p-3 text-sm text-gray-500">
+                  Không tìm thấy cửa hàng
+                </div>
+              ) : (
+                searchResults.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => handleStoreResultClick(s.id)}
+                    className="w-full text-left p-3 flex items-center space-x-3 hover:bg-gray-50"
+                  >
+                    <Image
+                      src={s.logo}
+                      alt={s.name}
+                      width={32}
+                      height={32}
+                      className="rounded-full object-cover"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium truncate">
+                          {s.name}
+                        </span>
+                        {s.user?.onlineStatus?.isOnline && (
+                          <span className="ml-2 inline-block w-2 h-2 bg-green-500 rounded-full" />
+                        )}
+                      </div>
+                      <span className="text-xs text-gray-500">@{s.url}</span>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">
