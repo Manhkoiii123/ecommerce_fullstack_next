@@ -5,12 +5,15 @@ import { ThemeProvider } from "next-themes";
 import { ReactNode } from "react";
 
 import { Toaster } from "react-hot-toast";
+import AIChatbot from "@/components/shared/ai-chatbot";
 
 export default function StoreLayout({ children }: { children: ReactNode }) {
   return (
     <div>
       <div className=" ">{children}</div>
       <Toaster position="top-center" />
+      {/* AI Chatbot - Floating widget */}
+      <AIChatbot />
     </div>
   );
 }
