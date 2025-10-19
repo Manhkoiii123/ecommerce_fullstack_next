@@ -53,7 +53,7 @@ import { toast } from "sonner";
 import { upsertProduct } from "@/queries/product";
 import { v4 } from "uuid";
 import { format } from "date-fns";
-import { ArrowRight, Dot } from "lucide-react";
+import { ArrowRight, Dot, Sparkles } from "lucide-react";
 import DateTimePicker from "react-datetime-picker";
 import "react-datetime-picker/dist/DateTimePicker.css";
 import "react-calendar/dist/Calendar.css";
@@ -126,6 +126,10 @@ const ProductDetails: FC<StoreDetailsProps> = ({
     { name: string; value: string }[]
   >(data?.variant_specs || [{ name: "", value: "" }]);
   const [keywords, setKeywords] = useState<string[]>(data?.keywords || []);
+  const [isGeneratingDescription, setIsGeneratingDescription] =
+    useState<boolean>(false);
+  const [isGeneratingVariantDescription, setIsGeneratingVariantDescription] =
+    useState<boolean>(false);
   const handleAddition = (keyword: Keyword) => {
     if (keywords.length === 10) return;
     setKeywords([...keywords, keyword.text]);
@@ -133,6 +137,62 @@ const ProductDetails: FC<StoreDetailsProps> = ({
   const handleDeleteKeyword = (i: number) => {
     setKeywords(keywords.filter((_, index) => index !== i));
   };
+
+  const handleGenerateDescription = async (type: "product" | "variant") => {
+    const productName =
+      type === "product" ? form.getValues().name : form.getValues().variantName;
+
+    if (!productName) {
+      toast.error(
+        `Please enter ${type === "product" ? "product" : "variant"} name first!`
+      );
+      return;
+    }
+
+    if (type === "product") {
+      setIsGeneratingDescription(true);
+    } else {
+      setIsGeneratingVariantDescription(true);
+    }
+
+    try {
+      const response = await fetch("/api/ai/generate-description", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          productName,
+          type,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to generate description");
+      }
+
+      if (type === "product") {
+        form.setValue("description", data.description);
+      } else {
+        form.setValue("variantDescription", data.description);
+      }
+
+      toast.success("Description generated successfully!");
+    } catch (error: any) {
+      toast.error("Failed to generate description", {
+        description: error.message,
+      });
+    } finally {
+      if (type === "product") {
+        setIsGeneratingDescription(false);
+      } else {
+        setIsGeneratingVariantDescription(false);
+      }
+    }
+  };
+
   const productDescEditor = useRef(null);
   const variantDescEditor = useRef(null);
   const { theme } = useTheme();
@@ -448,7 +508,29 @@ const ProductDetails: FC<StoreDetailsProps> = ({
                       </TabsTrigger>
                     </TabsList>
                   )}
-                  <TabsContent value="product">
+                  <TabsContent value="product" className="space-y-3">
+                    <div className="flex justify-end">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleGenerateDescription("product")}
+                        disabled={isGeneratingDescription || isLoading}
+                        className="gap-2"
+                      >
+                        {isGeneratingDescription ? (
+                          <>
+                            <Sparkles className="w-4 h-4 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-4 h-4" />
+                            AI Generate
+                          </>
+                        )}
+                      </Button>
+                    </div>
                     <FormField
                       disabled={isLoading}
                       control={form.control}
@@ -470,7 +552,29 @@ const ProductDetails: FC<StoreDetailsProps> = ({
                       )}
                     />
                   </TabsContent>
-                  <TabsContent value="variant">
+                  <TabsContent value="variant" className="space-y-3">
+                    <div className="flex justify-end">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleGenerateDescription("variant")}
+                        disabled={isGeneratingVariantDescription || isLoading}
+                        className="gap-2"
+                      >
+                        {isGeneratingVariantDescription ? (
+                          <>
+                            <Sparkles className="w-4 h-4 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-4 h-4" />
+                            AI Generate
+                          </>
+                        )}
+                      </Button>
+                    </div>
                     <FormField
                       disabled={isLoading}
                       control={form.control}
