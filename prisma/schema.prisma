@@ -166,7 +166,9 @@ model Product {
   wishlist                    Wishlist[]        @relation("WishlistToProduct")
   flashSales                  FlashSaleProduct[] @relation("ProductFlashSales")
 
-  numReviews Int @default(0)
+  numReviews              Int       @default(0)
+  reviewSummary           String?   @db.Text
+  reviewSummaryUpdatedAt  DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt

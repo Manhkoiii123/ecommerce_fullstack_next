@@ -6,6 +6,7 @@ import ReviewDetails from "@/components/store/forms/review-details";
 import ReviewsFilters from "@/components/store/product-page/reviews/filters";
 import ReviewsSort from "@/components/store/product-page/reviews/sort";
 import Pagination from "@/components/store/shared/pagination";
+import ReviewSummary from "@/components/store/product-page/reviews/review-summary";
 import {
   RatingStatisticsType,
   ReviewsFiltersType,
@@ -35,7 +36,6 @@ const defaultData = {
 };
 const ProductReviews = ({ productId, rating, variantsInfo }: Props) => {
   const { canReview, message } = useReviewPermission(productId);
-  console.log("🚀 ~ ProductReviews ~ canReview:", canReview);
   const [data, setData] = useState<ReviewWithImage[]>([]);
   const half = Math.ceil(data.length / 2);
   const [averageRating, setAverageRating] = useState<number>(rating);
@@ -104,6 +104,11 @@ const ProductReviews = ({ productId, rating, variantsInfo }: Props) => {
             )}
           </div>
         </div>
+        {/* AI Review Summary */}
+        <ReviewSummary
+          productId={productId}
+          totalReviews={statistics.totalReviews}
+        />
         <div className="w-full">
           <div className="flex flex-col md:flex-row items-center gap-4">
             <RatingCard rating={averageRating} />
