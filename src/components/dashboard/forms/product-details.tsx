@@ -1,20 +1,10 @@
 "use client";
 
-import { FC, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import {
-  Category,
-  Country,
-  OfferTag,
-  ShippingFeeMethod,
-  Store,
-  SubCategory,
-} from "@prisma/client";
-import * as z from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import ClickToAddInputs from "@/components/dashboard/forms/click-to-add";
+import ImagesPreviewGrid from "@/components/dashboard/shared/images-preview-grid";
+import InputFieldset from "@/components/dashboard/shared/input-field";
 import { AlertDialog } from "@/components/ui/alert-dialog";
-import { MultiSelect } from "react-multi-select-component";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -22,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -29,18 +20,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import ImageUpload from "../shared/image-upload";
-import { ProductFormSchema } from "@/lib/schemas";
-import { WithOutContext as ReactTags } from "react-tag-input";
-import { ProductWithVariantType } from "@/lib/types";
-import ImagesPreviewGrid from "@/components/dashboard/shared/images-preview-grid";
-import ClickToAddInputs from "@/components/dashboard/forms/click-to-add";
 import {
   Select,
   SelectContent,
@@ -48,21 +29,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getAllCategoriesForCategory } from "@/queries/subCategories";
-import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ProductFormSchema } from "@/lib/schemas";
+import { ProductWithVariantType } from "@/lib/types";
 import { upsertProduct } from "@/queries/product";
-import { v4 } from "uuid";
+import { getAllCategoriesForCategory } from "@/queries/subCategories";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Category,
+  Country,
+  OfferTag,
+  ShippingFeeMethod,
+  SubCategory,
+} from "@prisma/client";
+import { NumberInput } from "@tremor/react";
 import { format } from "date-fns";
+import JoditEditor from "jodit-react";
 import { ArrowRight, Dot, Sparkles } from "lucide-react";
-import DateTimePicker from "react-datetime-picker";
-import "react-datetime-picker/dist/DateTimePicker.css";
+import { useTheme } from "next-themes";
+import { useRouter } from "next/navigation";
+import { FC, useEffect, useMemo, useRef, useState } from "react";
 import "react-calendar/dist/Calendar.css";
 import "react-clock/dist/Clock.css";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import JoditEditor from "jodit-react";
-import { useTheme } from "next-themes";
-import { NumberInput } from "@tremor/react";
-import InputFieldset from "@/components/dashboard/shared/input-field";
+import DateTimePicker from "react-datetime-picker";
+import "react-datetime-picker/dist/DateTimePicker.css";
+import { useForm } from "react-hook-form";
+import { MultiSelect } from "react-multi-select-component";
+import { WithOutContext as ReactTags } from "react-tag-input";
+import { toast } from "sonner";
+import { v4 } from "uuid";
+import * as z from "zod";
+import ImageUpload from "../shared/image-upload";
 interface Keyword {
   id: string;
   text: string;
@@ -113,7 +110,7 @@ const ProductDetails: FC<StoreDetailsProps> = ({
   );
   const [sizes, setSizes] = useState<
     { size: string; price: number; quantity: number; discount: number }[]
-  >(data?.sizes || [{ size: "", price: 1, quantity: 0.01, discount: 0 }]);
+  >(data?.sizes || [{ size: "", quantity: 1, price: 0.01, discount: 0 }]);
 
   const [productSpecs, setProductSpecs] = useState<
     { name: string; value: string }[]
@@ -254,6 +251,7 @@ const ProductDetails: FC<StoreDetailsProps> = ({
   }, [form.watch().categoryId]);
   const isLoading = form.formState.isSubmitting;
   const errors = form.formState.errors;
+  console.log("🚀 ~ ProductDetails ~ errors:", errors);
 
   useEffect(() => {
     if (data) {
@@ -266,7 +264,7 @@ const ProductDetails: FC<StoreDetailsProps> = ({
       setImages(data.images || []);
       setColors(data.colors || [{ color: "" }]);
       setSizes(
-        data.sizes || [{ size: "", price: 1, quantity: 0.01, discount: 0 }]
+        data.sizes || [{ size: "", quantity: 1, price: 0.01, discount: 0 }]
       );
       setProductSpecs(data.product_specs || [{ name: "", value: "" }]);
       setVariantSpecs(data.variant_specs || [{ name: "", value: "" }]);

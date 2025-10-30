@@ -11,31 +11,38 @@ import CountryNote from "@/components/store/shared/country-note";
 import useFromStore from "@/hooks/useFromStore";
 import { CartProductType, Country } from "@/lib/types";
 import { updateCartWithLatest } from "@/queries/user";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 const CartContainer = ({ userCountry }: { userCountry: Country }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [isCartLoaded, setIsCartLoaded] = useState<boolean>(false);
   const cartItems = useFromStore(useCartStore, (state) => state.cart);
+  console.log("🚀 ~ CartContainer ~ cartItems:", cartItems);
   const [selectedItems, setSelectedItems] = useState<CartProductType[]>([]);
   const [totalShipping, setTotalShipping] = useState<number>(0);
+  console.log("🚀 ~ CartContainer ~ totalShipping:", totalShipping);
 
   // Tính toán tổng phí ship chỉ cho những sản phẩm đã chọn
   const calculateSelectedItemsShipping = () => {
     let total = 0;
 
     selectedItems.forEach((item) => {
+      console.log("🚀 ~ calculateSelectedItemsShipping ~ item:", item);
       let itemShippingFee = 0;
 
-      if (item.shippingMethod === "ITEM") {
-        const initialFee = item.shippingFee;
-        const extraFee =
-          item.quantity > 1 ? item.extraShippingFee * (item.quantity - 1) : 0;
-        itemShippingFee = initialFee + extraFee;
-      } else if (item.shippingMethod === "WEIGHT") {
-        itemShippingFee = item.shippingFee * item.weight * item.quantity;
-      } else if (item.shippingMethod === "FIXED") {
-        itemShippingFee = item.shippingFee;
+      if (item.freeShippingForAllCountries) {
+        itemShippingFee = 0;
+      } else {
+        if (item.shippingMethod === "ITEM") {
+          const initialFee = item.shippingFee;
+          const extraFee =
+            item.quantity > 1 ? item.extraShippingFee * (item.quantity - 1) : 0;
+          itemShippingFee = initialFee + extraFee;
+        } else if (item.shippingMethod === "WEIGHT") {
+          itemShippingFee = item.shippingFee * item.weight * item.quantity;
+        } else if (item.shippingMethod === "FIXED") {
+          itemShippingFee = item.shippingFee;
+        }
       }
 
       total += itemShippingFee;

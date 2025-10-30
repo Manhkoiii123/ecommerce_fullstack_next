@@ -1,20 +1,20 @@
 "use client";
 
 import {
-  DollarSign,
-  ShoppingCart,
-  Package,
-  Users,
-  TrendingUp,
   Calendar,
+  DollarSign,
+  Package,
+  ShoppingCart,
+  TrendingUp,
+  Users,
 } from "lucide-react";
-import { StatsCard } from "./stats-card";
-import { OrderStatusChart } from "./order-status-chart";
-import { WeeklyRevenueChart } from "./weekly-revenue-chart";
-import { TopProductsTable } from "./top-products-table";
 import { ConversionRateCard } from "./conversion-rate-card";
-import { PeriodSelector } from "./period-selector";
+import { OrderStatusChart } from "./order-status-chart";
 import { OrdersAtRisk } from "./orders-at-risk";
+import { PeriodSelector } from "./period-selector";
+import { StatsCard } from "./stats-card";
+import { TopProductsTable } from "./top-products-table";
+import { WeeklyRevenueChart } from "./weekly-revenue-chart";
 
 interface DashboardStats {
   monthly: {

@@ -13,16 +13,10 @@ import {
 } from "@/lib/types";
 import { generateUniqueSlug } from "@/lib/utils";
 import { currentUser } from "@clerk/nextjs/server";
-import slugify from "slugify";
+import { Country, ProductVariant, Size, Store } from "@prisma/client";
 import { getCookie } from "cookies-next";
 import { cookies } from "next/headers";
-import {
-  Country,
-  FreeShipping,
-  ProductVariant,
-  Size,
-  Store,
-} from "@prisma/client";
+import slugify from "slugify";
 export const upsertProduct = async (
   product: ProductWithVariantType,
   storeUrl: string
@@ -888,7 +882,8 @@ export const getProductPageData = async (
       product?.shippingFeeMethod,
       userCountry,
       product?.store,
-      product.freeShipping
+      product.freeShipping,
+      product.freeShippingForAllCountries
     ),
     getStoreFollowersCount(storeId),
     user ? checkIfUserFollowingStore(storeId, user.id) : false,
@@ -1051,7 +1046,8 @@ export const getShippingDetails = async (
   shippingFeeMethod: string,
   userCountry: { name: string; code: string; city: string },
   store: Store,
-  freeShipping: FreeShippingWithCountriesType | null
+  freeShipping: FreeShippingWithCountriesType | null,
+  freeShippingForAllCountries: boolean
 ) => {
   // mặc định khởi tạo
   let shippingDetails = {
@@ -1066,7 +1062,7 @@ export const getShippingDetails = async (
     countryName: userCountry.name,
     city: userCountry.city,
     isFreeShipping: false,
-    freeShippingForAllCountries: false,
+    freeShippingForAllCountries: freeShippingForAllCountries,
   };
   // tìm cái thông tin country của người dùng đang ở
   const country = await db.country.findUnique({
@@ -1328,8 +1324,10 @@ export const getProductShippingFee = async (
   store: Store,
   freeShipping: FreeShippingWithCountriesType | null,
   weight: number,
-  quantity: number
+  quantity: number,
+  freeShippingForAllCountries: boolean
 ) => {
+  if (freeShippingForAllCountries) return 0;
   const country = await db.country.findUnique({
     where: {
       name: userCountry.name,

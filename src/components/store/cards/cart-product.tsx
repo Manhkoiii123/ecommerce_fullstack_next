@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useCartStore } from "@/cart-store/useCartStore";
+import FlashSaleCartPrice from "@/components/store/shared/flash-sale-cart-price";
 import { CartProductType, Country } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { addToWishlist } from "@/queries/user";
@@ -14,7 +15,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import React, {
+import {
   Dispatch,
   FC,
   SetStateAction,
@@ -23,7 +24,6 @@ import React, {
   useState,
 } from "react";
 import { toast } from "sonner";
-import FlashSaleCartPrice from "@/components/store/shared/flash-sale-cart-price";
 interface Props {
   product: CartProductType;
   selectedItems: CartProductType[];
@@ -56,6 +56,7 @@ const CartProduct: FC<Props> = ({
     shippingService,
     shippingFee,
     extraShippingFee,
+    freeShippingForAllCountries,
   } = product;
   const totalPrice = price * quantity;
 
@@ -84,14 +85,19 @@ const CartProduct: FC<Props> = ({
 
     const quantityToUse = newQty !== undefined ? newQty : quantity;
 
-    if (shippingMethod === "ITEM") {
-      initialFee = shippingFee;
-      extraFee = quantityToUse > 1 ? extraShippingFee * (quantityToUse - 1) : 0;
-      totalFee = initialFee + extraFee;
-    } else if (shippingMethod === "WEIGHT") {
-      totalFee = shippingFee * weight * quantityToUse;
-    } else if (shippingMethod === "FIXED") {
-      totalFee = shippingFee;
+    if (freeShippingForAllCountries) {
+      initialFee = 0;
+    } else {
+      if (shippingMethod === "ITEM") {
+        initialFee = shippingFee;
+        extraFee =
+          quantityToUse > 1 ? extraShippingFee * (quantityToUse - 1) : 0;
+        totalFee = initialFee + extraFee;
+      } else if (shippingMethod === "WEIGHT") {
+        totalFee = shippingFee * weight * quantityToUse;
+      } else if (shippingMethod === "FIXED") {
+        totalFee = shippingFee;
+      }
     }
     if (stock > 0) {
       // Không cần gọi onSelectionChange ở đây nữa

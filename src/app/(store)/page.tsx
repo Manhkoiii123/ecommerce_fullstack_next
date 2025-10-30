@@ -24,15 +24,16 @@ export default async function Home() {
 
   const {
     products_mens_fashion: products_laptop,
-    products_manh_dev: products_manh_dev,
-    products_offer_tag_3,
+    products_flash_sale: products_flash_sale,
+    products_buy_1_get_1: products_buy_1_get_1,
     products_offer_tag_4,
   } = await getHomeDataDynamic([
     { property: "category", value: "mens-fashion", type: "simple" },
-    { property: "offer", value: "manh_dev", type: "full" },
-    { property: "offer", value: "offer_tag_3", type: "simple" },
+    { property: "offer", value: "flash-sale", type: "full" },
+    { property: "offer", value: "buy-1-get-1", type: "simple" },
     { property: "offer", value: "offer_tag_4", type: "simple" },
   ]);
+  console.log("🚀 ~ Home ~ products_flash_sale:", products_flash_sale);
 
   // Get active flash sales
   const activeFlashSales = await getActiveFlashSales();
@@ -90,7 +91,7 @@ export default async function Home() {
 
             <div className="mt-10 space-y-10">
               <div className="bg-white rounded-md">
-                <MainSwiper products={products_manh_dev} type="curved">
+                <MainSwiper products={products_flash_sale} type="curved">
                   <div className="mb-4 pl-4 flex items-center justify-between">
                     <Image
                       src={SuperDealsImg}

@@ -1,6 +1,7 @@
 "use server";
 import { db } from "@/lib/db";
 import { CartProductType, CartWithCartItemsType } from "@/lib/types";
+import { getProductFlashSaleDiscount } from "@/queries/flash-sale";
 import {
   getDeliveryDetailsForStoreByCountry,
   getProductShippingFee,
@@ -9,14 +10,12 @@ import {
 import { currentUser } from "@clerk/nextjs/server";
 import {
   CartItem,
-  ShippingAddress,
   Country as CountryDB,
+  ShippingAddress,
 } from "@prisma/client";
 import { getCookie } from "cookies-next";
-import { cookies } from "next/headers";
-import { getProductFlashSaleDiscount } from "@/queries/flash-sale";
-import { createNewOrderNotification } from "@/lib/notifications";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 export const followStore = async (storeId: string): Promise<boolean> => {
   try {
     //  lấy ng hiện tại
@@ -171,7 +170,8 @@ export const saveUserCart = async (
           product.shippingFeeMethod,
           country,
           product.store,
-          product.freeShipping
+          product.freeShipping,
+          product.freeShippingForAllCountries
         );
         if (typeof temp_details !== "boolean") {
           details = temp_details;
@@ -460,23 +460,28 @@ export const placeOrder = async (
           product.shippingFeeMethod,
           country,
           product.store,
-          product.freeShipping
+          product.freeShipping,
+          product.freeShippingForAllCountries
         );
         if (typeof temp_details !== "boolean") {
           details = temp_details;
         }
       }
       let shippingFee = 0;
-      const { shippingFeeMethod } = product;
-      if (shippingFeeMethod === "ITEM") {
-        shippingFee =
-          quantity === 1
-            ? details.shippingFee
-            : details.shippingFee + details.extraShippingFee * (quantity - 1);
-      } else if (shippingFeeMethod === "WEIGHT") {
-        shippingFee = details.shippingFee * variant.weight * quantity;
-      } else if (shippingFeeMethod === "FIXED") {
-        shippingFee = details.shippingFee;
+      const { shippingFeeMethod, freeShippingForAllCountries } = product;
+      if (freeShippingForAllCountries) {
+        shippingFee = 0;
+      } else {
+        if (shippingFeeMethod === "ITEM") {
+          shippingFee =
+            quantity === 1
+              ? details.shippingFee
+              : details.shippingFee + details.extraShippingFee * (quantity - 1);
+        } else if (shippingFeeMethod === "WEIGHT") {
+          shippingFee = details.shippingFee * variant.weight * quantity;
+        } else if (shippingFeeMethod === "FIXED") {
+          shippingFee = details.shippingFee;
+        }
       }
 
       const totalPrice = price * validQuantity + shippingFee;
@@ -678,6 +683,7 @@ export const updateCartWithLatest = async (
           },
         },
       });
+      console.log("🚀 ~ updateCartWithLatest ~ product:", product);
 
       if (
         !product ||
@@ -702,7 +708,7 @@ export const updateCartWithLatest = async (
         isFreeShipping: false,
         deliveryTimeMin: 0,
         deliveryTimeMax: 0,
-        freeShippingForAllCountries: false,
+        freeShippingForAllCountries: product.freeShippingForAllCountries,
       };
 
       if (countryCookie) {
@@ -711,7 +717,8 @@ export const updateCartWithLatest = async (
           product.shippingFeeMethod,
           country,
           product.store,
-          product.freeShipping
+          product.freeShipping,
+          product.freeShippingForAllCountries
         );
 
         if (typeof temp_details !== "boolean") {
@@ -865,7 +872,8 @@ export const updateCheckoutProductstWithLatest = async (
         store,
         freeShipping,
         variant.weight,
-        quantity
+        quantity,
+        product.freeShippingForAllCountries
       );
 
       if (fee) {
