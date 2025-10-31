@@ -11,3 +11,9 @@ vào webhook của clerk => add endpoind => url `https://pretty-mouse-strangely.
 # 1 vài cái bug fix sau
 
 cập nhật stock và đã bán khi order done => fix
+
+luồng xử lí cart => add to cart -> save to cart vẫn lưu giá gốc => sag bên trang checkout => update lại db trong cart nhờ hàm `updateCheckoutProductstWithLatest`
+
+
+
+ts```

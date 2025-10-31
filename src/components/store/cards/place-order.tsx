@@ -1,16 +1,16 @@
+import { useCartStore } from "@/cart-store/useCartStore";
 import FastDelivery from "@/components/store/cards/fast-delivery";
+import ApplyCouponForm from "@/components/store/forms/apply-coupon";
 import { SecurityPrivacyCard } from "@/components/store/product-page/returns-security-privacy-card";
 import { Button } from "@/components/store/ui/button";
-import { cn } from "@/lib/utils";
-import { ShippingAddress } from "@prisma/client";
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
-import { PulseLoader } from "react-spinners";
-import { emptyUserCart, placeOrder } from "@/queries/user";
-import { useRouter } from "next/navigation";
-import { useCartStore } from "@/cart-store/useCartStore";
-import ApplyCouponForm from "@/components/store/forms/apply-coupon";
 import { CartWithCartItemsType } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { emptyUserCart, placeOrder } from "@/queries/user";
+import { ShippingAddress } from "@prisma/client";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { PulseLoader } from "react-spinners";
+import { toast } from "sonner";
 interface Props {
   shippingFees: number;
   subTotal: number;
@@ -184,7 +184,11 @@ const PlaceOrderCard: React.FC<Props> = ({
         )}{" "}
         <Info
           title="Total"
-          text={`+${(flashSaleSubtotal + shippingFees).toFixed(2)}`}
+          text={`+${(
+            flashSaleSubtotal -
+            discountedAmount +
+            shippingFees
+          ).toFixed(2)}`}
           isBold
           noBorder
         />
@@ -252,7 +256,7 @@ const PlaceOrderCard: React.FC<Props> = ({
         )}
       </div>
       {/* Order Summary */}
-      <div className="bg-white p-4">
+      {/* <div className="bg-white p-4">
         <h2 className="text-lg font-semibold mb-3">Order Summary</h2>
 
         <Info
@@ -292,7 +296,7 @@ const PlaceOrderCard: React.FC<Props> = ({
             </p>
           </div>
         )}
-      </div>
+      </div> */}
 
       <div className="bg-white p-4">
         <Button onClick={() => handlePlaceOrder()}>

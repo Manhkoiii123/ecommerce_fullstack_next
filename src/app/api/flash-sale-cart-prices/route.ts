@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     const { productIds } = await request.json();
 
     if (!productIds || !Array.isArray(productIds)) {
-      return NextResponse.json(
+    return NextResponse.json(
         { error: "Product IDs array is required" },
         { status: 400 }
       );

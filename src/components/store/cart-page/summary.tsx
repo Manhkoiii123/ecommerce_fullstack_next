@@ -1,10 +1,10 @@
 import { CartProductType } from "@/lib/types";
-import { FC, useState, useEffect } from "react";
-import { Button } from "../ui/button";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { PulseLoader } from "react-spinners";
 import { saveUserCart } from "@/queries/user";
+import { useRouter } from "next/navigation";
+import { FC, useEffect, useState } from "react";
+import { PulseLoader } from "react-spinners";
+import { toast } from "sonner";
+import { Button } from "../ui/button";
 
 interface Props {
   selectedItems: CartProductType[];

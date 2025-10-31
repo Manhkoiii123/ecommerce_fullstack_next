@@ -17,17 +17,14 @@ const CartContainer = ({ userCountry }: { userCountry: Country }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [isCartLoaded, setIsCartLoaded] = useState<boolean>(false);
   const cartItems = useFromStore(useCartStore, (state) => state.cart);
-  console.log("🚀 ~ CartContainer ~ cartItems:", cartItems);
   const [selectedItems, setSelectedItems] = useState<CartProductType[]>([]);
   const [totalShipping, setTotalShipping] = useState<number>(0);
-  console.log("🚀 ~ CartContainer ~ totalShipping:", totalShipping);
 
   // Tính toán tổng phí ship chỉ cho những sản phẩm đã chọn
   const calculateSelectedItemsShipping = () => {
     let total = 0;
 
     selectedItems.forEach((item) => {
-      console.log("🚀 ~ calculateSelectedItemsShipping ~ item:", item);
       let itemShippingFee = 0;
 
       if (item.freeShippingForAllCountries) {
