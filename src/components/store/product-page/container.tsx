@@ -34,7 +34,6 @@ const ProductPageContainer = ({
 }: ProductPageContainerProps) => {
   if (!productData) return null;
   const { images, shippingDetails, productId, variantId } = productData;
-  // console.log("🚀 ~ ProductPageContainer ~ shippingDetails:", shippingDetails);
   if (typeof shippingDetails === "boolean") return null;
   const data: CartProductType = {
     productId: productData.productId,

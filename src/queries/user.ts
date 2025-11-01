@@ -87,7 +87,6 @@ export const followStore = async (storeId: string): Promise<boolean> => {
 export const saveUserCart = async (
   cartProducts: CartProductType[]
 ): Promise<boolean> => {
-  console.log("🚀 ~ saveUserCart ~ cartProducts:", cartProducts);
   const user = await currentUser();
   if (!user) throw new Error("Unauthenticated");
   const userId = user.id;
@@ -210,7 +209,6 @@ export const saveUserCart = async (
       };
     })
   );
-  console.log("🚀 ~ saveUserCart ~ validatedCartItems:", validatedCartItems);
 
   const subTotal = validatedCartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
@@ -221,7 +219,6 @@ export const saveUserCart = async (
     0
   );
   const total = subTotal + shippingFees;
-  console.log("🚀 ~ saveUserCart ~ total:", total);
   const cart = await db.cart.create({
     data: {
       cartItems: {
@@ -248,7 +245,6 @@ export const saveUserCart = async (
       userId,
     },
   });
-  console.log("🚀 ~ saveUserCart ~ cart:", cart);
   if (cart) return true;
   return false;
 };

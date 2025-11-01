@@ -14,18 +14,14 @@ interface VideoProps {
   hostIdentity: string;
 }
 const Video = ({ hostIdentity, hostName }: VideoProps) => {
-  console.log("🚀 ~ Video ~ hostIdentity:", hostIdentity);
   const connectionState = useConnectionState();
-  console.log("🚀 ~ Video ~ connectionState:", connectionState);
 
   const participant = useRemoteParticipant(`${hostIdentity}`);
-  console.log("🚀 ~ Video ~ participant:", participant);
 
   const tracks = useTracks([
     Track.Source.Camera,
     Track.Source.Microphone,
   ]).filter((track) => track.participant.identity === `${hostIdentity}`);
-  console.log("🚀 ~ Video ~ tracks:", tracks);
 
   let content;
   if (!participant && connectionState === ConnectionState.Connected) {

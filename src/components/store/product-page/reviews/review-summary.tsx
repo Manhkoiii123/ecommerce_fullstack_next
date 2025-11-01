@@ -11,7 +11,6 @@ interface ReviewSummaryProps {
 }
 
 const ReviewSummary = ({ productId, totalReviews }: ReviewSummaryProps) => {
-  console.log("🚀 ~ ReviewSummary ~ totalReviews:", totalReviews);
   const [summary, setSummary] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isVisible, setIsVisible] = useState<boolean>(false);

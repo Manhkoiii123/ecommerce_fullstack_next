@@ -9,7 +9,6 @@ import React from "react";
 const ButtonDashboardLive = ({ user }: { user: any }) => {
   const searchParams = useSearchParams();
   const storeUrl = searchParams?.get("storeUrl");
-  console.log("🚀 ~ ButtonDashboardLive ~ storeUrl:", storeUrl);
 
   return (
     <Button

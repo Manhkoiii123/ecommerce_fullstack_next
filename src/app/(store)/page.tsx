@@ -33,7 +33,6 @@ export default async function Home() {
     { property: "offer", value: "buy-1-get-1", type: "simple" },
     { property: "offer", value: "offer_tag_4", type: "simple" },
   ]);
-  console.log("🚀 ~ Home ~ products_flash_sale:", products_flash_sale);
 
   // Get active flash sales
   const activeFlashSales = await getActiveFlashSales();

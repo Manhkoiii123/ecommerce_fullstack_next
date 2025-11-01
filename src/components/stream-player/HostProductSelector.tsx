@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useLiveProducts } from "@/hooks/use-live-products-socket";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useLiveProducts } from "@/hooks/use-live-products-socket";
+import { useEffect, useState } from "react";
 
 export default function HostProductSelector({
   storeUrl,

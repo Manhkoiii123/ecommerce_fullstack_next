@@ -3,9 +3,8 @@ import NavItem, {
   NavItemSkeleton,
 } from "@/app/(dashboard)/u/[storeUrl]/_components/sidebar/NavItem";
 import { useUser } from "@clerk/nextjs";
-import { Fullscreen, KeyRound, MessageSquare, Users } from "lucide-react";
-import { useParams } from "next/navigation";
-import { usePathname } from "next/navigation";
+import { Fullscreen, KeyRound } from "lucide-react";
+import { useParams, usePathname } from "next/navigation";
 const Navigation = () => {
   const pathname = usePathname();
   const params = useParams();
@@ -21,16 +20,6 @@ const Navigation = () => {
       label: "Keys",
       href: `/u/${storeUrl}/keys`,
       icon: KeyRound,
-    },
-    {
-      label: "Chat",
-      href: `/u/${storeUrl}/chat`,
-      icon: MessageSquare,
-    },
-    {
-      label: "Commumity",
-      href: `/u/${user?.username}/community`,
-      icon: Users,
     },
   ];
   if (!user?.username) {
