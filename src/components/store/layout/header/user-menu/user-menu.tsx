@@ -120,7 +120,7 @@ const links = [
   {
     icon: <MessageIcon />,
     title: "Messages",
-    link: "/profile/messages",
+    link: "/profile/chat",
   },
   {
     icon: <WishlistIcon />,

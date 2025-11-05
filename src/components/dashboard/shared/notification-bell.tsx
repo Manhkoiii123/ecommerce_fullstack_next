@@ -224,6 +224,24 @@ export function NotificationBell({
                     }`}
                     onClick={() => {
                       handleMarkAsRead(notification.id);
+                      // Navigate to product detail if available
+                      if (notification.data?.productUrl) {
+                        router.push(notification.data.productUrl);
+                        setIsOpen(false);
+                        return;
+                      }
+                      if (
+                        notification.data?.productSlug &&
+                        notification.data?.variantSlug
+                      ) {
+                        router.push(
+                          `/product/${notification.data.productSlug}/${notification.data.variantSlug}`
+                        );
+                        setIsOpen(false);
+                        return;
+                      }
+
+                      // Fallbacks for order notifications
                       if (notification.data?.orderId && userId) {
                         router.push(`/order/${notification.data.orderId}`);
                       } else if (storeId) {

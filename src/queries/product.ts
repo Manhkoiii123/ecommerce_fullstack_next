@@ -178,6 +178,29 @@ const handleProductCreate = async (
   };
 
   const new_product = await db.product.create({ data: productData });
+  // fire realtime notifications to followers of the store
+  try {
+    const baseUrl =
+      (process.env.NEXT_PUBLIC_SITE_URL as string) ||
+      (process.env.NEXT_PUBLIC_APP_URL as string) ||
+      (process.env.NEXTAUTH_URL as string) ||
+      (process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : "http://localhost:3000");
+    const cookieHeader = cookies()
+      .getAll()
+      .map((c) => `${c.name}=${c.value}`)
+      .join("; ");
+    const url = `${baseUrl.replace(/\/$/, "")}/api/socket/product-published`;
+    await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: cookieHeader,
+      },
+      body: JSON.stringify({ storeId, productId: new_product.id }),
+    });
+  } catch (e) {}
   return new_product;
 };
 

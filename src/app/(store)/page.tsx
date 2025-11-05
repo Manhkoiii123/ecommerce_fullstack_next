@@ -1,5 +1,7 @@
 import ProductCard from "@/components/store/cards/product/product-card";
 import AnimatedDeals from "@/components/store/home/animated-deals";
+import FeaturedCategories from "@/components/store/home/featured-categories";
+import FlashSaleBanner from "@/components/store/home/flash-sale-banner";
 import Featured from "@/components/store/home/main/featured";
 import HomeMainSwiper from "@/components/store/home/main/home-swiper";
 import HomeUserCard from "@/components/store/home/main/user/user";
@@ -7,16 +9,13 @@ import Sideline from "@/components/store/home/sideline/sideline";
 import CategoriesHeader from "@/components/store/layout/categories-header/categories-header";
 import Footer from "@/components/store/layout/footer/footer";
 import Header from "@/components/store/layout/header/header";
-import ProductList from "@/components/store/shared/product-list";
 import MainSwiper from "@/components/store/shared/swiper";
 import { SimpleProduct } from "@/lib/types";
+import SuperDealsImg from "@/public/assets/images/ads/super-deals.avif";
+import { getActiveFlashSales } from "@/queries/flash-sale";
 import { getHomeDataDynamic } from "@/queries/home";
 import { getProducts } from "@/queries/product";
-import { getActiveFlashSales } from "@/queries/flash-sale";
 import Image from "next/image";
-import SuperDealsImg from "@/public/assets/images/ads/super-deals.avif";
-import FeaturedCategories from "@/components/store/home/featured-categories";
-import FlashSaleBanner from "@/components/store/home/flash-sale-banner";
 
 export default async function Home() {
   const productsData = await getProducts();
