@@ -25,6 +25,7 @@ const OrdersTable = ({
   totalPages: number;
   prev_filter?: OrderTableFilter;
 }) => {
+  console.log("🚀 ~ OrdersTable ~ orders:", orders);
   const [page, setPage] = useState<number>(1);
   const [totalDataPages, setTotalDataPages] = useState<number>(totalPages);
   const [data, setData] = useState<UserOrderType[]>(orders);

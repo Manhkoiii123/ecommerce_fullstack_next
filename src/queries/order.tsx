@@ -67,8 +67,41 @@ export const updateOrderGroupStatus = async (
       id: groupId,
       storeId: storeId,
     },
+    include: {
+      items: true,
+    },
   });
   if (!order) throw new Error("Order not found.");
+  if (status === "Cancelled" && order.status !== "Cancelled") {
+    await db.$transaction(async (tx) => {
+      // Update group status first
+      await tx.orderGroup.update({
+        where: { id: groupId },
+        data: { status },
+      });
+      for (const item of order.items) {
+        if (item.status !== "Cancelled") {
+          await tx.size.update({
+            where: { id: item.sizeId },
+            data: {
+              quantity: {
+                increment: item.quantity,
+              },
+            },
+          });
+          await tx.product.update({
+            where: { id: item.productId },
+            data: {
+              sales: {
+                decrement: item.quantity,
+              },
+            },
+          });
+        }
+      }
+    });
+    return "Cancelled";
+  }
   const updatedOrder = await db.orderGroup.update({
     where: {
       id: groupId,
@@ -112,7 +145,32 @@ export const updateOrderItemStatus = async (
   });
 
   if (!product) throw new Error("Order item not found.");
-
+  // If cancelling and previously not cancelled, restock inventory for this item
+  if (status === "Cancelled" && product.status !== "Cancelled") {
+    await db.$transaction(async (tx) => {
+      await tx.orderItem.update({
+        where: { id: orderItemId },
+        data: { status },
+      });
+      await tx.size.update({
+        where: { id: product.sizeId },
+        data: {
+          quantity: {
+            increment: product.quantity,
+          },
+        },
+      });
+      await tx.product.update({
+        where: { id: product.productId },
+        data: {
+          sales: {
+            decrement: product.quantity,
+          },
+        },
+      });
+    });
+    return "Cancelled";
+  }
   const updatedProduct = await db.orderItem.update({
     where: {
       id: orderItemId,
@@ -121,7 +179,6 @@ export const updateOrderItemStatus = async (
       status,
     },
   });
-
   return updatedProduct.status;
 };
 

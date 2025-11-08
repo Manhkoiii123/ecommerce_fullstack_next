@@ -307,7 +307,7 @@ export const getStoreOrders = async (storeUrl: string) => {
         },
       },
       orderBy: {
-        updatedAt: "desc",
+        createdAt: "desc",
       },
     });
 

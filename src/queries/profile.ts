@@ -101,7 +101,7 @@ export const getUserOrders = async (
     take: pageSize,
     skip,
     orderBy: {
-      updatedAt: "desc",
+      createdAt: "desc",
     },
   });
   const totalCount = await db.order.count({ where: whereClause });
