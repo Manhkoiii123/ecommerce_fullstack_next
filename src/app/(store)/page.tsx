@@ -16,11 +16,10 @@ import { getActiveFlashSales } from "@/queries/flash-sale";
 import { getHomeDataDynamic } from "@/queries/home";
 import { getProducts } from "@/queries/product";
 import Image from "next/image";
-
 export default async function Home() {
   const productsData = await getProducts();
   const { products } = productsData;
-
+ 
   const {
     products_mens_fashion: products_laptop,
     products_flash_sale: products_flash_sale,

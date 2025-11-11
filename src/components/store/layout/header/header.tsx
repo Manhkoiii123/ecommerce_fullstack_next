@@ -44,8 +44,8 @@ export default async function Header() {
           </div>
           <CountryLanguageCurrencySelector userCountry={userCountry} />
           <UserMenu />
-          <Cart />
-          <NotificationBell userId={user?.id} />
+          {user && <Cart />}
+          {user && <NotificationBell userId={user?.id} />}
         </div>
       </div>
     </div>

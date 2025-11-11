@@ -1,7 +1,9 @@
 import ProductFilters from "@/components/store/browser-page/filter";
+import ProductPagination from "@/components/store/browser-page/product-pagination";
 import ProductSort from "@/components/store/browser-page/sort";
 import ProductCard from "@/components/store/cards/product/product-card";
 import Header from "@/components/store/layout/header/header";
+import Pagination from "@/components/store/shared/pagination";
 import { FiltersQueryType } from "@/lib/types";
 import { getProducts } from "@/queries/product";
 import { getFilteredSizes } from "@/queries/size";
@@ -22,6 +24,7 @@ const BrowsePage = async ({
     maxPrice,
     minPrice,
     color,
+    page,
   } = searchParams;
   const products_data = await getProducts(
     {
@@ -34,9 +37,10 @@ const BrowsePage = async ({
       size: Array.isArray(size) ? size : size ? [size] : undefined,
       color: Array.isArray(color) ? color : color ? [color] : undefined,
     },
-    sort
+    sort,
+    (page && Number(page)) || 1
   );
-  const { products } = products_data;
+  const { products, currentPage, totalPages, totalCount } = products_data;
 
   return (
     <div className="relative h-screen overflow-hidden">
@@ -57,6 +61,7 @@ const BrowsePage = async ({
             <ProductCard key={product.id + product.slug} product={product} />
           ))}
         </div>
+        <ProductPagination page={currentPage} totalPages={totalPages} />
       </div>
     </div>
   );

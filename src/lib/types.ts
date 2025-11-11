@@ -345,6 +345,7 @@ export type FiltersQueryType = {
   minPrice: string;
   maxPrice: string;
   color: string;
+  page: string;
 };
 export type CatgegoryWithSubsType = Category & {
   subCategories: SubCategory[];

@@ -6,9 +6,15 @@ interface Props {
   page: number;
   totalPages: number;
   setPage: Dispatch<SetStateAction<number>>;
+  isProductPage?: boolean;
 }
 
-const Pagination: FC<Props> = ({ page, setPage, totalPages }) => {
+const Pagination: FC<Props> = ({
+  page,
+  setPage,
+  totalPages,
+  isProductPage = false,
+}) => {
   const handlePrevious = () => {
     if (page > 1) {
       setPage((prev) => prev - 1);
@@ -22,7 +28,11 @@ const Pagination: FC<Props> = ({ page, setPage, totalPages }) => {
   };
   return (
     <div className="w-full py-0 lg:px-0 sm:px-6 px-4">
-      <div className="w-full flex items-center justify-end gap-x-4 border-t border-gray-200">
+      <div
+        className={`w-full flex items-center  gap-x-4 border-t border-gray-200 ${
+          isProductPage ? "justify-center pt-4" : "justify-end"
+        }`}
+      >
         <div
           onClick={() => handlePrevious()}
           className="flex items-center pt-3 text-gray-600 hover:text-orange-background cursor-pointer"

@@ -24,6 +24,7 @@ export default function FiltersHeader({
   const queriesArray = Object.entries(queries);
   const queriesLength = queriesArray.reduce((count, [queryKey, queryValue]) => {
     if (queryKey === "sort") return count;
+    if (queryKey === "page") return count;
     if (queryKey === "search" && queryValue === "") return count;
     return count + (Array.isArray(queryValue) ? queryValue.length : 1);
   }, 0);
@@ -75,6 +76,7 @@ export default function FiltersHeader({
         {queriesArray.map(([queryKey, queryValue]) => {
           //  nếu mà serach và sort thì ko hiển thị
           if (queryKey === "sort") return null;
+          if (queryKey === "page") return null;
           if (queryKey === "search" && queryValue === "") return null;
           // còn lại các cái có thể là string hoặc array
           const isArrayQuery = Array.isArray(queryValue);

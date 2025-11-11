@@ -680,7 +680,7 @@ export const getProducts = async (
   filters: any = {},
   sortBy: string = "",
   page: number = 1,
-  pageSize: number = 10
+  pageSize: number = 7
 ) => {
   const currentPage = page;
   const limit = pageSize;
@@ -872,7 +872,7 @@ export const getProducts = async (
       variantImages,
     };
   });
-  const totalCount = products.length;
+  const totalCount = await db.product.count({ where: wherClause });
   const totalPages = Math.ceil(totalCount / pageSize);
   return {
     products: productsWithFilteredVariants,
