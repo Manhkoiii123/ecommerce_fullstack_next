@@ -66,7 +66,7 @@ const ConnectModal = ({ storeUrl }: { storeUrl: string }) => {
           </SelectContent>
         </Select>
         <Alert>
-          <AlertTriangle className="h-4 w-4 !text-white" />
+          <AlertTriangle className="h-4 w-4 " />
           <AlertTitle>Warning</AlertTitle>
           <AlertDescription>
             This action will reset all active streams using the current

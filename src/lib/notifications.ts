@@ -11,7 +11,9 @@ export interface CreateNotificationData {
     | "ORDER_CANCELLED"
     | "LOW_STOCK"
     | "REVIEW_RECEIVED"
-    | "SYSTEM_UPDATE";
+    | "SYSTEM_UPDATE"
+    | "NEW_STORE_PENDING"
+    | "STORE_APPROVED";
   title: string;
   message: string;
   storeId?: string;
@@ -80,10 +82,11 @@ export async function createNewOrderNotification(
 
       const storeNotificationData: CreateNotificationData = {
         type: "NEW_ORDER",
-        title: "Đơn hàng mới! 🎉",
-        message: `${customerName} đã đặt đơn hàng mới với ${itemCount} sản phẩm trị giá $${orderTotal.toFixed(
+        title: "New order! 🎉",
+        message: `${customerName} has placed a new order with ${itemCount} items worth $${orderTotal.toFixed(
           2
         )}.`,
+
         storeId,
         orderId,
         createdAt: new Date(),
@@ -92,7 +95,7 @@ export async function createNewOrderNotification(
           customerName,
           orderTotal,
           itemCount,
-          productName: firstProduct?.name || "Nhiều sản phẩm",
+          productName: firstProduct?.name || "Many items",
           customerEmail: order.user.email,
         },
       };
@@ -109,8 +112,8 @@ export async function createNewOrderNotification(
 
     const customerNotificationData: CreateNotificationData = {
       type: "NEW_ORDER",
-      title: "Đặt hàng thành công! ✅",
-      message: `Đơn hàng của bạn đã được đặt thành công. Mã đơn hàng: ${orderId}`,
+      title: "Order placed successfully! ✅",
+      message: `Your order has been placed successfully. Order ID: ${orderId}`,
       userId,
       orderId,
       createdAt: new Date(),
@@ -120,7 +123,7 @@ export async function createNewOrderNotification(
         itemCount: totalItemCount,
         estimatedDelivery: `${Math.min(
           ...order.groups.map((g) => g.shippingDeliveryMin)
-        )}-${Math.max(...order.groups.map((g) => g.shippingDeliveryMax))} ngày`,
+        )}-${Math.max(...order.groups.map((g) => g.shippingDeliveryMax))} days`,
       },
     };
 
@@ -289,15 +292,15 @@ export async function createPaymentNotification(
     let notificationType: CreateNotificationData["type"] = "PAYMENT_RECEIVED";
 
     if (paymentStatus === "Paid") {
-      title = "Thanh toán thành công! 💰";
-      message = `Đơn hàng #${orderId} đã được thanh toán thành công qua ${paymentMethod}.`;
+      title = "Payment successful! ";
+      message = `Order #${orderId} has been successfully paid via ${paymentMethod}.`;
     } else if (paymentStatus === "Failed") {
-      title = "Thanh toán thất bại! ❌";
-      message = `Thanh toán cho đơn hàng #${orderId} đã thất bại. Vui lòng thử lại.`;
+      title = "Payment failed! ";
+      message = `Payment for order #${orderId} has failed. Please try again.`;
       notificationType = "PAYMENT_FAILED";
     } else if (paymentStatus === "Refunded") {
-      title = "Hoàn tiền thành công! 💸";
-      message = `Đơn hàng #${orderId} đã được hoàn tiền thành công.`;
+      title = "Refund successful! ";
+      message = `Order #${orderId} has been successfully refunded.`;
     }
 
     // 🔹 Notifications cho tất cả các store trong order
@@ -306,10 +309,11 @@ export async function createPaymentNotification(
 
       return {
         type: notificationType,
-        title: `Thanh toán - ${paymentStatus}`,
-        message: `Đơn hàng #${orderId} của ${customerName} ($${amount.toFixed(
+        title: `Payment - ${paymentStatus}`,
+        message: `Order #${orderId} for ${customerName} ($${amount.toFixed(
           2
-        )}) - ${paymentStatus} qua ${paymentMethod}.`,
+        )}) - ${paymentStatus} via ${paymentMethod}.`,
+
         storeId,
         orderId,
         createdAt: new Date(),
@@ -443,6 +447,147 @@ export async function getUserUnreadNotificationCount(userId: string) {
     return count;
   } catch (error) {
     console.error("Error getting user unread notification count:", error);
+    throw error;
+  }
+}
+
+// Helper to trigger socket emission (best effort, won't fail if unavailable)
+async function triggerSocketEmission(notifications: any[], type: string) {
+  // Only try if we have a base URL
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (!baseUrl) {
+    console.log("⏭️ No NEXT_PUBLIC_SITE_URL, skipping socket emission");
+    return;
+  }
+
+  try {
+    // Use setTimeout to make it non-blocking
+    setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `${baseUrl}/api/socket/notifications/emit`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ notifications, type }),
+          }
+        );
+
+        if (response.ok) {
+          console.log(`✅ Socket emission triggered for ${type}`);
+        }
+      } catch (err) {
+        console.log("⏭️ Socket emission skipped (expected in some contexts)");
+      }
+    }, 0);
+  } catch (error) {
+    // Silent fail - socket is optional
+  }
+}
+
+// Notification khi người dùng tạo store mới (gửi cho admin)
+export async function createNewStorePendingNotification(
+  storeId: string,
+  userId: string,
+  storeName: string
+) {
+  try {
+    // Lấy danh sách admin
+    const admins = await db.user.findMany({
+      where: {
+        role: "ADMIN",
+      },
+    });
+
+    if (admins.length === 0) {
+      console.log("No admins found to notify");
+      return { adminNotifications: [] };
+    }
+
+    // Tạo notification cho từng admin
+    const adminNotifications = await Promise.all(
+      admins.map((admin) =>
+        createNotification({
+          type: "NEW_STORE_PENDING",
+          title: "New store pending approval! 🏪",
+          message: `The store "${storeName}" has been created and is pending approval.`,
+          userId: admin.id,
+          storeId,
+          createdAt: new Date(),
+          data: {
+            storeId,
+            storeName,
+            sellerId: userId,
+            status: "PENDING",
+          },
+        })
+      )
+    );
+
+    const result = adminNotifications.map((notification) => ({
+      id: notification.id,
+      type: "NEW_STORE_PENDING" as const,
+      title: notification.title,
+      message: notification.message,
+      userId: notification.userId,
+      storeId: notification.storeId,
+      createdAt: notification.createdAt,
+      data: notification.data,
+      status: notification.status,
+    }));
+
+    // Try to emit socket events (non-blocking, best effort)
+    triggerSocketEmission(result, "NEW_STORE_PENDING");
+
+    return { adminNotifications: result };
+  } catch (error) {
+    console.error("Error creating new store pending notification:", error);
+    throw error;
+  }
+}
+
+export async function createStoreApprovedNotification(
+  storeId: string,
+  userId: string,
+  storeName: string
+) {
+  try {
+    const sellerNotificationData: CreateNotificationData = {
+      type: "STORE_APPROVED",
+      title: "Store approved! 🎉",
+      message: `Congratulations! Your store "${storeName}" has been approved and is now active.`,
+      userId,
+      storeId,
+      createdAt: new Date(),
+      data: {
+        storeId,
+        storeName,
+        status: "ACTIVE",
+      },
+    };
+
+    const sellerNotification = await createNotification(sellerNotificationData);
+
+    const result = {
+      id: sellerNotification.id,
+      type: sellerNotification.type as "STORE_APPROVED",
+      title: sellerNotification.title,
+      message: sellerNotification.message,
+      userId: sellerNotification.userId,
+      storeId: sellerNotification.storeId,
+      createdAt: sellerNotification.createdAt,
+      data: sellerNotification.data,
+      status: sellerNotification.status,
+    };
+
+    // Try to emit socket event (non-blocking, best effort)
+    triggerSocketEmission([result], "STORE_APPROVED");
+
+    return {
+      sellerNotification: result,
+    };
+  } catch (error) {
+    console.error("Error creating store approved notification:", error);
     throw error;
   }
 }

@@ -758,6 +758,8 @@ enum NotificationType {
   LOW_STOCK
   REVIEW_RECEIVED
   SYSTEM_UPDATE
+  NEW_STORE_PENDING
+  STORE_APPROVED
 }
 
 enum NotificationStatus {

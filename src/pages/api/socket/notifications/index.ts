@@ -4,6 +4,8 @@ import {
   createNewOrderNotification,
   createOrderStatusChangeNotification,
   createPaymentNotification,
+  createNewStorePendingNotification,
+  createStoreApprovedNotification,
 } from "../../../../lib/notifications";
 
 export default async function handler(
@@ -23,13 +25,15 @@ export default async function handler(
       paymentStatus,
       amount,
       paymentMethod,
+      storeId,
+      storeName,
     } = req.body;
 
     if (!type) {
       return res.status(400).json({ error: "Notification type missing" });
     }
 
-    let notificationResult;
+    let notificationResult: any;
 
     if (type === "NEW_ORDER") {
       if (!orderId || !userId) {
@@ -39,9 +43,26 @@ export default async function handler(
       }
 
       notificationResult = await createNewOrderNotification(orderId, userId);
-    }
 
-    if (type === "ORDER_STATUS_CHANGE") {
+      // Emit notifications for order
+      if (notificationResult?.storeNotifications) {
+        for (const storeNotification of notificationResult.storeNotifications) {
+          if (storeNotification.storeId) {
+            res?.socket?.server?.io?.emit(
+              `notifications:store:${storeNotification.storeId}`,
+              storeNotification
+            );
+          }
+        }
+      }
+
+      if (notificationResult?.customerNotification) {
+        res?.socket?.server?.io?.emit(
+          `notifications:user:${userId}`,
+          notificationResult.customerNotification
+        );
+      }
+    } else if (type === "ORDER_STATUS_CHANGE") {
       if (!orderId || !userId || !newStatus) {
         return res.status(400).json({
           error: "Missing orderId, userId or newStatus",
@@ -53,11 +74,29 @@ export default async function handler(
         userId,
         newStatus
       );
-    }
-    if (type === "PAYMENT_RECEIVED" || type === "PAYMENT_FAILED") {
+
+      // Emit notifications for order status change
+      if (notificationResult?.storeNotifications) {
+        for (const storeNotification of notificationResult.storeNotifications) {
+          if (storeNotification.storeId) {
+            res?.socket?.server?.io?.emit(
+              `notifications:store:${storeNotification.storeId}`,
+              storeNotification
+            );
+          }
+        }
+      }
+
+      if (notificationResult?.customerNotification) {
+        res?.socket?.server?.io?.emit(
+          `notifications:user:${userId}`,
+          notificationResult.customerNotification
+        );
+      }
+    } else if (type === "PAYMENT_RECEIVED" || type === "PAYMENT_FAILED") {
       if (!orderId || !userId) {
         return res.status(400).json({
-          error: "Missing orderId, userId or newStatus",
+          error: "Missing orderId, userId or paymentStatus",
         });
       }
 
@@ -68,24 +107,69 @@ export default async function handler(
         amount,
         paymentMethod
       );
-    }
 
-    if (notificationResult?.storeNotifications) {
-      for (const storeNotification of notificationResult.storeNotifications) {
-        if (storeNotification.storeId) {
-          res?.socket?.server?.io?.emit(
-            `notifications:store:${storeNotification.storeId}`,
-            storeNotification
-          );
+      // Emit notifications for payment
+      if (notificationResult?.storeNotifications) {
+        for (const storeNotification of notificationResult.storeNotifications) {
+          if (storeNotification.storeId) {
+            res?.socket?.server?.io?.emit(
+              `notifications:store:${storeNotification.storeId}`,
+              storeNotification
+            );
+          }
         }
       }
-    }
 
-    if (notificationResult?.customerNotification) {
-      res?.socket?.server?.io?.emit(
-        `notifications:user:${userId}`,
-        notificationResult?.customerNotification
+      if (notificationResult?.customerNotification) {
+        res?.socket?.server?.io?.emit(
+          `notifications:user:${userId}`,
+          notificationResult.customerNotification
+        );
+      }
+    } else if (type === "NEW_STORE_PENDING") {
+      if (!storeId || !userId || !storeName) {
+        return res.status(400).json({
+          error: "Missing storeId, userId or storeName",
+        });
+      }
+
+      notificationResult = await createNewStorePendingNotification(
+        storeId,
+        userId,
+        storeName
       );
+
+      // Emit notification cho admin khi có store mới
+      if (notificationResult?.adminNotifications) {
+        for (const adminNotification of notificationResult.adminNotifications) {
+          if (adminNotification.userId) {
+            res?.socket?.server?.io?.emit(
+              `notifications:user:${adminNotification.userId}`,
+              adminNotification
+            );
+          }
+        }
+      }
+    } else if (type === "STORE_APPROVED") {
+      if (!storeId || !userId || !storeName) {
+        return res.status(400).json({
+          error: "Missing storeId, userId or storeName",
+        });
+      }
+
+      notificationResult = await createStoreApprovedNotification(
+        storeId,
+        userId,
+        storeName
+      );
+
+      // Emit notification cho seller khi store được approve
+      if (notificationResult?.sellerNotification) {
+        res?.socket?.server?.io?.emit(
+          `notifications:user:${notificationResult.sellerNotification.userId}`,
+          notificationResult.sellerNotification
+        );
+      }
     }
 
     return res.status(200).json(notificationResult);

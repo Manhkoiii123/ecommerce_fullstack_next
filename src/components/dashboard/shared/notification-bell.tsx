@@ -139,6 +139,12 @@ export function NotificationBell({
         return "⭐";
       case "LOW_STOCK":
         return "⚠️";
+      case "NEW_STORE_PENDING":
+        return "🏪";
+      case "STORE_APPROVED":
+        return "✅";
+      case "NEW_PRODUCT":
+        return "📦";
       default:
         return "📢";
     }
@@ -160,6 +166,12 @@ export function NotificationBell({
         return "bg-yellow-100 text-yellow-800";
       case "LOW_STOCK":
         return "bg-orange-100 text-orange-800";
+      case "NEW_STORE_PENDING":
+        return "bg-amber-100 text-amber-800";
+      case "STORE_APPROVED":
+        return "bg-emerald-100 text-emerald-800";
+      case "NEW_PRODUCT":
+        return "bg-indigo-100 text-indigo-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -188,7 +200,7 @@ export function NotificationBell({
         <Card className="absolute right-0 top-12 w-[400px] shadow-lg z-[101]">
           <CardContent className="p-0">
             <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold">Thông báo</h3>
+              <h3 className="font-semibold">Notifications</h3>
               {unreadCount > 0 && (
                 <Button
                   variant="ghost"
@@ -196,7 +208,7 @@ export function NotificationBell({
                   onClick={handleMarkAllAsRead}
                   className="text-xs"
                 >
-                  Đánh dấu tất cả đã đọc
+                  Mark all as read
                 </Button>
               )}
             </div>
@@ -224,12 +236,27 @@ export function NotificationBell({
                     }`}
                     onClick={() => {
                       handleMarkAsRead(notification.id);
-                      // Navigate to product detail if available
+
+                      // Admin notifications
+                      if (notification.type === "NEW_STORE_PENDING") {
+                        router.push("/dashboard/admin/stores");
+                        setIsOpen(false);
+                        return;
+                      }
+
+                      if (notification.type === "STORE_APPROVED") {
+                        router.push("/dashboard/seller");
+                        setIsOpen(false);
+                        return;
+                      }
+
+                      // Product notifications
                       if (notification.data?.productUrl) {
                         router.push(notification.data.productUrl);
                         setIsOpen(false);
                         return;
                       }
+
                       if (
                         notification.data?.productSlug &&
                         notification.data?.variantSlug
@@ -241,14 +268,28 @@ export function NotificationBell({
                         return;
                       }
 
-                      // Fallbacks for order notifications
+                      // Order notifications
                       if (notification.data?.orderId && userId) {
                         router.push(`/order/${notification.data.orderId}`);
-                      } else if (storeId) {
+                        setIsOpen(false);
+                        return;
+                      }
+
+                      if (notification.data?.orderId && storeId) {
+                        router.push(
+                          `/dashboard/seller/stores/${storeUrl}/orders`
+                        );
+                        setIsOpen(false);
+                        return;
+                      }
+
+                      // Default fallback for store notifications
+                      if (storeId) {
                         router.push(
                           `/dashboard/seller/stores/${storeUrl}/orders`
                         );
                       }
+
                       setIsOpen(false);
                     }}
                   >

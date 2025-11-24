@@ -117,7 +117,6 @@ const CartSummary: FC<Props> = ({ selectedItems, shippingFees }) => {
       toast.error(error.toString());
     }
   };
-  // Nếu không có sản phẩm nào được chọn, hiển thị thông báo
   if (selectedItems.length === 0) {
     return (
       <div className="relative py-4 px-6 bg-white">

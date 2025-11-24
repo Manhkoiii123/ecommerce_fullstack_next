@@ -50,6 +50,7 @@ export const createIngress = async (
 ) => {
   const self = await getSeft();
   const store = await getStorePageDetails(storeUrl);
+  console.log("🚀 ~ createIngress ~ store:", store);
 
   if (!store) {
     throw new Error("Store not found or access denied");
@@ -97,9 +98,10 @@ export const createIngress = async (
     throw new Error("Failed to create ingress");
   }
 
+
   const stream = await db.stream.findFirst({
     where: {
-      store: { url: storeUrl },
+      storeId: store.id,
     },
     select: { id: true },
   });

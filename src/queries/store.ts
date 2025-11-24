@@ -5,6 +5,10 @@ import { StoreDefaultShippingType, StoreStatus, StoreType } from "@/lib/types";
 import { checkIfUserFollowingStore } from "@/queries/product";
 import { clerkClient, currentUser } from "@clerk/nextjs/server";
 import { ShippingRate, Store } from "@prisma/client";
+import {
+  createNewStorePendingNotification,
+  createStoreApprovedNotification,
+} from "@/lib/notifications";
 
 export const upsertStore = async (store: Partial<Store>) => {
   try {
@@ -43,6 +47,13 @@ export const upsertStore = async (store: Partial<Store>) => {
       }
       throw new Error(errorMessage);
     }
+    // Kiểm tra xem store có tồn tại không để xác định có phải create mới
+    const isNewStore =
+      !store.id ||
+      !(await db.store.findUnique({
+        where: { id: store.id },
+      }));
+
     const storeDetails = await db.store.upsert({
       where: {
         id: store.id,
@@ -67,6 +78,18 @@ export const upsertStore = async (store: Partial<Store>) => {
       },
     });
 
+    // Chỉ gửi notification khi tạo mới store
+    if (isNewStore) {
+      try {
+        await createNewStorePendingNotification(
+          storeDetails.id,
+          user.id,
+          storeDetails.name
+        );
+      } catch (error) {
+        console.error("Failed to create notification:", error);
+      }
+    }
     return storeDetails;
   } catch (error) {
     throw error;
@@ -395,6 +418,19 @@ export const applySeller = async (store: StoreType) => {
       },
     });
 
+    // Gửi notification cho admin khi có store mới
+    try {
+      await createNewStorePendingNotification(
+        storeDetails.id,
+        user.id,
+        storeDetails.name
+      );
+      console.log(
+        "✅ Notification created successfully for new store application"
+      );
+    } catch (error) {
+      console.error("Failed to create notification:", error);
+    }
     return storeDetails;
   } catch (error) {
     throw error;
@@ -526,6 +562,16 @@ export const updateStoreStatus = async (
         role: "SELLER",
       },
     });
+
+    try {
+      await createStoreApprovedNotification(
+        updatedStore.id,
+        updatedStore.userId,
+        updatedStore.name
+      );
+    } catch (error) {
+      console.error("Failed to create notification:", error);
+    }
   }
 
   return updatedStore.status;

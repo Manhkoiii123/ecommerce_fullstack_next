@@ -11,13 +11,13 @@ interface KeyCardProps {
 const KeyCard = ({ value }: KeyCardProps) => {
   const [show, setShow] = useState(false);
   return (
-    <div className="rounded-xl bg-[#252731] p-6">
+    <div className="rounded-xl  p-6">
       <div className="flex items-start gap-x-10">
         <p className="font-semibold shrink-0">Stream Key</p>
         <div className="space-y-2 w-full">
           <div className="w-full flex items-center gap-x-2">
             <Input
-              className="bg-neutral-900/80 text-white border-none rounded-r-none focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0"
+              className=" border-none rounded-r-none focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0"
               value={value || ""}
               disabled
               type={show ? "text" : "password"}

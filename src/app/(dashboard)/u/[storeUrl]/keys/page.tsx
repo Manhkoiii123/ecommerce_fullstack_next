@@ -12,7 +12,7 @@ const KeysPage = async ({ params }: { params: { storeUrl: string } }) => {
     throw new Error("Stream not found");
   }
   return (
-    <div className="text-white p-6">
+    <div className="!pointer-events-nonetext-black p-6">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">Keys & URLs</h1>
         <ConnectModal storeUrl={params.storeUrl} />
