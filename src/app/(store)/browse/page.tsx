@@ -52,16 +52,18 @@ const BrowsePage = async ({
         <ProductFilters queries={searchParams} />
       </div>
       <div className="ml-[190px] md:ml-[220px] pt-[140px] lg:pt-20">
-        <div className="sticky top-[64px] z-10 px-4 py-2 flex items-center">
+        <div className="sticky top-[64px] z-10 px-4 py-2 flex items-center justify-between">
           <ProductSort />
         </div>
 
-        <div className="mt-4 px-4 w-full overflow-y-auto max-h-[calc(100vh-155px)] pb-28 scrollbar flex flex-wrap">
-          {products.map((product, i) => (
-            <ProductCard key={product.id + product.slug} product={product} />
-          ))}
+        <div className="flex items-center flex-col overflow-y-auto max-h-[calc(100vh-155px)]  ">
+          <div className="mt-4 px-4 w-full  scrollbar flex flex-wrap pb-28">
+            {products.map((product, i) => (
+              <ProductCard key={product.id + product.slug} product={product} />
+            ))}
+          </div>
+          <ProductPagination page={currentPage} totalPages={totalPages} />
         </div>
-        <ProductPagination page={currentPage} totalPages={totalPages} />
       </div>
     </div>
   );

@@ -181,11 +181,11 @@ export function NotificationBell({
     <div className="relative">
       <Button
         variant="ghost"
-        size="icon"
+        // size="icon"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative"
+        className="relative w-8 h-8"
       >
-        <Bell className="h-5 w-5" />
+        <Bell className="!h-6 !w-6" />
         {unreadCount > 0 && (
           <Badge
             variant="destructive"
@@ -225,7 +225,7 @@ export function NotificationBell({
               ) : notifications.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>Chưa có thông báo nào</p>
+                  <p>Don&apos;t have any notifications</p>
                 </div>
               ) : (
                 notifications.map((notification) => (

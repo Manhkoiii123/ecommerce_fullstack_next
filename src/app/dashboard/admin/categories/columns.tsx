@@ -153,7 +153,7 @@ const CellActions: React.FC<CellActionsProps> = ({ rowData }) => {
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <AlertDialogTrigger asChild>
-            <DropdownMenuItem className="flex gap-2" onClick={() => {}}>
+            <DropdownMenuItem className="flex gap-2">
               <Trash size={15} /> Delete category
             </DropdownMenuItem>
           </AlertDialogTrigger>

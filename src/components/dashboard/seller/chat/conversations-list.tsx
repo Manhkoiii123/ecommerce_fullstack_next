@@ -23,6 +23,7 @@ interface Conversation {
     id: string;
     name: string;
     picture: string;
+    email: string;
     onlineStatus?: {
       isOnline: boolean;
       lastSeenAt: string;
@@ -98,15 +99,15 @@ export default function SellerConversationsList({
     };
 
     socket.on(`chat:store:${storeId}:unread`, handleUnreadUpdate);
-    
+
     // Listen to all conversations for this store
-    conversations?.forEach(conv => {
+    conversations?.forEach((conv) => {
       socket.on(`chat:${conv.id}:messages`, handleNewMessage);
     });
 
     return () => {
       socket.off(`chat:store:${storeId}:unread`, handleUnreadUpdate);
-      conversations?.forEach(conv => {
+      conversations?.forEach((conv) => {
         socket.off(`chat:${conv.id}:messages`, handleNewMessage);
       });
     };
@@ -216,7 +217,7 @@ export default function SellerConversationsList({
                       alt={conversation.user.name}
                       width={48}
                       height={48}
-                      className="rounded-full object-cover"
+                      className="rounded-full object-cover "
                     />
                     {conversation.user.onlineStatus?.isOnline && (
                       <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
@@ -226,7 +227,7 @@ export default function SellerConversationsList({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <h3 className="font-medium text-sm truncate">
-                        {conversation.user.name}
+                        {conversation.user.email}
                       </h3>
                       <div className="flex items-center space-x-2">
                         {unreadCounts[conversation.id] > 0 && (

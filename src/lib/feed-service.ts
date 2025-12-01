@@ -1,4 +1,4 @@
-// import { getSeft } from "@/lib/auth-service";
+import { getSeft } from "@/lib/auth-service";
 import { db } from "@/lib/db";
 
 export const getStreams = async () => {
@@ -37,4 +37,13 @@ export const getStreams = async () => {
   });
 
   return streams;
+};
+
+export const checkHaveSomeStoreIsLive = async () => {
+  const liveStream = await db.stream.findFirst({
+    where: {
+      isLive: true,
+    },
+  });
+  return liveStream ? true : false;
 };

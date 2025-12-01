@@ -17,9 +17,9 @@ import { getHomeDataDynamic } from "@/queries/home";
 import { getProducts } from "@/queries/product";
 import Image from "next/image";
 export default async function Home() {
-  const productsData = await getProducts();
+  const productsData = await getProducts(undefined, undefined, undefined, 6);
   const { products } = productsData;
- 
+
   const {
     products_mens_fashion: products_laptop,
     products_flash_sale: products_flash_sale,
@@ -108,7 +108,7 @@ export default async function Home() {
                   <span>More to love</span>
                   <div className="h-[1px] flex-1 border-t-[2px] border-t-[hsla(0,0%,59.2%,.3)] my-4 mx-[14px]" />
                 </div>
-                <div className="mt-7 bg-white justify-center flex flex-wrap min-[1530px]:grid min-[1530px]:grid-cols-7 p-4 pb-16 rounded-md">
+                <div className="mt-7 bg-white justify-center flex flex-wrap min-[1530px]:grid min-[1530px]:grid-cols-6 p-4 pb-16 rounded-md">
                   {products.map((product, i) => (
                     <ProductCard key={i} product={product} />
                   ))}

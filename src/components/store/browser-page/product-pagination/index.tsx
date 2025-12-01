@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 interface Props {
@@ -22,7 +23,6 @@ export default function ProductPagination({ page, totalPages }: Props) {
     }
   };
 
-  // Render dấu ...
   const renderDot = (key: number) => (
     <span
       key={key}
@@ -103,35 +103,30 @@ export default function ProductPagination({ page, totalPages }: Props) {
   };
 
   return (
-    <div className="flex flex-wrap justify-center mt-6">
-      {/* Prev button */}
+    <div className="flex flex-wrap justify-center ">
       {page === 1 ? (
         <span className="flex items-center justify-center px-3 py-2 mx-2 border bg-white/60 cursor-not-allowed rounded-sm">
-          Prev
+          <ArrowLeft className="w-3 inline-block" />
         </span>
       ) : (
         <span
           onClick={() => handleChangePage(page - 1)}
           className="flex items-center justify-center px-3 py-2 mx-2 bg-white border cursor-pointer hover:border-gray-300 rounded-sm"
         >
-          Prev
+          <ArrowLeft className="w-3 inline-block" />
         </span>
       )}
-
-      {/* Pagination numbers */}
       {renderPagination()}
-
-      {/* Next button */}
       {page === totalPages ? (
         <span className="flex items-center justify-center px-3 py-2 mx-2 border bg-white/60 cursor-not-allowed rounded-sm">
-          Next
+          <ArrowRight className="w-3 inline-block" />
         </span>
       ) : (
         <span
           onClick={() => handleChangePage(page + 1)}
           className="flex items-center justify-center px-3 py-2 mx-2 bg-white border cursor-pointer hover:border-gray-300 rounded-sm"
         >
-          Next
+          <ArrowRight className="w-3 inline-block" />
         </span>
       )}
     </div>

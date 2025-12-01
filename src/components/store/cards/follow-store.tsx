@@ -7,22 +7,27 @@ import { useRouter } from "next/navigation";
 import { Dispatch, FC, SetStateAction, useState } from "react";
 import toast from "react-hot-toast";
 import { PulseLoader } from "react-spinners";
+import axios from "axios";
 
 interface Props {
   id: string;
   isUserFollowingStore: boolean;
   setFollowersCount?: Dispatch<SetStateAction<number>>;
+  storeName: string;
 }
 
 const FollowStore: FC<Props> = ({
   id,
   isUserFollowingStore,
   setFollowersCount,
+  storeName,
 }) => {
   const [following, setFollowing] = useState<boolean>(isUserFollowingStore);
   const [loading, setLoading] = useState<boolean>(false);
+  const [chatLoading, setChatLoading] = useState<boolean>(false);
   const user = useUser();
   const router = useRouter();
+
   const handleStoreFollow = async () => {
     if (!user.isSignedIn) router.push("/sign-in");
     try {
@@ -42,6 +47,31 @@ const FollowStore: FC<Props> = ({
       toast.error("Something happend, Try again later !");
     }
   };
+
+  const handleChatClick = async () => {
+    if (!user.isSignedIn) {
+      router.push("/sign-in");
+      return;
+    }
+
+    setChatLoading(true);
+    try {
+      // Create or find conversation
+      await axios.post("/api/socket/messages", {
+        content: `Hi ${storeName}! I'm interested in your products.`,
+        storeId: id,
+      });
+
+      // Navigate to chat
+      router.push("/profile/chat");
+    } catch (error) {
+      console.error("Failed to start chat:", error);
+      toast.error("Failed to start chat. Please try again!");
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
   return (
     <div className="w-fit  md:w-96">
       <div className="flex items-center justify-between rounded-xl py-3 px-4">
@@ -83,9 +113,20 @@ const FollowStore: FC<Props> = ({
               </>
             )}
           </div>
-          <div className="flex items-center border border-black rounded-full cursor-pointer text-base font-bold h-9 mx-2 px-4 bg-black text-white">
-            <MessageSquareMore className="w-4 me-2" />
-            <span>Message</span>
+          <div
+            className="flex items-center border border-black rounded-full cursor-pointer text-base font-bold h-9 mx-2 px-4 bg-black text-white hover:bg-gray-800"
+            onClick={handleChatClick}
+          >
+            {chatLoading ? (
+              <div className="w-full flex justify-center">
+                <PulseLoader size={5} color="#fff" />
+              </div>
+            ) : (
+              <>
+                <MessageSquareMore className="w-4 me-2" />
+                <span>Message</span>
+              </>
+            )}
           </div>
         </div>
       </div>

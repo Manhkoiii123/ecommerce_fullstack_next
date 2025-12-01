@@ -28,6 +28,7 @@ const Following = ({ data }: FollowingProps) => {
             username={user.name}
             imageUrl={user.logo}
             isLive={user.stream?.isLive}
+            storeUrl={user.url}
           />
         ))}
       </ul>

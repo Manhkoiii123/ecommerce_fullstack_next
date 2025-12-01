@@ -60,6 +60,7 @@ export default function StoreDEetails({
               id={details.id}
               isUserFollowingStore={details.isUserFollowingStore}
               setFollowersCount={setFollowersCount}
+              storeName={name}
             />
           </div>
         </div>

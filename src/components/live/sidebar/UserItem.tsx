@@ -13,11 +13,12 @@ interface UserItemProps {
   username: string;
   imageUrl: string;
   isLive?: boolean;
+  storeUrl: string;
 }
-const UserItem = ({ imageUrl, username, isLive }: UserItemProps) => {
+const UserItem = ({ imageUrl, username, isLive, storeUrl }: UserItemProps) => {
   const pathname = usePathname();
   const { collapsed } = useSidebar((state) => state);
-  const href = `/${username}`;
+  const href = `/${storeUrl}`;
   const isActive = pathname === href;
   return (
     <Button

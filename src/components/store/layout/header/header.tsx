@@ -8,6 +8,8 @@ import { Country } from "@/lib/types";
 import CountryLanguageCurrencySelector from "@/components/store/layout/header/country-lang-curr-selector";
 import { NotificationBell } from "@/components/dashboard/shared/notification-bell";
 import { currentUser } from "@clerk/nextjs/server";
+import LiveButton from "@/components/store/layout/header/live-button";
+import { checkHaveSomeStoreIsLive } from "@/lib/feed-service";
 
 export default async function Header() {
   const user = await currentUser();
@@ -20,6 +22,7 @@ export default async function Header() {
     region: "",
   };
 
+  const isLive = await checkHaveSomeStoreIsLive();
   if (userCountryCookie) {
     userCountry = JSON.parse(userCountryCookie.value) as Country;
   }
@@ -38,7 +41,7 @@ export default async function Header() {
           </div>
           <Search />
         </div>
-        <div className="hidden lg:flex w-full lg:w-fit lg:mt-2 justify-end mt-1.5 pl-6">
+        <div className="hidden lg:flex w-full lg:w-fit lg:mt-2 justify-end mt-1.5 pl-6 lg:gap-2 items-center">
           <div className="lg:flex">
             <DownloadApp />
           </div>
@@ -46,6 +49,7 @@ export default async function Header() {
           <UserMenu />
           {user && <Cart />}
           {user && <NotificationBell userId={user?.id} />}
+          <LiveButton isLive={isLive} />
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 "use client";
 import UserItem, { UserItemSkeleton } from "@/components/live/sidebar/UserItem";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSidebar } from "@/store/use-sidebar";
 import { Store } from "@prisma/client";
 interface RecommendedProps {
@@ -11,22 +12,25 @@ const Recommended = ({ data }: RecommendedProps) => {
   const { collapsed } = useSidebar((state) => state);
   const showLabel = !collapsed && data.length > 0;
   return (
-    <div>
+    <div className="flex flex-col h-full">
       {showLabel && (
         <div className="pl-6 mb-4">
           <p className="text-sm text-muted-foreground">Recommeded</p>
         </div>
       )}
-      <ul className="space-y-2 px-2">
-        {data.map((user) => (
-          <UserItem
-            key={user.id}
-            username={user.name}
-            imageUrl={user.logo}
-            isLive={user.stream?.isLive}
-          />
-        ))}
-      </ul>
+      <ScrollArea>
+        <ul className="space-y-2 px-2">
+          {data.map((user) => (
+            <UserItem
+              key={user.id}
+              username={user.name}
+              imageUrl={user.logo}
+              isLive={user.stream?.isLive}
+              storeUrl={user.url}
+            />
+          ))}
+        </ul>
+      </ScrollArea>
     </div>
   );
 };
