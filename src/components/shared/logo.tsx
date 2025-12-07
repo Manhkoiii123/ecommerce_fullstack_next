@@ -10,15 +10,14 @@ interface LogoProps {
   width: string;
   height: string;
   user?: any;
+  storeUrl?: string;
 }
 
-const Logo: FC<LogoProps> = ({ width, height, user }) => {
-  const searchParams = useSearchParams();
-  const storeUrl = searchParams?.get("storeUrl");
-  const link =
-    user && user?.privateMetadata.role === "SELLER"
-      ? `/dashboard/seller/stores/${storeUrl}`
-      : "/";
+const Logo: FC<LogoProps> = ({ width, height, user, storeUrl }) => {
+  // const searchParams = useSearchParams();
+
+  // const storeUrl = searchParams?.get("storeUrl");
+  const link = storeUrl ? `/dashboard/seller/stores/${storeUrl}` : "/";
   return (
     <div className="z-50 " style={{ width: width, height: height }}>
       <Link href={link ? link : "/"}>

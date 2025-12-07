@@ -87,6 +87,7 @@ interface DashboardOverviewProps {
   selectedYear: number;
   selectedMonth: number;
   onPeriodChange: (year: number, month: number) => void;
+  storeUrl: string;
 }
 
 export const DashboardOverview = ({
@@ -99,6 +100,7 @@ export const DashboardOverview = ({
   selectedYear,
   selectedMonth,
   onPeriodChange,
+  storeUrl,
 }: DashboardOverviewProps) => {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -224,7 +226,7 @@ export const DashboardOverview = ({
       </div>
 
       {/* Orders at Risk Section */}
-      <OrdersAtRisk storeUrl={monthlyStats ? undefined : undefined} />
+      <OrdersAtRisk storeUrl={monthlyStats ? storeUrl : storeUrl} />
 
       {/* Yearly Summary - Chỉ hiển thị khi không chọn tháng cụ thể */}
       {!monthlyStats && (

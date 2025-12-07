@@ -91,6 +91,7 @@ export const DashboardPage = ({ storeUrl }: DashboardExampleProps) => {
       selectedYear={selectedYear}
       selectedMonth={selectedMonth}
       onPeriodChange={changePeriod}
+      storeUrl={storeUrl}
     />
   );
 };

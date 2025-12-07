@@ -22,6 +22,7 @@ interface TopStoresBySalesTableProps {
     logo: string | null;
     status: string;
     owner: string;
+    ownerEmail: string;
     totalSales: number;
     productsCount: number;
     ordersCount: number;
@@ -120,7 +121,7 @@ export const TopStoresBySalesTable = ({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm">{store.owner}</div>
+                    <div className="text-sm">{store.ownerEmail}</div>
                   </TableCell>
                   <TableCell>
                     <Badge variant={getStatusVariant(store.status)}>
@@ -139,14 +140,16 @@ export const TopStoresBySalesTable = ({
                   <TableCell className="text-right">
                     {store.ordersCount}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <Link
-                      href={`/${store.url}`}
-                      className="text-primary hover:underline text-sm"
-                    >
-                      View Store
-                    </Link>
-                  </TableCell>
+                  {store.status === "ACTIVE" && (
+                    <TableCell className="text-right">
+                      <Link
+                        href={`/store/${store.url}`}
+                        className="text-primary hover:underline text-sm"
+                      >
+                        View Store
+                      </Link>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

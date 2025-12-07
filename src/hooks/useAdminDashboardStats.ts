@@ -56,7 +56,7 @@ export const useAdminDashboardStats = (days: number = 30) => {
           categoriesWithStats,
         ] = await Promise.all([
           getAdminDashboardStats(),
-          getTopStoresBySales(10),
+          getTopStoresBySales(3),
           getNewlyCreatedStores(newStoresDays),
           getProductsBySubCategory(),
           getNewProductsBySubCategory(newStoresDays),

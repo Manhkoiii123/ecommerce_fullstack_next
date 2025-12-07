@@ -231,7 +231,7 @@ const ProductPageContainer = ({
                   />
                   <div className="mt-3 space-y-3">
                     <ShippingDetails
-                      quantity={1}
+                      quantity={productToBeAddedToCart.quantity}
                       shippingDetails={shippingDetails}
                       weight={productData?.weight || 0}
                       freeShippingForAllCountries={

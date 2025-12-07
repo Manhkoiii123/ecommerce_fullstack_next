@@ -1,7 +1,12 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { StoreDefaultShippingType, StoreStatus, StoreType } from "@/lib/types";
+import {
+  OrderStatus,
+  StoreDefaultShippingType,
+  StoreStatus,
+  StoreType,
+} from "@/lib/types";
 import { checkIfUserFollowingStore } from "@/queries/product";
 import { clerkClient, currentUser } from "@clerk/nextjs/server";
 import { ShippingRate, Store } from "@prisma/client";
@@ -1445,79 +1450,73 @@ export const getStoreDashboardStatsByPeriod = async (
 };
 
 // Auto-cancel unpaid orders after 3 days
-export const autoCancelUnpaidOrders = async () => {
+export const autoCancelUnpaidOrders = async (storeUrl?: string) => {
   try {
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    const orderUnpaid = await getOrdersAtRiskOfCancellation(storeUrl);
 
-    // Find all unpaid orders older than 3 days
-    const unpaidOrders = await db.order.findMany({
-      where: {
-        paymentStatus: "Pending",
-        createdAt: {
-          lt: threeDaysAgo,
-        },
-      },
-      include: {
-        groups: {
+    const cancelledOrders = await Promise.all(
+      orderUnpaid.map(async (o) => {
+        const order = await db.orderGroup.findUnique({
+          where: { id: o.id },
           include: {
             items: true,
-          },
-        },
-        user: {
-          select: {
-            email: true,
-            name: true,
-          },
-        },
-      },
-    });
-
-    if (unpaidOrders.length === 0) {
-      console.log("No unpaid orders older than 3 days found");
-      return { cancelled: 0, message: "No orders to cancel" };
-    }
-
-    const cancelledOrders = [];
-
-    for (const order of unpaidOrders) {
-      try {
-        // Update order status to cancelled
-        await db.order.update({
-          where: { id: order.id },
-          data: {
-            paymentStatus: "Cancelled",
-            orderStatus: "Cancelled",
-            updatedAt: new Date(),
+            order: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                    name: true,
+                  },
+                },
+              },
+            },
           },
         });
 
-        // Update all order groups to cancelled
-        await db.orderGroup.updateMany({
-          where: { orderId: order.id },
-          data: {
-            status: "Cancelled",
-            updatedAt: new Date(),
-          },
+        if (!order) throw new Error("Order not found.");
+
+        await db.$transaction(async (tx) => {
+          await tx.orderGroup.updateMany({
+            where: { id: o.id },
+            data: {
+              status: "Cancelled",
+              updatedAt: new Date(),
+            },
+          });
+
+          await tx.orderItem.updateMany({
+            where: { id: { in: order.items.map((i) => i.id) } },
+            data: {
+              status: "Cancelled",
+              updatedAt: new Date(),
+            },
+          });
+
+          for (const group of order.items) {
+            await tx.size.update({
+              where: { id: group.sizeId },
+              data: {
+                quantity: {
+                  increment: group.quantity,
+                },
+              },
+            });
+
+            await tx.product.update({
+              where: { id: group.productId },
+              data: {
+                sales: {
+                  decrement: group.quantity,
+                },
+              },
+            });
+          }
         });
 
-        // Note: Inventory restoration would need to be implemented based on your specific inventory management system
-        // This is a placeholder for the inventory restoration logic
-
-        cancelledOrders.push({
-          orderId: order.id,
-          customerEmail: order.user?.email || "Unknown",
-          totalAmount: order.total,
-          cancelledAt: new Date(),
-        });
-
-        console.log(
-          `Order ${order.id} cancelled automatically after 3 days of non-payment`
-        );
-      } catch (error) {
-        console.error(`Error cancelling order ${order.id}:`, error);
-      }
-    }
+        return order;
+      })
+    );
 
     return {
       cancelled: cancelledOrders.length,
@@ -1536,38 +1535,27 @@ export const getOrdersAtRiskOfCancellation = async (storeUrl?: string) => {
     const twoDaysAgo = new Date();
     twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
 
+    const store = await db.store.findFirst({ where: { url: storeUrl } });
     const whereClause: any = {
-      paymentStatus: "Pending",
+      status: "Pending",
       createdAt: {
         lt: twoDaysAgo,
       },
     };
 
     if (storeUrl) {
-      whereClause.groups = {
-        some: {
-          store: {
-            url: storeUrl,
-          },
-        },
-      };
+      whereClause.storeId = store?.id;
     }
 
-    const atRiskOrders = await db.order.findMany({
+    const atRiskOrders = await db.orderGroup.findMany({
       where: whereClause,
       include: {
-        user: {
-          select: {
-            email: true,
-            name: true,
-          },
-        },
-        groups: {
+        order: {
           include: {
-            store: {
+            user: {
               select: {
+                email: true,
                 name: true,
-                url: true,
               },
             },
           },
@@ -1580,14 +1568,14 @@ export const getOrdersAtRiskOfCancellation = async (storeUrl?: string) => {
 
     return atRiskOrders.map((order) => ({
       id: order.id,
-      customerEmail: order.user?.email || "Unknown",
-      customerName: order.user?.name || "Unknown",
+      customerEmail: order.order.user.email || "Unknown",
+      customerName: order.order.user.name || "Unknown",
       totalAmount: order.total,
       createdAt: order.createdAt,
       daysUnpaid: Math.floor(
         (Date.now() - order.createdAt.getTime()) / (1000 * 60 * 60 * 24)
       ),
-      stores: order.groups.map((og) => og.store.name).join(", "),
+      stores: store?.name,
       willBeCancelledIn:
         3 -
         Math.floor(

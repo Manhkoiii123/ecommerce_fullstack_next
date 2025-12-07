@@ -147,7 +147,7 @@ const FlashSaleDetails: FC<FlashSaleDetailsProps> = ({ data, storeUrl }) => {
     try {
       // Get store info and products from the specific storeUrl
       const storeData = await getStorePageDetails(storeUrl);
-      const productsData = await getProducts({ store: storeUrl });
+      const productsData = await getProducts({ store: storeUrl }, "", 1, 9999);
 
       if (storeData) {
         setStore({ id: storeData.id, name: storeData.name, url: storeUrl });
@@ -305,7 +305,7 @@ const FlashSaleDetails: FC<FlashSaleDetailsProps> = ({ data, storeUrl }) => {
       if (data?.id) {
         router.refresh();
       } else {
-        router.push("/dashboard/seller");
+        router.push(`/dashboard/seller/stores/${storeUrl}/flash-sales`);
         router.refresh();
       }
     } catch (error: any) {
@@ -540,7 +540,7 @@ const FlashSaleDetails: FC<FlashSaleDetailsProps> = ({ data, storeUrl }) => {
                   )}
                 />
 
-                {form.watch("discountType") === "FIXED_AMOUNT" && (
+                {/* {form.watch("discountType") === "FIXED_AMOUNT" && (
                   <FormField
                     control={form.control}
                     name="maxDiscount"
@@ -563,7 +563,7 @@ const FlashSaleDetails: FC<FlashSaleDetailsProps> = ({ data, storeUrl }) => {
                       </FormItem>
                     )}
                   />
-                )}
+                )} */}
               </div>
             </div>
 

@@ -105,10 +105,8 @@ export const NewlyCreatedStoresTable = ({
                   </TableCell>
                   <TableCell>
                     <div>
-                      <div className="font-medium">{store.owner}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {store.ownerEmail}
-                      </div>
+                      {/* <div className="font-medium">{store.owner}</div> */}
+                      <div className="font-medium">{store.ownerEmail}</div>
                     </div>
                   </TableCell>
                   <TableCell>

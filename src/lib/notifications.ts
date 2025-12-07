@@ -206,7 +206,7 @@ export async function createOrderStatusChangeNotification(
         break;
       default:
         title = "Order status updated 📝";
-        message = `The status of order #${orderId} has changed from ${oldStatus} to ${newStatus}.`;
+        message = `The status of order #${orderId} has changed to ${newStatus}.`;
     }
 
     const storeNotifications: CreateNotificationData[] = order.groups.map(

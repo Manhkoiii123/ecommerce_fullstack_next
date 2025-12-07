@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Clock, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import { OrderStatus } from "@/lib/types";
 
 interface OrderAtRisk {
   id: string;
@@ -52,15 +53,29 @@ export const OrdersAtRisk = ({ storeUrl }: OrdersAtRiskProps) => {
   const handleAutoCancel = async () => {
     try {
       setIsAutoCancelling(true);
-      const response = await fetch("/api/auto-cancel-orders", {
-        method: "POST",
-      });
+      const response = await fetch(
+        `/api/auto-cancel-orders?storeUrl=${storeUrl || ""}`,
+        {
+          method: "POST",
+        }
+      );
       const data = await response.json();
 
       if (data.success) {
         toast.success(`Successfully cancelled ${data.cancelled} orders`);
-        // Refresh the list
         fetchOrdersAtRisk();
+        data.cancelledOrders.forEach(async (o: any) => {
+          await fetch("/api/socket/notifications", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "ORDER_STATUS_CHANGE",
+              orderId: o.orderId,
+              userId: o.order.userId,
+              newStatus: OrderStatus.Cancelled,
+            }),
+          });
+        });
       } else {
         toast.error("Failed to auto-cancel orders");
       }
@@ -184,7 +199,7 @@ export const OrdersAtRisk = ({ storeUrl }: OrdersAtRiskProps) => {
                           {riskLevel.level} Risk
                         </Badge>
                         <span className="text-sm text-muted-foreground">
-                          Order #{order.id.slice(-8)}
+                          Order #{order.id}
                         </span>
                       </div>
                       <div className="text-right">
@@ -200,7 +215,6 @@ export const OrdersAtRisk = ({ storeUrl }: OrdersAtRiskProps) => {
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-muted-foreground">Customer:</span>
-                        <div className="font-medium">{order.customerName}</div>
                         <div className="text-muted-foreground">
                           {order.customerEmail}
                         </div>

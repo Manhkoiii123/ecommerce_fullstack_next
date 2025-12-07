@@ -38,7 +38,8 @@ const BrowsePage = async ({
       color: Array.isArray(color) ? color : color ? [color] : undefined,
     },
     sort,
-    (page && Number(page)) || 1
+    (page && Number(page)) || 1,
+    7
   );
   const { products, currentPage, totalPages, totalCount } = products_data;
 

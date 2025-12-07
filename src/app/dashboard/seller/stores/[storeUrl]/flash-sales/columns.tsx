@@ -237,7 +237,7 @@ const CellActions: React.FC<CellActionsProps> = ({ rowData }) => {
             className="flex gap-2"
             onClick={() => {
               setOpen(
-                <CustomModal>
+                <CustomModal maxWidth="!max-w-2xl">
                   <FlashSaleDetails
                     data={{
                       ...rowData,
