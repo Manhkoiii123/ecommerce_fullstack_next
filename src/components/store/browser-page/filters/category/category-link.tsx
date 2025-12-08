@@ -24,6 +24,7 @@ export default function CategoryLink({
     if (category === categoryQuery) return;
     params.delete("subCategory");
     params.set("category", category);
+    params.set("page", "1");
     replaceParams();
   };
 
@@ -31,8 +32,10 @@ export default function CategoryLink({
     if (category.url !== categoryQuery) params.set("category", category.url);
     if (sub === subCategoryQuery) {
       params.delete("subCategory");
+      params.set("page", "1");
     } else {
       params.set("subCategory", sub);
+      params.set("page", "1");
     }
     replaceParams();
   };

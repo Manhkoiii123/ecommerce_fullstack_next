@@ -804,8 +804,8 @@ export const getProducts = async (
   const products = await db.product.findMany({
     where: wherClause,
     orderBy,
-    take: limit,
-    skip: skip,
+    // take: limit,
+    // skip: skip,
     include: {
       variants: {
         include: {
@@ -819,8 +819,8 @@ export const getProducts = async (
   type VariantWithSizes = ProductVariant & { sizes: Size[] };
 
   products.sort((a, b) => {
-    const getMinPrice = (product: any) =>
-      Math.min(
+    const getMinPrice = (product: any) => {
+      return Math.min(
         ...product.variants.flatMap((variant: VariantWithSizes) =>
           variant.sizes.map((size) => {
             let discount = size.discount;
@@ -830,6 +830,7 @@ export const getProducts = async (
         ),
         Infinity
       );
+    };
 
     const minPriceA = getMinPrice(a);
     const minPriceB = getMinPrice(b);
@@ -842,6 +843,7 @@ export const getProducts = async (
 
     return 0;
   });
+
   const productsWithFilteredVariants = products.map((product) => {
     const filteredVariants = product.variants;
 
@@ -872,10 +874,15 @@ export const getProducts = async (
       variantImages,
     };
   });
+
+  const start = (page - 1) * pageSize;
+  const end = start + pageSize;
+
+  const pageData = productsWithFilteredVariants.slice(start, end);
   const totalCount = await db.product.count({ where: wherClause });
   const totalPages = Math.ceil(totalCount / pageSize);
   return {
-    products: productsWithFilteredVariants,
+    products: pageData,
     totalPages,
     currentPage,
     pageSize,

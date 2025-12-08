@@ -18,9 +18,11 @@ export default function ColorCircle({ color }: { color: string }) {
     if (existed_color) {
       const newColors = colorQueryArray.filter((c) => c !== color);
       params.delete("color");
+      params.set("page", "1");
       newColors.forEach((color) => params.append("color", color)); // Add back the remaining colors
     } else {
       params.append("color", color);
+      params.set("page", "1");
     }
     replaceParams();
   };

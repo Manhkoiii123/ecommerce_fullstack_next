@@ -18,9 +18,11 @@ export default function SizeLink({ size }: { size: string }) {
     if (existed_size) {
       const newSizes = sizeQueryArray.filter((s) => s !== size);
       params.delete("size");
+      params.set("page", "1");
       newSizes.forEach((size) => params.append("size", size));
     } else {
       params.append("size", size);
+      params.set("page", "1");
     }
     replaceParams();
   };

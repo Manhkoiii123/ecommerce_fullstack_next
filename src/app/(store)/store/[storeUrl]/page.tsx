@@ -24,9 +24,12 @@ export default async function StorePage({
         <div className="mt-8 md:mt-14">
           <div className="flex ">
             <div className=" lg:top-16 left-2 md:left-4 mt-3">
-              <ProductFilters queries={searchParams} />
+              <ProductFilters
+                queries={searchParams}
+                storeUrl={params.storeUrl}
+              />
             </div>
-            <div className="pt-4 ">
+            <div className="pt-4 flex-1">
               <div className="md:ml-5">
                 <ProductSort />
               </div>

@@ -8,15 +8,25 @@ import { cn } from "@/lib/utils";
 import { addToWishlist } from "@/queries/user";
 import { Heart } from "lucide-react";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReactStars from "react-rating-stars-component";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
+import { Size } from "@prisma/client";
 const ProductCard = ({ product }: { product: ProductType }) => {
   const { name, slug, rating, sales, variantImages, variants, id } = product;
   const [variant, setVariant] = useState<VariantSimplified>(variants[0]);
   const { variantSlug, variantName, images, sizes } = variant;
+  const [listSize, setListSize] = useState<Size[]>([]);
+
+  useEffect(() => {
+    setListSize((prev) => {
+      const sizes = variants.flatMap((variant) => variant.sizes);
+      return sizes;
+    });
+  }, [variants]);
+
   const router = useRouter();
   const { userId } = useAuth();
   const requireLogin = () => {
@@ -74,7 +84,7 @@ const ProductCard = ({ product }: { product: ProductType }) => {
             </div>
             {/* )}  */}
             {/* Price */}
-            <FlashSalePrice productId={id} sizes={sizes} isCard />
+            <FlashSalePrice productId={id} sizes={listSize} isCard />
           </button>
         </div>
         <div className="hidden  group-hover:block absolute -left-[1px] bg-white border border-t-0  w-[calc(100%+2px)] px-4 pb-4 rounded-b-3xl shadow-xl z-30 space-y-2">

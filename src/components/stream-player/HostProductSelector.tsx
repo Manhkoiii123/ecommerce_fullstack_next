@@ -48,7 +48,7 @@ export default function HostProductSelector({
 
   return (
     <div className="border rounded-md p-3">
-      <div className="font-semibold mb-2">Chọn sản phẩm hiển thị</div>
+      <div className="font-semibold mb-2">Select products</div>
       <div className="max-h-60 overflow-auto space-y-2">
         {allProducts.map((p) => (
           <label key={p.id} className="flex items-center gap-2 text-sm">
@@ -61,12 +61,11 @@ export default function HostProductSelector({
         ))}
       </div>
       <div className="text-xs text-muted-foreground mt-2">
-        Khi check, sản phẩm sẽ lên đầu danh sách. Người xem chỉ thấy danh sách
-        đã chọn.
+        Note: Only products from the same store can be selected
       </div>
       <div className="mt-2">
         <Button size="sm" disabled={saving}>
-          {saving ? "Đang lưu..." : "Lưu thay đổi"}
+          {saving ? "Saving..." : "Save"}
         </Button>
       </div>
     </div>

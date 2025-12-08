@@ -132,7 +132,7 @@ export const NewlyCreatedStoresTable = ({
                       Manage
                     </Link>
                     <Link
-                      href={`/${store.url}`}
+                      href={`/store/${store.url}`}
                       className="text-muted-foreground hover:underline text-sm"
                     >
                       View

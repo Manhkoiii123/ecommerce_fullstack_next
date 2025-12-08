@@ -303,7 +303,6 @@ export async function createPaymentNotification(
       message = `Order #${orderId} has been successfully refunded.`;
     }
 
-    // 🔹 Notifications cho tất cả các store trong order
     const storeNotifications = order.groups.map((group) => {
       const storeId = group.storeId;
 

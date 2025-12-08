@@ -103,7 +103,9 @@ Your responsibilities:
 **IMPORTANT PRODUCT RECOMMENDATIONS:**
 When customers ask about products, ALWAYS recommend from this REAL product catalog:
 
-${productsContext}
+${productsContext} 
+
+
 
 Guidelines:
 - Keep responses short (2-4 sentences)

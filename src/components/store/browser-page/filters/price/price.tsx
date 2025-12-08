@@ -19,14 +19,18 @@ const PriceFilter: FC = () => {
     const params = new URLSearchParams(searchParams!);
     if (minPrice) {
       params.set("minPrice", String(minPrice));
+      params.set("page", "1");
     } else {
       params.delete("minPrice");
+      params.set("page", "1");
     }
 
     if (maxPrice) {
       params.set("maxPrice", String(maxPrice));
+      params.set("page", "1");
     } else {
       params.delete("maxPrice");
+      params.set("page", "1");
     }
 
     replace(`${pathname}?${params.toString()}`);

@@ -49,7 +49,7 @@ const StreamPlayer = ({ isFollowing, stream, store }: StreamPlayerProps) => {
             name={stream.name}
             storeUrl={store.url}
           />
-          <SelectedProducts storeId={store.id} />
+          {stream.isLive && <SelectedProducts storeId={store.id} />}
         </div>
         <div className={cn("col-span-1 2xl:col-span-1", collapsed && "hidden")}>
           <Chat

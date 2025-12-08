@@ -16,6 +16,7 @@ export default function OfferLink({ offer }: { offer: OfferTag }) {
     if (offer === offerQuery) return;
     params.delete("offer");
     params.set("offer", offer);
+    params.set("page", "1");
     replaceParams();
   };
 
