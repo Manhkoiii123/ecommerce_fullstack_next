@@ -14,6 +14,7 @@ import {
   createNewStorePendingNotification,
   createStoreApprovedNotification,
 } from "@/lib/notifications";
+import { revalidatePath } from "next/cache";
 
 export const upsertStore = async (store: Partial<Store>) => {
   try {
@@ -1533,7 +1534,7 @@ export const autoCancelUnpaidOrders = async (storeUrl?: string) => {
 export const getOrdersAtRiskOfCancellation = async (storeUrl?: string) => {
   try {
     const twoDaysAgo = new Date();
-    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+    twoDaysAgo.setDate(twoDaysAgo.getDate() + 1);
 
     const store = await db.store.findFirst({ where: { url: storeUrl } });
     const whereClause: any = {
@@ -1919,6 +1920,89 @@ export const getStoreWithLiveStream = async (storeUrl: string) => {
     }
 
     return store;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const cancelGroupOrder = async (orderId: string) => {
+  try {
+    const order = await db.orderGroup.findUnique({
+      where: { id: orderId },
+      include: {
+        items: true,
+        order: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                name: true,
+              },
+            },
+            groups: true,
+          },
+        },
+      },
+    });
+
+    if (!order) throw new Error("Order not found.");
+
+    await db.$transaction(async (tx) => {
+      if (
+        order.order.groups
+          .filter((g) => g.id !== order.id)
+          .every((g) => g.status === "Cancelled")
+      ) {
+        await tx.order.updateMany({
+          where: { id: order.orderId },
+          data: {
+            orderStatus: "Cancelled",
+            paymentStatus: "Cancelled",
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      await tx.orderGroup.updateMany({
+        where: { id: orderId },
+        data: {
+          status: "Cancelled",
+          updatedAt: new Date(),
+        },
+      });
+
+      await tx.orderItem.updateMany({
+        where: { id: { in: order.items.map((i) => i.id) } },
+        data: {
+          status: "Cancelled",
+          updatedAt: new Date(),
+        },
+      });
+
+      for (const group of order.items) {
+        await tx.size.update({
+          where: { id: group.sizeId },
+          data: {
+            quantity: {
+              increment: group.quantity,
+            },
+          },
+        });
+
+        await tx.product.update({
+          where: { id: group.productId },
+          data: {
+            sales: {
+              decrement: group.quantity,
+            },
+          },
+        });
+      }
+    });
+
+    revalidatePath(`/order/${order.orderId}`);
+    return order;
   } catch (error) {
     throw error;
   }

@@ -28,6 +28,9 @@ export const OrdersAtRisk = ({ storeUrl }: OrdersAtRiskProps) => {
   const [orders, setOrders] = useState<OrderAtRisk[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isAutoCancelling, setIsAutoCancelling] = useState(false);
+  const [isAutoCancellingOneOrder, setIsAutoCancellingOneOrder] = useState<{
+    [orderId: string]: boolean;
+  }>({});
 
   const fetchOrdersAtRisk = async () => {
     try {
@@ -73,6 +76,7 @@ export const OrdersAtRisk = ({ storeUrl }: OrdersAtRiskProps) => {
               orderId: o.orderId,
               userId: o.order.userId,
               newStatus: OrderStatus.Cancelled,
+              orderGroupId: o.id,
             }),
           });
         });
@@ -84,6 +88,47 @@ export const OrdersAtRisk = ({ storeUrl }: OrdersAtRiskProps) => {
       console.error("Error:", error);
     } finally {
       setIsAutoCancelling(false);
+    }
+  };
+  const handleAutoCancelOneOrder = async (orderId: string) => {
+    try {
+      setIsAutoCancellingOneOrder({
+        ...isAutoCancellingOneOrder,
+        [orderId]: true,
+      });
+      const response = await fetch(
+        `/api/auto-cancel-one-order?orderId=${orderId}`,
+        {
+          method: "POST",
+        }
+      );
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success(`Successfully cancelled orders`);
+        fetchOrdersAtRisk();
+        await fetch("/api/socket/notifications", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "ORDER_STATUS_CHANGE",
+            orderId: data.order.orderId,
+            userId: data.order.order.userId,
+            newStatus: OrderStatus.Cancelled,
+            orderGroupId: orderId,
+          }),
+        });
+      } else {
+        toast.error("Failed to auto-cancel orders");
+      }
+    } catch (error) {
+      toast.error("Error auto-cancelling orders");
+      console.error("Error:", error);
+    } finally {
+      setIsAutoCancellingOneOrder({
+        ...isAutoCancellingOneOrder,
+        [orderId]: false,
+      });
     }
   };
 
@@ -249,6 +294,24 @@ export const OrdersAtRisk = ({ storeUrl }: OrdersAtRiskProps) => {
                               order.willBeCancelledIn !== 1 ? "s" : ""
                             } left`}
                       </Badge>
+                      <Button
+                        onClick={() => handleAutoCancelOneOrder(order.id)}
+                        disabled={isAutoCancellingOneOrder[order.id]}
+                        variant="destructive"
+                        size="sm"
+                      >
+                        {isAutoCancellingOneOrder[order.id] ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Auto-Cancelling...
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="h-4 w-4 mr-2" />
+                            Auto-Cancel
+                          </>
+                        )}
+                      </Button>
                     </div>
                   </div>
                 );

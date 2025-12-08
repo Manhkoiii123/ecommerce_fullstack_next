@@ -42,6 +42,7 @@ const OrderStatusSelect: FC<Props> = ({
           orderId: orderId,
           userId: userId,
           newStatus: selectedStatus,
+          orderGroupId: groupId,
         }),
       });
       if (response) {

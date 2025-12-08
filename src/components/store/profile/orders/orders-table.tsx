@@ -90,6 +90,12 @@ const OrdersTable = ({
                       (total, group) => total + group._count.items,
                       0
                     );
+                    const pendingTotal = order.groups.reduce((acc, group) => {
+                      if (group.status !== "Cancelled") {
+                        return acc + group.total;
+                      }
+                      return acc;
+                    }, 0);
                     const images = Array.from(
                       order.groups.flatMap((g) => g.items.map((p) => p.image))
                     );

@@ -13,9 +13,19 @@ export const createPayPalPayment = async (orderId: string) => {
       where: {
         id: orderId,
       },
+      include: {
+        groups: true,
+      },
     });
 
     if (!order) throw new Error("Order not found.");
+
+    const pendingMoney = order.groups.reduce((total, group) => {
+      if (group.status === "Pending") {
+        return total + group.total;
+      }
+      return total;
+    }, 0);
 
     const response = await fetch(
       "https://api.sandbox.paypal.com/v2/checkout/orders",
@@ -33,7 +43,7 @@ export const createPayPalPayment = async (orderId: string) => {
             {
               amount: {
                 currency_code: "USD",
-                value: order.total.toFixed(2).toString(),
+                value: pendingMoney.toFixed(2).toString(),
               },
             },
           ],

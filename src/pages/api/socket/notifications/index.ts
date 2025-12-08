@@ -27,6 +27,7 @@ export default async function handler(
       paymentMethod,
       storeId,
       storeName,
+      orderGroupId,
     } = req.body;
 
     if (!type) {
@@ -72,7 +73,9 @@ export default async function handler(
       notificationResult = await createOrderStatusChangeNotification(
         orderId,
         userId,
-        newStatus
+        newStatus,
+        undefined,
+        orderGroupId
       );
 
       // Emit notifications for order status change

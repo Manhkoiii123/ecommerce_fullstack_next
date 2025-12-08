@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { OrderFulltType, OrderStatus, PaymentStatus } from "@/lib/types";
 import { downloadBlobAsFile, printPDF } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, Download, Printer } from "lucide-react";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 const OrderHeader = ({ order }: { order: OrderFulltType }) => {
+  const router = useRouter();
   if (!order) return;
   const handleDownload = async () => {
     try {
@@ -28,7 +30,10 @@ const OrderHeader = ({ order }: { order: OrderFulltType }) => {
       <div className="w-full border-b flex flex-col min-[1100px]:flex-row gap-4 p-2">
         <div className="min-[1100px]:w-[920px] xl:w-[990px] flex items-center gap-x-3 ">
           <div className="border-r pr-4">
-            <button className="w-10 h-10 border rounded-full grid place-items-center">
+            <button
+              onClick={() => router.push("/profile/orders")}
+              className="w-10 h-10 border rounded-full grid place-items-center"
+            >
               <ChevronLeft className="stroke-main-secondary" />
             </button>
           </div>

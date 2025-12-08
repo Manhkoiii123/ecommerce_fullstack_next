@@ -21,6 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export default function OrderGroupTable({
   group,
@@ -39,6 +40,7 @@ export default function OrderGroupTable({
   const { coupon, couponId, subTotal, total, shippingFees } = group;
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const router = useRouter();
 
   let discountedAmount = 0;
   if (couponId && coupon) {
@@ -46,30 +48,38 @@ export default function OrderGroupTable({
   }
   const isBigScreen = useMediaQuery({ query: "(min-width: 1400px)" });
 
-  const handleCancelOrder = async () => {
+  const handleAutoCancelOneOrder = async (orderGroupId: string) => {
     try {
       setIsCancelling(true);
-      const result = await cancelOrder(group.orderId);
-      await fetch("/api/socket/notifications", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "ORDER_STATUS_CHANGE",
-          orderId: result.orderId,
-          userId: result.userId,
-          newStatus: OrderStatus.Cancelled,
-        }),
-      });
+      const response = await fetch(
+        `/api/auto-cancel-one-order?orderId=${orderGroupId}`,
+        {
+          method: "POST",
+        }
+      );
+      const data = await response.json();
 
-      if (result.success) {
-        toast.success(result.message);
+      if (data.success) {
+        toast.success(`Successfully cancelled orders`);
         setShowCancelModal(false);
+        await fetch("/api/socket/notifications", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "ORDER_STATUS_CHANGE",
+            orderId: data.order.orderId,
+            userId: data.order.order.userId,
+            newStatus: OrderStatus.Cancelled,
+            orderGroupId: orderGroupId,
+          }),
+        });
+        router.refresh();
+      } else {
+        toast.error("Failed to auto-cancel orders");
       }
-    } catch (error: any) {
-      toast.error("Failed to cancel order", {
-        description:
-          error.message || "An error occurred while cancelling the order",
-      });
+    } catch (error) {
+      toast.error("Error auto-cancelling orders");
+      console.error("Error:", error);
     } finally {
       setIsCancelling(false);
     }
@@ -243,7 +253,7 @@ export default function OrderGroupTable({
             </Button>
             <Button
               variant="destructive"
-              onClick={handleCancelOrder}
+              onClick={() => handleAutoCancelOneOrder(group.id)}
               disabled={isCancelling}
             >
               {isCancelling ? "Cancelling..." : "Yes, Cancel Order"}

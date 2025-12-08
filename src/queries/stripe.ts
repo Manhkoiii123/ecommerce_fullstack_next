@@ -19,12 +19,22 @@ export const createStripePaymentIntent = async (orderId: string) => {
       where: {
         id: orderId,
       },
+      include: {
+        groups: true,
+      },
     });
 
     if (!order) throw new Error("Order not found.");
 
+    const pendingMoney = order.groups.reduce((total, group) => {
+      if (group.status !== "Cancelled") {
+        return total + group.total;
+      }
+      return total;
+    }, 0);
+
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(order.total * 100),
+      amount: Math.round(pendingMoney),
       currency: "usd",
       automatic_payment_methods: { enabled: true },
     });
@@ -51,9 +61,19 @@ export const createStripePayment = async (
       where: {
         id: orderId,
       },
+      include: {
+        groups: true,
+      },
     });
 
     if (!order) throw new Error("Order not found.");
+
+    const pendingMoney = order.groups.reduce((total, group) => {
+      if (group.status !== "Cancelled") {
+        return total + group.total;
+      }
+      return total;
+    }, 0);
 
     const updatedPaymentDetails = await db.paymentDetails.upsert({
       where: {
@@ -62,7 +82,7 @@ export const createStripePayment = async (
       update: {
         paymentInetntId: paymentIntent.id,
         paymentMethod: "Stripe",
-        amount: paymentIntent.amount,
+        amount: pendingMoney,
         currency: paymentIntent.currency,
         status:
           paymentIntent.status === "succeeded"
@@ -73,7 +93,7 @@ export const createStripePayment = async (
       create: {
         paymentInetntId: paymentIntent.id,
         paymentMethod: "Stripe",
-        amount: paymentIntent.amount,
+        amount: pendingMoney,
         currency: paymentIntent.currency,
         status:
           paymentIntent.status === "succeeded"

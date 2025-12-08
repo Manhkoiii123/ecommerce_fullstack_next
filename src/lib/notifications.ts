@@ -149,9 +149,19 @@ export async function createOrderStatusChangeNotification(
   orderId: string,
   userId: string,
   newStatus: string,
-  oldStatus?: string
+  oldStatus?: string,
+  orderGroupId?: string
 ) {
   try {
+    let orderGroup = null;
+    if (orderGroupId) {
+      orderGroup = await db.orderGroup.findUnique({
+        where: { id: orderGroupId },
+        include: {
+          items: true,
+        },
+      });
+    }
     const order = await db.order.findUnique({
       where: { id: orderId },
       include: {
@@ -209,25 +219,44 @@ export async function createOrderStatusChangeNotification(
         message = `The status of order #${orderId} has changed to ${newStatus}.`;
     }
 
-    const storeNotifications: CreateNotificationData[] = order.groups.map(
-      (group) => ({
-        type: notificationType,
-        title: `Order status changed - ${newStatus}`,
-        message: `Order #${orderId} from ${customerName} ($${group.total.toFixed(
-          2
-        )}) is now ${newStatus}.`,
-        storeId: group.storeId,
-        orderId,
-        createdAt: new Date(),
-        data: {
-          orderId,
-          customerName,
-          orderTotal: group.total,
-          oldStatus,
-          newStatus,
-        },
-      })
-    );
+    const storeNotifications: CreateNotificationData[] =
+      orderGroupId && orderGroup
+        ? [
+            {
+              type: notificationType,
+              title: `Order status changed - ${newStatus}`,
+              message: `Order #${orderId} from ${customerName} ($${orderGroup.total.toFixed(
+                2
+              )}) is now ${newStatus}.`,
+              storeId: orderGroup.storeId,
+              orderId,
+              createdAt: new Date(),
+              data: {
+                orderGroupId,
+                customerName,
+                orderTotal: orderGroup.total,
+                oldStatus,
+                newStatus,
+              },
+            },
+          ]
+        : order.groups.map((group) => ({
+            type: notificationType,
+            title: `Order status changed - ${newStatus}`,
+            message: `Order #${orderId} from ${customerName} ($${group.total.toFixed(
+              2
+            )}) is now ${newStatus}.`,
+            storeId: group.storeId,
+            orderId,
+            createdAt: new Date(),
+            data: {
+              orderId,
+              customerName,
+              orderTotal: group.total,
+              oldStatus,
+              newStatus,
+            },
+          }));
 
     const customerNotificationData: CreateNotificationData = {
       type: notificationType,

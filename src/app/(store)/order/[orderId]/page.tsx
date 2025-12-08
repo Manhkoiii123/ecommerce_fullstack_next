@@ -19,6 +19,26 @@ const OrderPage = async ({ params }: { params: { orderId: string } }) => {
     (acc, group) => acc + group._count.items,
     0
   );
+  const pendingMoney = order?.groups.reduce((total, group) => {
+    if (group.status !== "Cancelled") {
+      return total + group.total;
+    }
+    return total;
+  }, 0);
+
+  const pendingShipping = order?.groups.reduce((total, group) => {
+    if (group.status !== "Cancelled") {
+      return total + group.shippingFees;
+    }
+    return total;
+  }, 0);
+  const pendindSubTotal = order?.groups.reduce((total, group) => {
+    if (group.status !== "Cancelled") {
+      return total + group.subTotal;
+    }
+    return total;
+  }, 0);
+
   const deliveredItemsCount = order?.groups.reduce((total, group) => {
     if (group.status === "Delivered") {
       return total + group.items.length;
@@ -58,13 +78,14 @@ const OrderPage = async ({ params }: { params: { orderId: string } }) => {
               paymentDetails={order.paymentDetails}
             />
             {/* order total details */}
-            {order.paymentStatus !== "Pending" &&
+            {order.orderStatus !== "Cancelled" &&
+              order.paymentStatus !== "Pending" &&
               order.paymentStatus !== "Failed" && (
                 <OrderTotalDetailsCard
                   details={{
-                    subTotal: order.subTotal,
-                    shippingFees: order.shippingFees,
-                    total: order.total,
+                    subTotal: pendindSubTotal,
+                    shippingFees: pendingShipping,
+                    total: pendingMoney,
                   }}
                 />
               )}
@@ -81,24 +102,25 @@ const OrderPage = async ({ params }: { params: { orderId: string } }) => {
             />
           </div>
           {/* Col 3 -> Payment Gateways*/}
-          {(order.paymentStatus === "Pending" ||
-            order.paymentStatus === "Failed") && (
-            <div className="h-[calc(100vh-137px)] overflow-auto scrollbar border-l px-2 py-4 space-y-5">
-              <OrderTotalDetailsCard
-                details={{
-                  subTotal: order.subTotal,
-                  shippingFees: order.shippingFees,
-                  total: order.total,
-                }}
-              />
-              <Separator />
-              <OrderPayment
-                orderId={order.id}
-                amount={order.total}
-                userId={order.userId}
-              />
-            </div>
-          )}
+          {order.orderStatus !== "Cancelled" &&
+            (order.paymentStatus === "Pending" ||
+              order.paymentStatus === "Failed") && (
+              <div className="h-[calc(100vh-137px)] overflow-auto scrollbar border-l px-2 py-4 space-y-5">
+                <OrderTotalDetailsCard
+                  details={{
+                    subTotal: pendindSubTotal,
+                    shippingFees: pendingShipping,
+                    total: pendingMoney,
+                  }}
+                />
+                <Separator />
+                <OrderPayment
+                  orderId={order.id}
+                  amount={pendingMoney}
+                  userId={order.userId}
+                />
+              </div>
+            )}
         </div>
       </div>
     </div>

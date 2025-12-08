@@ -14,18 +14,26 @@ interface Props {
 
 const OrderPayment: FC<Props> = ({ amount, orderId, userId }) => {
   return (
-    <div className="w-full h-full  space-y-5">
-      {/* Paypal */}
-      <div className="mt-6">
-        <PaypalWrapper>
-          <PaypalPayment orderId={orderId} amount={amount} userId={userId} />
-        </PaypalWrapper>
-      </div>
-      {/* Stripe */}
-      <StripeWrapper amount={amount}>
-        <StripePayment orderId={orderId} amount={amount} userId={userId} />
-      </StripeWrapper>
-    </div>
+    <>
+      {amount !== 0 && (
+        <div className="w-full h-full  space-y-5">
+          {/* Paypal */}
+          <div className="mt-6">
+            <PaypalWrapper>
+              <PaypalPayment
+                orderId={orderId}
+                amount={amount}
+                userId={userId}
+              />
+            </PaypalWrapper>
+          </div>
+          {/* Stripe */}
+          <StripeWrapper amount={amount}>
+            <StripePayment orderId={orderId} amount={amount} userId={userId} />
+          </StripeWrapper>
+        </div>
+      )}
+    </>
   );
 };
 
