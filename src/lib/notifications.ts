@@ -332,28 +332,30 @@ export async function createPaymentNotification(
       message = `Order #${orderId} has been successfully refunded.`;
     }
 
-    const storeNotifications = order.groups.map((group) => {
-      const storeId = group.storeId;
+    const storeNotifications = order.groups
+      .filter((group) => group.status !== "Cancelled")
+      .map((group) => {
+        const storeId = group.storeId;
 
-      return {
-        type: notificationType,
-        title: `Payment - ${paymentStatus}`,
-        message: `Order #${orderId} for ${customerName} ($${amount.toFixed(
-          2
-        )}) - ${paymentStatus} via ${paymentMethod}.`,
+        return {
+          type: notificationType,
+          title: `Payment - ${paymentStatus}`,
+          message: `Order #${orderId} for ${customerName} ($${amount.toFixed(
+            2
+          )}) - ${paymentStatus} via ${paymentMethod}.`,
 
-        storeId,
-        orderId,
-        createdAt: new Date(),
-        data: {
+          storeId,
           orderId,
-          customerName,
-          amount,
-          paymentStatus,
-          paymentMethod,
-        },
-      } satisfies CreateNotificationData;
-    });
+          createdAt: new Date(),
+          data: {
+            orderId,
+            customerName,
+            amount,
+            paymentStatus,
+            paymentMethod,
+          },
+        } satisfies CreateNotificationData;
+      });
 
     // 🔹 Notification cho khách hàng
     const customerNotification: CreateNotificationData = {

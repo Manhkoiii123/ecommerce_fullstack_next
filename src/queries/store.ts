@@ -707,9 +707,11 @@ export const getStoreDashboardStats = async (storeUrl: string) => {
       storeId: store.id,
       createdAt: { gte: startOfMonth },
       order: { paymentStatus: "Paid" },
+      status: { not: "Cancelled" },
     },
     _sum: { total: true },
   });
+  console.log("🚀 ~ getStoreDashboardStats ~ monthlyRevenue:", monthlyRevenue);
 
   // Tổng doanh thu năm nay
   const yearlyRevenue = await db.orderGroup.aggregate({
@@ -717,6 +719,7 @@ export const getStoreDashboardStats = async (storeUrl: string) => {
       storeId: store.id,
       createdAt: { gte: startOfYear },
       order: { paymentStatus: "Paid" },
+      status: { not: "Cancelled" },
     },
     _sum: { total: true },
   });
@@ -726,6 +729,7 @@ export const getStoreDashboardStats = async (storeUrl: string) => {
     where: {
       storeId: store.id,
       createdAt: { gte: startOfMonth },
+      status: { not: "Cancelled" },
     },
   });
 
@@ -734,6 +738,7 @@ export const getStoreDashboardStats = async (storeUrl: string) => {
     where: {
       storeId: store.id,
       createdAt: { gte: startOfYear },
+      status: { not: "Cancelled" },
     },
   });
 
@@ -743,6 +748,7 @@ export const getStoreDashboardStats = async (storeUrl: string) => {
       orderGroup: {
         storeId: store.id,
         createdAt: { gte: startOfMonth },
+        status: { not: "Cancelled" },
       },
     },
     _sum: { quantity: true },
@@ -754,6 +760,7 @@ export const getStoreDashboardStats = async (storeUrl: string) => {
       orderGroup: {
         storeId: store.id,
         createdAt: { gte: startOfYear },
+        status: { not: "Cancelled" },
       },
     },
     _sum: { quantity: true },
@@ -940,7 +947,28 @@ export const getStoreWeeklyRevenue = async (
     by: ["createdAt"],
     where: {
       ...where,
-      order: { paymentStatus: "Paid" },
+      order: {
+        is: {
+          paymentStatus: "Paid",
+        },
+      },
+
+      // status của OrderGroup
+      status: {
+        in: [
+          "Pending",
+          "Confirmed",
+          "Processing",
+          "Shipped",
+          "OutforDelivery",
+          "Delivered",
+          "Failed",
+          "Refunded",
+          "Returned",
+          "PartiallyShipped",
+          "OnHold",
+        ],
+      },
     },
     _sum: { total: true },
   });
@@ -1114,6 +1142,7 @@ export const getStoreStatsByMonth = async (
         lt: endOfMonth,
       },
       order: { paymentStatus: "Paid" },
+      status: { not: "Cancelled" },
     },
     _sum: { total: true },
   });
@@ -1138,6 +1167,7 @@ export const getStoreStatsByMonth = async (
           gte: startOfMonth,
           lt: endOfMonth,
         },
+        status: { not: "Cancelled" },
       },
     },
     _sum: { quantity: true },
@@ -1234,6 +1264,7 @@ export const getStoreStatsByMonth = async (
           gte: startOfMonth,
           lt: endOfMonth,
         },
+        status: { not: "Cancelled" },
       },
     },
     _sum: {
