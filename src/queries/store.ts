@@ -711,7 +711,6 @@ export const getStoreDashboardStats = async (storeUrl: string) => {
     },
     _sum: { total: true },
   });
-  console.log("🚀 ~ getStoreDashboardStats ~ monthlyRevenue:", monthlyRevenue);
 
   // Tổng doanh thu năm nay
   const yearlyRevenue = await db.orderGroup.aggregate({
@@ -1580,7 +1579,9 @@ export const getOrdersAtRiskOfCancellation = async (storeUrl?: string) => {
     }
 
     const atRiskOrders = await db.orderGroup.findMany({
-      where: whereClause,
+      where: {
+        ...whereClause,
+      },
       include: {
         order: {
           include: {
@@ -1598,7 +1599,11 @@ export const getOrdersAtRiskOfCancellation = async (storeUrl?: string) => {
       },
     });
 
-    return atRiskOrders.map((order) => ({
+    const filteredOrders = atRiskOrders.filter(
+      (o) => o.order.paymentStatus !== "Paid"
+    );
+
+    return filteredOrders.map((order) => ({
       id: order.id,
       customerEmail: order.order.user.email || "Unknown",
       customerName: order.order.user.name || "Unknown",

@@ -47,7 +47,10 @@ import {
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { upsertFlashSale } from "@/queries/flash-sale";
+import {
+  getProductFlashSaleDiscount,
+  upsertFlashSale,
+} from "@/queries/flash-sale";
 import { getStorePageDetails } from "@/queries/store";
 import { getProducts } from "@/queries/product";
 import { v4 } from "uuid";
@@ -91,19 +94,36 @@ interface Product {
 
 // Extended FlashSale type with products relation
 type FlashSaleWithProducts = FlashSale & {
+  store: {
+    id: string;
+    name: string;
+    url: string;
+  };
   products: Array<{
+    // product: {
     productId: string;
-    customDiscountValue?: number;
-    customMaxDiscount?: number;
+    name: string;
+    customMaxDiscount: number | null;
+    customDiscountValue: number | null;
+    // };
   }>;
 };
+// type FlashSaleWithProducts = FlashSale & {
+//   products: Array<{
+//     productId: string;
+//     customDiscountValue?: number | null;
+//     customMaxDiscount?: number | null;
+//   }>;
+// };
 
 const FlashSaleDetails: FC<FlashSaleDetailsProps> = ({ data, storeUrl }) => {
+  console.log("🚀 ~ FlashSaleDetails ~ data:", data);
   const router = useRouter();
   const [store, setStore] = useState<Store | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
 
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  console.log("🚀 ~ FlashSaleDetails ~ selectedProducts:", selectedProducts);
   const [customDiscounts, setCustomDiscounts] = useState<
     Array<{
       productId: string;
@@ -111,6 +131,7 @@ const FlashSaleDetails: FC<FlashSaleDetailsProps> = ({ data, storeUrl }) => {
       customMaxDiscount?: number;
     }>
   >([]);
+  console.log("🚀 ~ FlashSaleDetails ~ customDiscounts:", customDiscounts);
 
   const isInitialized = useRef(false);
   const hasFetchedData = useRef(false);
@@ -140,6 +161,7 @@ const FlashSaleDetails: FC<FlashSaleDetailsProps> = ({ data, storeUrl }) => {
 
   // Memoize products to prevent unnecessary re-renders
   const memoizedProducts = useMemo(() => products, [products]);
+  console.log("🚀 ~ FlashSaleDetails ~ memoizedProducts:", memoizedProducts);
 
   const fetchData = useCallback(async () => {
     if (hasFetchedData.current) return;
@@ -149,6 +171,26 @@ const FlashSaleDetails: FC<FlashSaleDetailsProps> = ({ data, storeUrl }) => {
       const storeData = await getStorePageDetails(storeUrl);
       const productsData = await getProducts({ store: storeUrl }, "", 1, 9999);
 
+      const filterProduct = (
+        await Promise.all(
+          productsData?.products?.map(async (p) => {
+            const checkFlashsaleExist = await getProductFlashSaleDiscount(p.id);
+
+            if (checkFlashsaleExist) {
+              if (checkFlashsaleExist?.flashSaleId !== data?.id) {
+                return null;
+              } else {
+                return p;
+              }
+            } else {
+              return p;
+            }
+
+            // return checkFlashsaleExist?.flashSaleId !== data?.id ? null : p;
+          })
+        )
+      ).filter(Boolean) as Product[];
+
       if (storeData) {
         setStore({ id: storeData.id, name: storeData.name, url: storeUrl });
         // Always set storeId when we have store data
@@ -156,7 +198,7 @@ const FlashSaleDetails: FC<FlashSaleDetailsProps> = ({ data, storeUrl }) => {
       }
 
       if (productsData && productsData.products) {
-        setProducts(productsData.products);
+        setProducts(filterProduct);
       }
 
       hasFetchedData.current = true;
@@ -677,7 +719,7 @@ const FlashSaleDetails: FC<FlashSaleDetailsProps> = ({ data, storeUrl }) => {
                                       )
                                     }
                                   />
-                                  {form.watch("discountType") ===
+                                  {/* {form.watch("discountType") ===
                                     "FIXED_AMOUNT" && (
                                     <Input
                                       type="number"
@@ -695,7 +737,7 @@ const FlashSaleDetails: FC<FlashSaleDetailsProps> = ({ data, storeUrl }) => {
                                         )
                                       }
                                     />
-                                  )}
+                                  )} */}
                                 </div>
                               </div>
                             </div>

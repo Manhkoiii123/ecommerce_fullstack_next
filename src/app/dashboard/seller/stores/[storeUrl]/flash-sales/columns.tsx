@@ -46,10 +46,12 @@ type FlashSaleWithRelations = FlashSale & {
     url: string;
   };
   products: Array<{
-    product: {
-      id: string;
-      name: string;
-    };
+    // product: {
+    productId: string;
+    name: string;
+    customMaxDiscount: number | null;
+    customDiscountValue: number | null;
+    // };
   }>;
 };
 
@@ -237,16 +239,16 @@ const CellActions: React.FC<CellActionsProps> = ({ rowData }) => {
             className="flex gap-2"
             onClick={() => {
               setOpen(
-                <CustomModal maxWidth="!max-w-2xl">
+                <CustomModal maxWidth="!max-w-6xl">
                   <FlashSaleDetails
                     data={{
                       ...rowData,
-                      products:
-                        rowData.products?.map((p) => ({
-                          productId: p.product.id,
-                          customDiscountValue: undefined,
-                          customMaxDiscount: undefined,
-                        })) || [],
+                      // products:
+                      //   rowData.products?.map((p) => ({
+                      //     productId: p.id,
+                      //     customDiscountValue: (p as any).customDiscountValue,
+                      //     customMaxDiscount: (p as any).customMaxDiscount,
+                      //   })) || [],
                     }}
                     storeUrl={storeUrl}
                   />
