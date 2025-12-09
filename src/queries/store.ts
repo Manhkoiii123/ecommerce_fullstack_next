@@ -1500,6 +1500,7 @@ export const autoCancelUnpaidOrders = async (storeUrl?: string) => {
                     name: true,
                   },
                 },
+                groups: true,
               },
             },
           },
@@ -1508,6 +1509,20 @@ export const autoCancelUnpaidOrders = async (storeUrl?: string) => {
         if (!order) throw new Error("Order not found.");
 
         await db.$transaction(async (tx) => {
+          if (
+            order.order.groups
+              .filter((g) => g.id !== order.id)
+              .every((g) => g.status === "Cancelled")
+          ) {
+            await tx.order.updateMany({
+              where: { id: order.orderId },
+              data: {
+                orderStatus: "Cancelled",
+                paymentStatus: "Cancelled",
+                updatedAt: new Date(),
+              },
+            });
+          }
           await tx.orderGroup.updateMany({
             where: { id: o.id },
             data: {
@@ -1549,6 +1564,22 @@ export const autoCancelUnpaidOrders = async (storeUrl?: string) => {
       })
     );
 
+    for (const o of cancelledOrders) {
+      await fetch("http://localhost:3000/api/socket/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "ORDER_STATUS_CHANGE",
+          orderId: o.orderId,
+          userId: o.order.userId,
+          newStatus: OrderStatus.Cancelled,
+          orderGroupId: o.id,
+        }),
+      });
+    }
+
+    revalidatePath("/dashboard/seller/stores", "layout");
+
     return {
       cancelled: cancelledOrders.length,
       message: `Successfully cancelled ${cancelledOrders.length} unpaid orders`,
@@ -1565,8 +1596,10 @@ export const getOrdersAtRiskOfCancellation = async (storeUrl?: string) => {
   try {
     const twoDaysAgo = new Date();
     twoDaysAgo.setDate(twoDaysAgo.getDate() + 1);
-
-    const store = await db.store.findFirst({ where: { url: storeUrl } });
+    let store: any = null;
+    if (storeUrl) {
+      store = await db.store.findFirst({ where: { url: storeUrl } });
+    }
     const whereClause: any = {
       status: "Pending",
       createdAt: {

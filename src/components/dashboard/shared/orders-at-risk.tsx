@@ -67,19 +67,19 @@ export const OrdersAtRisk = ({ storeUrl }: OrdersAtRiskProps) => {
       if (data.success) {
         toast.success(`Successfully cancelled ${data.cancelled} orders`);
         fetchOrdersAtRisk();
-        data.cancelledOrders.forEach(async (o: any) => {
-          await fetch("/api/socket/notifications", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              type: "ORDER_STATUS_CHANGE",
-              orderId: o.orderId,
-              userId: o.order.userId,
-              newStatus: OrderStatus.Cancelled,
-              orderGroupId: o.id,
-            }),
-          });
-        });
+        // data.cancelledOrders.forEach(async (o: any) => {
+        //   await fetch("/api/socket/notifications", {
+        //     method: "POST",
+        //     headers: { "Content-Type": "application/json" },
+        //     body: JSON.stringify({
+        //       type: "ORDER_STATUS_CHANGE",
+        //       orderId: o.orderId,
+        //       userId: o.order.userId,
+        //       newStatus: OrderStatus.Cancelled,
+        //       orderGroupId: o.id,
+        //     }),
+        //   });
+        // });
       } else {
         toast.error("Failed to auto-cancel orders");
       }

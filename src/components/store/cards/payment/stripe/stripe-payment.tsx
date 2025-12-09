@@ -71,7 +71,6 @@ export default function StripePayment({
         },
         redirect: "if_required",
       });
-      console.log("🚀 ~ handleSubmit ~ paymentIntent:", paymentIntent);
 
       if (!error && paymentIntent) {
         try {

@@ -15,6 +15,15 @@ export default clerkMiddleware(async (auth, req) => {
   if (req.nextUrl.pathname.startsWith("/api/webhooks")) {
     return NextResponse.next();
   }
+
+  if (req.nextUrl.pathname.startsWith("/api/cron")) {
+    return NextResponse.next();
+  }
+
+  if (req.nextUrl.pathname.startsWith("/api/socket/notifications")) {
+    return NextResponse.next();
+  }
+
   if (isProtectedRoute(req)) await auth.protect();
   let response = NextResponse.next();
   const countryCookie = req.cookies.get("userCountry");
