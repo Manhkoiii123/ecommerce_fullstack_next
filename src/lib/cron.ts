@@ -49,7 +49,8 @@ async function safeFetch(url: string, options: RequestInit = {}, retries = 3) {
 }
 
 export async function runCron() {
-  const cancelUrl = "http://localhost:3000/api/cron/auto-cancel-orders";
+  const cancelUrl =
+    "https://pretty-mouse-strangely.ngrok-free.app/api/cron/auto-cancel-orders";
 
   const response = await safeFetch(cancelUrl, { method: "POST" });
   const data = await response.json();
@@ -57,6 +58,6 @@ export async function runCron() {
   console.log("Auto cancel result:", data);
 }
 
-cron.schedule("01 18 * * *", () => {
+cron.schedule("19 06 * * *", () => {
   runCron().catch((e) => console.error("runCron error:", e));
 });

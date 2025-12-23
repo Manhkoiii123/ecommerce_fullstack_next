@@ -117,13 +117,11 @@ type FlashSaleWithProducts = FlashSale & {
 // };
 
 const FlashSaleDetails: FC<FlashSaleDetailsProps> = ({ data, storeUrl }) => {
-  console.log("🚀 ~ FlashSaleDetails ~ data:", data);
   const router = useRouter();
   const [store, setStore] = useState<Store | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
 
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
-  console.log("🚀 ~ FlashSaleDetails ~ selectedProducts:", selectedProducts);
   const [customDiscounts, setCustomDiscounts] = useState<
     Array<{
       productId: string;
@@ -131,7 +129,6 @@ const FlashSaleDetails: FC<FlashSaleDetailsProps> = ({ data, storeUrl }) => {
       customMaxDiscount?: number;
     }>
   >([]);
-  console.log("🚀 ~ FlashSaleDetails ~ customDiscounts:", customDiscounts);
 
   const isInitialized = useRef(false);
   const hasFetchedData = useRef(false);
@@ -661,6 +658,27 @@ const FlashSaleDetails: FC<FlashSaleDetailsProps> = ({ data, storeUrl }) => {
                 <span className="text-sm text-muted-foreground">
                   {selectedProducts.length} products selected
                 </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    if (selectedProducts.length === products.length) {
+                      setSelectedProducts([]);
+                      form.setValue("productIds", []);
+                      setCustomDiscounts([]);
+                    } else {
+                      const allIds = products.map((p) => p.id);
+                      setSelectedProducts(allIds);
+                      form.setValue("productIds", allIds);
+                      setCustomDiscounts([]);
+                    }
+                  }}
+                >
+                  {selectedProducts.length === products.length
+                    ? "Deselect All"
+                    : "Select All"}
+                </Button>
+                ;
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto border rounded-lg p-4">
